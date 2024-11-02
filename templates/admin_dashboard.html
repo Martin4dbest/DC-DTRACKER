@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominion City Admin Dashboard</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: #0052D4;
+            width: 230px; /* Reduced width for more space */
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 30px 20px; /* Increased padding for better spacing */
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            
+        }
+
+        .sidebar h1 {
+            font-size: 1.5em;
+            margin-bottom: 30px; /* More space between title and links */
+            text-align: center;
+            color: #fff;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            margin: 15px 0; /* Increased margin for better spacing */
+            padding: 12px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #4364F7;
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: 260px; /* Adjusted based on sidebar width */
+            padding: 40px; /* Increased padding */
+            width: calc(100% - 260px);
+            background-color: #f4f4f9;
+        }
+
+        .content h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #0052D4;
+        }
+
+        .content h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        table th, table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #0052D4;
+            color: #fff;
+        }
+
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Buttons */
+        .button {
+            background-color: #0072ff;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+        /* User Detail Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-header button {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px 0;
+        }
+
+        .close-modal {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">  
+        <h1>Admin</h1>
+        <a href="#">Donations</a>
+        <a href="#">Users</a>
+        <a href="#">Settings</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <h2>Admin Dashboard</h2>
+
+        <!-- Recent Donations -->
+        <h3>Recent Donations</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Partner</th>
+                        <th>Amount</th>
+                        <th>Currency</th>
+                        <th>Donation Date</th> 
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in recent_donations %}
+                    <tr>
+                        <td>{{ donation.user.name }}</td>
+                        <td>{{ donation.amount }}</td>
+                        <td>{{ donation.currency }}</td> <!-- Dynamically display currency -->
+                        <td>{{ donation.donation_date }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_donation', donation_id=donation.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="delete-button">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No donations found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Users -->
+        <h3>Users</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span style="color: gold;">(Admin)</span>
+                            {% else %}
+                                (Partner)
+                            {% endif %}
+                        </td>
+
+
+
+                        <td>
+                            <a href="#" class="button view-details" data-id="{{ user.id }}">View Details</a>
+                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="delete-button">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No users found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bulk SMS Form -->
+        <h3>Send Bulk SMS</h3>
+        <form method="POST">
+            <div>
+                <label for="sms_message">Message:</label>
+                <textarea id="sms_message" name="sms_message" required></textarea>
+            </div>
+            <button type="submit" name="send_bulk_sms" class="button">Send SMS</button>
+        </form>
+
+        <!-- Bulk Email Form -->
+        <h3>Send Bulk Email</h3>
+        <form method="POST">
+            <div>
+                <label for="email_subject">Subject:</label>
+                <input type="text" id="email_subject" name="email_subject" required>
+            </div>
+            <div>
+                <label for="email_body">Body:</label>
+                <textarea id="email_body" name="email_body" required></textarea>
+            </div>
+            <button type="submit" name="send_bulk_email" class="button">Send Email</button>
+        </form>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div id="user-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>User Details</h3>
+                <button id="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- User details will be loaded dynamically here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const viewDetailsButtons = document.querySelectorAll('.view-details');
+            const modal = document.getElementById('user-detail-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const modalBody = modal.querySelector('.modal-body');
+
+            viewDetailsButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const userId = this.dataset.id;
+
+                    fetch(`/user/${userId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            modalBody.innerHTML = `
+                                <p><strong>Name:</strong> ${data.name || 'N/A'}</p>
+                                <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+                                <p><strong>Address:</strong> ${data.address || 'N/A'}</p>
+                                <p><strong>Country:</strong> ${data.country || 'N/A'}</p>
+                                <p><strong>State:</strong> ${data.state || 'N/A'}</p>       
+                                <p><strong>Local Church:</strong> ${data.church_branch || 'N/A'}</p>
+                                <p><strong>Birthday:</strong> ${data.birthday ? new Date(data.birthday).toLocaleString('default', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}</p>
+
+                            
+
+                            `;
+                            modal.style.display = 'flex'; // Show modal
+                        })
+                        .catch(error => console.error('Error fetching user details:', error));
+                });
+            });
+
+            closeModalBtn.addEventListener('click', function () {
+                modal.style.display = 'none'; // Hide modal
+            });
+
+            // Close the modal when clicking outside of it
+            window.addEventListener('click', function (event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

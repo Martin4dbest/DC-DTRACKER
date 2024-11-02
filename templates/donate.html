@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominion City Partnership Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* General styles here */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0052D4, #65C7F7, #9CECFB);
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+    
+        /* Sidebar */
+        .sidebar {
+            background-color: #003C8F;
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 30px 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+    
+        .sidebar h1 {
+            font-size: 1.8em;
+            margin-bottom: 40px;
+            text-align: center;
+            font-weight: 300;
+        }
+    
+        .sidebar a {
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+        }
+    
+        .sidebar a:hover {
+            background-color: #4364F7;
+        }
+    
+        /* Main Content */
+        .content {
+            margin-left: 270px;
+            padding: 50px;
+            width: calc(100% - 270px);
+            background-color: #f9fafc;
+            color: #333;
+            min-height: 100vh;
+        }
+    
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #003C8F;
+            font-weight: 400;
+        }
+    
+        label {
+            font-size: 1.2em;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+        }
+    
+        /* Adjust input fields for donation date, amount, and currency */
+
+                /* Adjust input fields for donation date, amount, and currency */
+                input[type="number"],
+        select,
+        input[type="date"] {
+            padding: 12px;
+            width: 500px; /* Reduced width */
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 2px; /* Reduced spacing */
+            font-size: 1em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: block; /* Ensure each input appears on a new line */
+            margin-left: auto; /* Center the fields */
+            margin-right: auto; /* Center the fields */
+        }
+
+    
+        button {
+            background-color: #0052D4;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    
+        button:hover {
+            background-color: #4364F7;
+        }
+    
+        /* Account Details Section */
+        #account-details {
+            display: none;
+            margin-top: 20px;
+            background-color: #f1f5fc;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    
+        /* Amount Entry Section */
+        #amount-entry {
+            display: none;
+            margin-top: 20px;
+        }
+    
+        /* Get Account Details Button */
+        #show_account_btn {
+            margin-top: 20px;
+            padding: 12px 20px;
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    
+        /* Welcome message */
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+    
+        .welcome-message h1 {
+            font-size: 3em;
+            color: #003C8F;
+            font-weight: 700;
+        }
+    
+        .welcome-message p {
+            font-size: 1.5em;
+            color: #333;
+            font-style: italic;
+        }
+    
+        /* Calendar input */
+        .calendar-label {
+            font-weight: 500;
+            margin-top: 20px;
+        }
+    
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 10px;
+                text-align: center;
+            }
+    
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+    
+            h2 {
+                font-size: 2em;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
+        <h1>Partner</h1>
+        <a href="#">Track Your Donations</a>
+        <a href="#">Church Updates</a>
+        <a href="#">Recent Donations</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Welcome message -->
+        <div class="welcome-message">
+            <h1>Welcome to Dominion City Partnership Platform</h1>
+            <p>"God loves a cheerful giver" - 2 Corinthians 9:7</p>
+            <p>Track your donations seamlessly and partner with us in spreading the gospel.</p>
+        </div>
+
+        <h2>Make a Donation</h2>
+
+        <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
+            <label>
+                <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()"> 
+                Have you made your donation offline?
+            </label>
+            <br>
+
+            <div id="amount-entry">
+                <label for="amount">Enter the amount you donated:</label><br>
+                <input type="number" id="amount" name="amount" step="0.01" required><br>
+                
+                <label for="currency">Currency:</label><br>
+                <select id="currency" name="currency" required>
+                    <option value="USD">&#36; USD</option>
+                    <option value="EUR">&#8364; EUR</option>
+                    <option value="GBP">&#163; GBP</option>
+                    <option value="NGN">&#8358; NGN</option>
+                    <option value="GHS">&#162; GHS (Ghanaian Cedi)</option>
+                    <option value="JPY">&#165; JPY</option>
+                    <option value="AUD">&#36; AUD</option>
+                    <option value="CAD">&#36; CAD</option>
+                    <option value="CHF">&#67;&#72;F (Swiss Franc)</option>
+                    <option value="ZAR">&#82; ZAR (South African Rand)</option>
+                    <option value="INR">&#8377; INR (Indian Rupee)</option>
+                    <option value="BRL">&#82;&#36; BRL (Brazilian Real)</option>
+                </select><br>
+
+                <!-- Calendar input for donation date -->
+                <label for="donation_date" class="calendar-label">Select donation date:</label><br>
+                <input type="date" id="donation_date" name="donation_date" required><br>
+
+                <button type="submit">Confirm Donation</button>
+            </div>
+
+
+            <div id="account-details">
+                <h3>Bank Account Details</h3>
+                <p>Account Name: Dominion City</p>
+                <p>Account Number: 123456789</p>
+                <p>Bank Name: Your Bank</p>
+                <p>Proceed to make your payment offline, then return here to confirm your donation.</p>
+            </div>
+
+            <button type="button" id="show_account_btn" onclick="showAccountDetails()">Get Account Details</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleFields() {
+            const checkbox = document.getElementById('offline_donation');
+            const amountEntry = document.getElementById('amount-entry');
+            const accountDetails = document.getElementById('account-details');
+            const showAccountBtn = document.getElementById('show_account_btn');
+
+            if (checkbox.checked) {
+                amountEntry.style.display = 'block';
+                accountDetails.style.display = 'none';
+                showAccountBtn.style.display = 'none';
+            } else {
+                amountEntry.style.display = 'none';
+                accountDetails.style.display = 'none';
+                showAccountBtn.style.display = 'inline-block';
+            }
+        }
+
+        function showAccountDetails() {
+            const accountDetails = document.getElementById('account-details');
+            accountDetails.style.display = 'block';
+        }
+
+        function checkForm() {
+            const checkbox = document.getElementById('offline_donation');
+            if (!checkbox.checked) {
+                alert("Please check the box if you have made your donation offline.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
