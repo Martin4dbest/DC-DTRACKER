@@ -17,22 +17,21 @@
         /* Sidebar */
         .sidebar {
             background-color: #0052D4;
-            width: 230px; /* Reduced width for more space */
+            width: 230px;
             height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            padding: 30px 20px; /* Increased padding for better spacing */
+            padding: 30px 20px;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
             color: #fff;
             display: flex;
             flex-direction: column;
-            
         }
 
         .sidebar h1 {
             font-size: 1.5em;
-            margin-bottom: 30px; /* More space between title and links */
+            margin-bottom: 30px;
             text-align: center;
             color: #fff;
         }
@@ -41,7 +40,7 @@
             display: block;
             color: #fff;
             text-decoration: none;
-            margin: 15px 0; /* Increased margin for better spacing */
+            margin: 15px 0;
             padding: 12px;
             border-radius: 8px;
             transition: background-color 0.3s;
@@ -53,20 +52,20 @@
 
         /* Main Content */
         .content {
-            margin-left: 260px; /* Adjusted based on sidebar width */
-            padding: 40px; /* Increased padding */
+            margin-left: 260px;
+            padding: 40px;
             width: calc(100% - 260px);
             background-color: #f4f4f9;
         }
 
         .content h2 {
-            font-size: 2.5em;
+            font-size: 1.8em;
             margin-bottom: 20px;
             color: #0052D4;
         }
 
         .content h3 {
-            font-size: 1.8em;
+            font-size: 1.2em;
             margin-bottom: 15px;
             color: #333;
         }
@@ -103,7 +102,7 @@
         .button {
             background-color: #0072ff;
             color: #fff;
-            padding: 10px 15px;
+            padding: 5px 10px;
             border-radius: 5px;
             text-decoration: none;
             transition: background-color 0.3s;
@@ -193,7 +192,6 @@
     <!-- Main Content -->
     <div class="content">
         <h2>Admin Dashboard</h2>
-
         <!-- Recent Donations -->
         <h3>Recent Donations</h3>
         <div class="table-container">
@@ -212,7 +210,7 @@
                     <tr>
                         <td>{{ donation.user.name }}</td>
                         <td>{{ donation.amount }}</td>
-                        <td>{{ donation.currency }}</td> <!-- Dynamically display currency -->
+                        <td>{{ donation.currency }}</td>
                         <td>{{ donation.donation_date }}</td>
                         <td>
                             <form action="{{ url_for('delete_donation', donation_id=donation.id) }}" method="POST" style="display:inline;">
@@ -222,7 +220,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4">No donations found.</td>
+                        <td colspan="5">No donations found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -238,7 +236,7 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Role</th>
-                        
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -253,10 +251,15 @@
                                 (Partner)
                             {% endif %}
                         </td>
-
-
-
                         <td>
+                            {% if not user.is_admin %}  <!-- Show buttons only for non-admin users -->
+                                {% if user.pledged_amount %}
+                                    <a href="{{ url_for('update_pledge', user_id=user.id) }}" class="button" style="background-color: gold; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Pledge Pending</a>
+                                {% else %}
+                                    <a href="{{ url_for('add_pledge', user_id=user.id) }}" class="button" style="background-color: green; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Add Pledge</a>
+
+                                {% endif %}
+                            {% endif %}
                             <a href="#" class="button view-details" data-id="{{ user.id }}">View Details</a>
                             <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
                                 <button type="submit" class="delete-button">Delete</button>
@@ -309,6 +312,8 @@
             </div>
         </div>
     </div>
+</body>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

@@ -25,13 +25,13 @@
             left: 0;
             padding: 30px 20px;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
-            color: #fff;
+            color: greenyellow;
             display: flex;
             flex-direction: column;
         }
     
         .sidebar h1 {
-            font-size: 1.8em;
+            font-size: 0.8em;
             margin-bottom: 40px;
             text-align: center;
             font-weight: 300;
@@ -39,7 +39,7 @@
     
         .sidebar a {
             display: block;
-            color: #fff;
+            color: gold;
             text-decoration: none;
             margin: 20px 0;
             padding: 15px;
@@ -63,9 +63,9 @@
         }
     
         h2 {
-            font-size: 2.5em;
-            margin-bottom: 30px;
-            color: #003C8F;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: green;
             font-weight: 400;
         }
     
@@ -115,9 +115,9 @@
         /* Account Details Section */
         #account-details {
             display: none;
-            margin-top: 20px;
+            margin-top: 10px;
             background-color: #f1f5fc;
-            padding: 20px;
+            padding: 10px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
@@ -146,14 +146,14 @@
         }
     
         .welcome-message h1 {
-            font-size: 3em;
+            font-size: 2.5em;
             color: #003C8F;
             font-weight: 700;
         }
     
         .welcome-message p {
-            font-size: 1.5em;
-            color: #333;
+            font-size: 1em;
+            color: purple;
             font-style: italic;
         }
     
@@ -205,7 +205,11 @@
             <p>Track your donations seamlessly and partner with us in spreading the gospel.</p>
         </div>
 
-        <h2>Make a Donation</h2>
+        
+        <!-- Donation Page -->
+         <h2>Partner: {{ user.name }}</h2>
+         <p>Pledged Amount: {{ user.pledged_amount }} {{ user.currency }}</p>
+
 
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
             <label>

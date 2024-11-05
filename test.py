@@ -5,8 +5,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash
-from sqlalchemy import Text
-
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from twilio.rest import Client
@@ -80,14 +78,10 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
     pledged_amount = db.Column(db.Numeric(10, 2), default=0.00)
     pledge_currency = db.Column(db.String(3), default="USD")
-
     #pledges = db.relationship('Pledge', backref='user', cascade="all, delete-orphan")
-    #pledges = db.relationship('Pledge', backref='donor', cascade="all, delete-orphan")
-    pledges = db.relationship('Pledge', back_populates='donor', cascade="all, delete-orphan")
-    
+    pledges = db.relationship('Pledge', backref='donor', cascade="all, delete-orphan")
 
     
 
@@ -108,13 +102,9 @@ class Donation(db.Model):
     amount = db.Column(db.Float, nullable=False)
     currency = db.Column(db.String(50), default='USD')
     donation_date = db.Column(db.Date, nullable=False, default=date.today) 
-
     user = db.relationship("User", backref="donations")
     #user = db.relationship('User', backref='pledges')
-    
 
-
-'''
 
 class Pledge(db.Model):
     __tablename__ = 'pledge'
@@ -122,20 +112,6 @@ class Pledge(db.Model):
     amount = db.Column(db.Float, nullable=False)
     date_pledged = db.Column(db.Date, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-'''
-class Pledge(db.Model):
-    __tablename__ = 'pledges'
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    pledged_amount = db.Column(db.Numeric)  # Ensure this attribute is defined
-    pledge_currency = db.Column(db.String)  # Example additional attribute
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
-    # Relationship to User model
-    #user = db.relationship('User', backref='pledges')
-    donor = db.relationship('User', back_populates='pledges')  # This should reference 'pledges' in User
     
     
 
@@ -279,12 +255,11 @@ def login():
 
     return render_template('login.html')
 
+
+# Donation route
 @app.route("/donate", methods=["GET", "POST"])
 @login_required
 def donate():
-    user = get_current_user()  # Retrieve the current user
-    app.logger.debug(f"User object: {user}")  # Log the user object to see its attributes
-
     if request.method == "POST":
         user_id = session.get("user_id")
 
@@ -334,16 +309,9 @@ def donate():
 
         if request.form.get("show_account"):
             # Logic to show bank account details
-            return render_template("donate.html", user=user, show_account_details=True)
+            return render_template("donate.html", show_account_details=True)
 
-    return render_template("donate.html", user=user, show_account_details=False)
-
-
-def get_current_user():
-    user_id = session.get("user_id")
-    return User.query.get(user_id) if user_id else None  # Adjust according to your ORM
-
-
+    return render_template("donate.html", show_account_details=False)
 
 
 # Donation success route
@@ -570,49 +538,32 @@ def add_pledge():
 
     return render_template('add_pledge.html')  # Render the form for adding pledges
 
-
-
-
-def get_user_by_id(user_id):
-    return User.query.get(user_id)  
-
-
-@app.route('/update_pledge/<int:user_id>', methods=['GET', 'POST'])
-def update_pledge(user_id):
+@app.route('/update_pledge/<int:pledge_id>', methods=['GET', 'POST'])
+def update_pledge(pledge_id):
+    pledge = Pledge.query.get_or_404(pledge_id)  # Fetch pledge or return a 404 error
     if request.method == 'POST':
-        pledged_amount = request.form['pledged_amount']
-        currency = request.form['currency']
+        # Handling form submission
+        if request.form:
+            pledge.pledged_amount = request.form.get('pledged_amount')  # Update the amount from form
+            pledge.pledge_currency = request.form.get('currency', pledge.pledge_currency)  # Update currency if provided
+            
+            db.session.commit()
+            flash('Pledge updated successfully!')
+            return redirect(url_for('admin_dashboard'))  # Redirect to admin dashboard
         
-        # Update the pledge in the database
-        update_user_pledge(user_id, pledged_amount, currency)
+        # Handling JSON submission
+        else:
+            data = request.get_json()
+            pledged_amount = data.get('pledged_amount')
+            currency = data.get('currency', pledge.pledge_currency)  # Default to existing currency if not provided
 
-        flash('Pledge updated successfully!')
-        return redirect(url_for('admin_dashboard'))
+            pledge.pledged_amount += float(pledged_amount)
+            pledge.pledge_currency = currency
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Pledge updated successfully.'})
 
-    # Fetch the user and current pledge details
-    user = get_user_by_id(user_id)
-    current_pledge = get_current_pledge(user_id)
-    return render_template('update_pledge.html', user=user, current_pledge=current_pledge)
-
-
-def get_current_pledge(user_id):
-    return Pledge.query.filter_by(user_id=user_id).first()
-
-
-
-
-def update_user_pledge(user_id, pledged_amount, currency):
-    # Logic to find the pledge associated with the user and update it
-    pledge = Pledge.query.filter_by(user_id=user_id).first()
-    if pledge:
-        pledge.pledged_amount = float(pledged_amount)
-        pledge.pledge_currency = currency
-        db.session.commit()
-
-
-def get_current_pledge(user_id):
-    # Logic to retrieve the current pledge for the user
-    return Pledge.query.filter_by(user_id=user_id).first()
+    return render_template('update_pledge.html', pledge=pledge)  # Render the form for updating pledges
 
 
 @app.route('/success')
