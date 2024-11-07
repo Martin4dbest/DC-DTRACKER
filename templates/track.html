@@ -1,0 +1,16 @@
+<table>
+   <thead>
+       <tr>
+           <th>User Name</th>
+           <th>Pledge Amount</th>
+       </tr>
+   </thead>
+   <tbody>
+       {% for pledge_data in pledges %}
+           <tr>
+               <td>{{ pledge_data.user.name }}</td>
+               <td>{{ pledge_data.pledge.amount }}</td>
+           </tr>
+       {% endfor %}
+   </tbody>
+</table>

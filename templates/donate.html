@@ -190,7 +190,6 @@
     <div class="sidebar">
         <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
         <h1>Partner</h1>
-        <a href="#">Track Your Donations</a>
         <a href="#">Church Updates</a>
         <a href="#">Recent Donations</a>
         <a href="{{ url_for('logout') }}">Logout</a>
@@ -208,7 +207,9 @@
         
         <!-- Donation Page -->
          <h2>Partner: {{ user.name }}</h2>
-         <p>Pledged Amount: {{ user.pledged_amount }} {{ user.currency }}</p>
+         <p>Pledged Amount: {{ user.pledged_amount }} {{ user.pledge_currency }}</p>
+         
+
 
 
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">

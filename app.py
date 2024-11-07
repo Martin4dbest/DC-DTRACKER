@@ -6,6 +6,7 @@ from flask_mail import Mail, Message
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash
 from sqlalchemy import Text
+from sqlalchemy import Column, Boolean, DateTime, DECIMAL
 
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -61,33 +62,31 @@ with app.app_context():
         print(f"Database connection failed: {e}")
 
 '''
-
-# User model with password handling
 class User(db.Model):
-    __tablename__ = 'user'  # Table name should match your database table name
+    __tablename__ = 'user'
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), nullable=False)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    address = db.Column(db.String(200), nullable=True)
-    country = db.Column(db.String(100), nullable=True)
-    state = db.Column(db.String(100), nullable=True)
-    church_branch = db.Column(db.String(100), nullable=False)
-    birthday = db.Column(db.Date, nullable=True)  # Year, month, and day optional
-    password_hash = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(200))
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(255), unique=True)
+    address = db.Column(db.String(500), nullable=True)
+    country = db.Column(db.String(150))
+    state = db.Column(db.String(150), nullable=True)
+    church_branch = db.Column(db.String(150))
+    birthday = db.Column(db.Date, nullable=True)
+    password_hash = db.Column(db.String(255))
     is_admin = db.Column(db.Boolean, default=False)
     is_super_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    pledged_amount = db.Column(db.Numeric(10, 2), default=0.00)
+    pledged_amount = db.Column(db.Float, default=0.0)
     pledge_currency = db.Column(db.String(3), default="USD")
+    paid_status = db.Column(db.Boolean, default=False)
 
-    #pledges = db.relationship('Pledge', backref='user', cascade="all, delete-orphan")
-    #pledges = db.relationship('Pledge', backref='donor', cascade="all, delete-orphan")
+
+    # Relationships
     pledges = db.relationship('Pledge', back_populates='donor', cascade="all, delete-orphan")
-    
 
     
 
@@ -279,6 +278,7 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route("/donate", methods=["GET", "POST"])
 @login_required
 def donate():
@@ -336,7 +336,11 @@ def donate():
             # Logic to show bank account details
             return render_template("donate.html", user=user, show_account_details=True)
 
-    return render_template("donate.html", user=user, show_account_details=False)
+    # Retrieve all pledges made by users from the database by joining User and Pledge
+    pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
+
+    return render_template("donate.html", user=user, pledges=pledges, show_account_details=False)
+
 
 
 def get_current_user():
@@ -429,7 +433,6 @@ def admin_login():
     return render_template('admin_login.html')
 
 
-# Admin dashboard
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 @admin_required
 def admin_dashboard():
@@ -446,12 +449,12 @@ def admin_dashboard():
             flash("Bulk email sent successfully!", "success")
         return redirect(url_for("admin_dashboard"))
 
-    # Fetch all donations and users using SQLAlchemy
-    donations = Donation.query.all()
+    # Fetch all donations and users
     users = User.query.all()
+    donations = Donation.query.all()
     total_donations = sum(donation.amount for donation in donations)
 
-    return render_template("admin_dashboard.html", recent_donations=donations, users=users, total_donations=total_donations)
+    return render_template("admin_dashboard.html", users=users, recent_donations=donations, total_donations=total_donations)
 
 
 
@@ -508,6 +511,8 @@ def delete_user(user_id):
     return redirect(url_for("admin_dashboard"))
 
 
+
+
 # Route to delete a donation
 @app.route("/delete_donation/<int:donation_id>", methods=["POST"])
 @admin_required
@@ -524,7 +529,6 @@ def delete_donation(donation_id):
     return redirect(url_for("admin_dashboard"))
 
 
-
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
     if request.method == 'POST':
@@ -534,19 +538,22 @@ def add_pledge():
             pledged_amount = request.form['pledged_amount']
             pledge_currency = request.form['currency']
 
-            # Create a new pledge record
-            new_pledge = Pledge(
-                user_id=user_id,
-                pledged_amount=float(pledged_amount),  # Ensure this is a float
-                pledge_currency=pledge_currency
-            )
+            # Fetch the user from the User table
+            user = User.query.get(user_id)
 
-            # Add to the database session and commit
-            db.session.add(new_pledge)
-            db.session.commit()
+            if user:
+                # Update the pledged amount and currency in the User table
+                user.pledged_amount = float(pledged_amount)  # Ensure this is a float
+                user.pledge_currency = pledge_currency
 
-            flash('Pledge added successfully!')
-            return redirect(url_for('admin_dashboard'))  # Redirect to the admin dashboard or success page
+                # Commit the changes to the database
+                db.session.commit()
+
+                flash('Pledge added successfully!')
+                return redirect(url_for('admin_dashboard'))  # Redirect to the admin dashboard or success page
+            else:
+                flash('User not found!', 'danger')
+                return redirect(url_for('admin_dashboard'))  # Redirect in case user not found
         
         # Handling JSON submission
         else:
@@ -554,19 +561,21 @@ def add_pledge():
             user_id = data.get('user_id')
             pledged_amount = data.get('pledged_amount')
             pledge_currency = data.get('currency', 'USD')  # Default to 'USD' if currency not provided
-            
-            # Create a new pledge record
-            new_pledge = Pledge(
-                user_id=user_id,
-                pledged_amount=float(pledged_amount),
-                pledge_currency=pledge_currency
-            )
 
-            # Add to the database session and commit
-            db.session.add(new_pledge)
-            db.session.commit()
-            
-            return jsonify({'success': True, 'message': 'Pledge added successfully.'})
+            # Fetch the user from the User table
+            user = User.query.get(user_id)
+
+            if user:
+                # Update the pledged amount and currency in the User table
+                user.pledged_amount = float(pledged_amount)
+                user.pledge_currency = pledge_currency
+
+                # Commit the changes to the database
+                db.session.commit()
+
+                return jsonify({'success': True, 'message': 'Pledge added successfully.'})
+            else:
+                return jsonify({'success': False, 'message': 'User not found.'}), 404
 
     return render_template('add_pledge.html')  # Render the form for adding pledges
 
@@ -613,6 +622,29 @@ def update_user_pledge(user_id, pledged_amount, currency):
 def get_current_pledge(user_id):
     # Logic to retrieve the current pledge for the user
     return Pledge.query.filter_by(user_id=user_id).first()
+
+
+
+@app.route('/track')
+def track():
+    # Fetch all users with their donations (pledges)
+    users_with_pledges = User.query.join(Donation).all()
+
+    # Create a list of dictionaries with user and pledge data
+    pledges_data = []
+    for user in users_with_pledges:
+        for pledge in user.donations:  # `donations` backref on User model
+            pledges_data.append({
+                'user': user,
+                'pledge': pledge
+            })
+    
+    # Print data to check if it's correct
+    print(pledges_data)  # Debug line, you can check this in your terminal or console
+    
+    return render_template('track.html', pledges=pledges_data)
+
+
 
 
 @app.route('/success')
