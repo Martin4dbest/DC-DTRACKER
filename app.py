@@ -584,44 +584,65 @@ def add_pledge():
 
 def get_user_by_id(user_id):
     return User.query.get(user_id)  
-
-
 @app.route('/update_pledge/<int:user_id>', methods=['GET', 'POST'])
 def update_pledge(user_id):
     if request.method == 'POST':
-        pledged_amount = request.form['pledged_amount']
-        currency = request.form['currency']
-        
-        # Update the pledge in the database
-        update_user_pledge(user_id, pledged_amount, currency)
+        pledged_amount = request.form.get('pledged_amount')
+        currency = request.form.get('currency')
 
-        flash('Pledge updated successfully!')
+        # Fetch the user from the database
+        user = db.session.get(User, user_id)
+
+        if user:
+            # Fetch the current pledge for the user
+            pledge = Pledge.query.filter_by(user_id=user_id).first()
+
+            if pledged_amount is None or currency is None:
+                flash('Missing pledged amount or currency!')
+                return redirect(url_for('update_pledge', user_id=user_id))
+
+            # If the payment is made, reset the pledge to 0
+            if 'payment_made' in request.form:
+                reset_pledge_to_zero(user_id)
+                flash('Payment confirmed, pledge reset to 0!')
+            else:
+                # Otherwise, update the pledge
+                if pledge:
+                    pledge.pledged_amount = float(pledged_amount)
+                    pledge.pledge_currency = currency
+                    db.session.commit()
+                    flash('Pledge updated successfully!')
+                else:
+                    flash('No pledge found for this user.', 'error')
+
+            return redirect(url_for('admin_dashboard'))  # Redirect to admin dashboard
+
+        flash('User not found.', 'error')
         return redirect(url_for('admin_dashboard'))
 
-    # Fetch the user and current pledge details
-    user = get_user_by_id(user_id)
+    # If the request is GET, render the page to show the user info or the form
+    user = db.session.get(User, user_id)
     current_pledge = get_current_pledge(user_id)
     return render_template('update_pledge.html', user=user, current_pledge=current_pledge)
 
-
-def get_current_pledge(user_id):
-    return Pledge.query.filter_by(user_id=user_id).first()
-
-
-
-
-def update_user_pledge(user_id, pledged_amount, currency):
-    # Logic to find the pledge associated with the user and update it
+def reset_pledge_to_zero(user_id):
     pledge = Pledge.query.filter_by(user_id=user_id).first()
     if pledge:
-        pledge.pledged_amount = float(pledged_amount)
-        pledge.pledge_currency = currency
+        pledge.pledged_amount = 0  # Reset pledge to 0
+        pledge.pledge_currency = 'USD'  # Optionally reset to default currency
         db.session.commit()
 
-
 def get_current_pledge(user_id):
-    # Logic to retrieve the current pledge for the user
     return Pledge.query.filter_by(user_id=user_id).first()
+
+
+
+
+# Fetch user by ID
+
+def get_user_by_id(user_id):
+    return db.session.get(User, user_id) if user_id else None
+
 
 
 
