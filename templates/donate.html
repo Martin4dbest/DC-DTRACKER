@@ -242,7 +242,8 @@
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
             <label style="margin-top: 30px; display: block;">
                 <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()"> 
-                Done with payment? Please Confirm your paid donation here
+                <p style="color: gold; margin-left: 20px;">Thank you for your support! Please check the box to confirm your donation now that payment is complete.</p>
+                
             </label>
         
             <div id="amount-entry" style="margin-top: 10px; padding: 10px;">
@@ -273,7 +274,7 @@
                     <option value="AED">&#163; AED - UAE Dirham</option>
                 </select>
             
-                <label class="calendar-label" for="date_donated" style="font-size: 0.9em; margin-top: 8px;">Date:</label><br>
+                <label class="calendar-label" for="date_donated" style="font-size: 0.9em; margin-top: 8px;">Payment Date:</label><br>
                 <input type="date" id="date_donated" name="date_donated" required style="width: 30%; padding: 8px; font-size: 0.9em;">
             
                 <button type="submit" style="margin-top: 10px; padding: 5px 10px; background-color: blue; color: white; font-size: 1em; font-weight: 500; border: none; border-radius: 5px; cursor: pointer; width: 20%; transition: background-color 0.3s ease;">

@@ -1,35 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Pledge</title>
+    <style>
+        /* Basic reset and font styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        /* Main container styling */
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header styling */
+        h1 {
+            color: #333;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        /* User info styling */
+        p {
+            color: #555;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Form and input styling */
+        form label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        form input[type="number"],
+        form select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        /* Button styling */
+        .button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            color: #ffffff;
+        }
+
+        .button.update {
+            background-color: #007bff;
+        }
+
+        .button.update:hover {
+            background-color: #0056b3;
+        }
+
+        .button.confirm {
+            background-color: #28a745;
+        }
+
+        .button.confirm:hover {
+            background-color: #218838;
+        }
+
+        /* Media queries for responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Update or Mark Pledge as Pending</h1>
 
-    {% if user %}
-        <p>User: {{ user.name }} (Email: {{ user.email }})</p>
-        <form action="{{ url_for('update_pledge', user_id=user.id) }}" method="POST">
-            <label for="pledged_amount">Pledged Amount:</label>
-            <input type="number" id="pledged_amount" name="pledged_amount" required min="0" step="0.01"
-                   value="{{ current_pledge.pledged_amount if current_pledge else '' }}">
+    <div class="container">
+        <h1>Confirm and Reset Paid Pledge</h1>
 
-            <label for="currency">Currency:</label>
-            <select id="currency" name="currency" required>
-                <option value="USD" {% if current_pledge and current_pledge.pledge_currency == 'USD' %} selected {% endif %}>$ USD</option>
-                <option value="EUR" {% if current_pledge and current_pledge.pledge_currency == 'EUR' %} selected {% endif %}>€ EUR</option>
-                <option value="GBP" {% if current_pledge and current_pledge.pledge_currency == 'GBP' %} selected {% endif %}>£ GBP</option>
-                <option value="NGN" {% if current_pledge and current_pledge.pledge_currency == 'NGN' %} selected {% endif %}>₦ NGN</option>
-                <option value="GHS" {% if current_pledge and current_pledge.pledge_currency == 'GHS' %} selected {% endif %}>₵ GHS</option>
-            </select>
-            
-            <!-- Button to confirm payment and reset pledge -->
-            <button type="submit" class="button" name="payment_made" value="true" style="background-color: #28a745;">Confirm Payment (Reset to 0)</button>
-            
-            <!-- Button to update the pledge -->
-            <button type="submit" class="button">Update Pledge</button>
-        </form>
-    {% else %}
-        <p>User not found.</p>
-    {% endif %}
+        {% if user %}
+            <p>User: {{ user.name }} (Email: {{ user.email }})</p>
+            <form action="{{ url_for('update_pledge', user_id=user.id) }}" method="POST">
+                <label for="pledged_amount">Pledged Amount:</label>
+                <input type="number" id="pledged_amount" name="pledged_amount" required min="0" step="0.01"
+                       value="{{ current_pledge.pledged_amount if current_pledge else '' }}">
+
+                <label for="currency">Currency:</label>
+                <select id="currency" name="currency" required>
+                    <option value="USD" {% if current_pledge and current_pledge.pledge_currency == 'USD' %} selected {% endif %}>$ USD</option>
+                    <option value="EUR" {% if current_pledge and current_pledge.pledge_currency == 'EUR' %} selected {% endif %}>€ EUR</option>
+                    <option value="GBP" {% if current_pledge and current_pledge.pledge_currency == 'GBP' %} selected {% endif %}>£ GBP</option>
+                    <option value="NGN" {% if current_pledge and current_pledge.pledge_currency == 'NGN' %} selected {% endif %}>₦ NGN</option>
+                    <option value="GHS" {% if current_pledge and current_pledge.pledge_currency == 'GHS' %} selected {% endif %}>₵ GHS</option>
+                </select>
+                
+                <!-- Button to confirm payment and reset pledge -->
+                <button type="submit" class="button confirm" name="payment_made" value="true">Confirm Payment (Reset to 0)</button>
+                
+                <!-- Button to update the pledge -->
+                <button type="submit" class="button update">Update Pledge</button>
+            </form>
+        {% else %}
+            <p>User not found.</p>
+        {% endif %}
+    </div>
+
 </body>
 </html>
