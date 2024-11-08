@@ -52,6 +52,8 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 
+
+
 ''''
 #Verify the Database Connection: 
 with app.app_context():
@@ -83,10 +85,13 @@ class User(db.Model):
     pledged_amount = db.Column(db.Float, default=0.0)
     pledge_currency = db.Column(db.String(3), default="USD")
     paid_status = db.Column(db.Boolean, default=False)
+    medal = db.Column(db.String(100), nullable=True)  
 
 
     # Relationships
     pledges = db.relationship('Pledge', back_populates='donor', cascade="all, delete-orphan")
+
+
 
     
 
@@ -109,6 +114,7 @@ class Donation(db.Model):
     donation_date = db.Column(db.Date, nullable=False, default=date.today) 
 
     user = db.relationship("User", backref="donations")
+    medal = db.Column(db.String(50))  # field to store medal type
     #user = db.relationship('User', backref='pledges')
     
 
@@ -282,8 +288,12 @@ def login():
 @app.route("/donate", methods=["GET", "POST"])
 @login_required
 def donate():
-    user = get_current_user()  # Retrieve the current user
+    user = get_current_user()  # Retrieve the current logged-in user
     app.logger.debug(f"User object: {user}")  # Log the user object to see its attributes
+
+
+    # Ensure the user object has the latest pledge data, including the medal
+    db.session.refresh(user)  # Refresh the user to make sure we have the latest data from the database
 
     if request.method == "POST":
         user_id = session.get("user_id")
@@ -340,6 +350,7 @@ def donate():
     pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
 
     return render_template("donate.html", user=user, pledges=pledges, show_account_details=False)
+
 
 
 
@@ -537,6 +548,7 @@ def add_pledge():
             user_id = request.form['user_id']  # Get the user ID from the form
             pledged_amount = request.form['pledged_amount']
             pledge_currency = request.form['currency']
+            medal = request.form.get('medal')  # Get the selected medal from the form
 
             # Fetch the user from the User table
             user = User.query.get(user_id)
@@ -545,6 +557,7 @@ def add_pledge():
                 # Update the pledged amount and currency in the User table
                 user.pledged_amount = float(pledged_amount)  # Ensure this is a float
                 user.pledge_currency = pledge_currency
+                user.medal = medal  # Save the selected medal type
 
                 # Commit the changes to the database
                 db.session.commit()
@@ -561,6 +574,8 @@ def add_pledge():
             user_id = data.get('user_id')
             pledged_amount = data.get('pledged_amount')
             pledge_currency = data.get('currency', 'USD')  # Default to 'USD' if currency not provided
+            medal = data.get('medal')  # Medal type provided in JSON data
+
 
             # Fetch the user from the User table
             user = User.query.get(user_id)
@@ -569,6 +584,7 @@ def add_pledge():
                 # Update the pledged amount and currency in the User table
                 user.pledged_amount = float(pledged_amount)
                 user.pledge_currency = pledge_currency
+                user.medal = medal  # Save the selected medal type
 
                 # Commit the changes to the database
                 db.session.commit()
@@ -584,6 +600,8 @@ def add_pledge():
 
 def get_user_by_id(user_id):
     return User.query.get(user_id)  
+
+
 @app.route('/update_pledge/<int:user_id>', methods=['GET', 'POST'])
 def update_pledge(user_id):
     if request.method == 'POST':
@@ -645,7 +663,7 @@ def get_user_by_id(user_id):
 
 
 
-
+'''
 @app.route('/track')
 def track():
     # Fetch all users with their donations (pledges)
@@ -665,8 +683,43 @@ def track():
     
     return render_template('track.html', pledges=pledges_data)
 
+'''
+'''
+# Donation and Medal assignment functions
+def convert_to_base_currency(amount, currency, base_currency='USD'):
+    try:
+        if currency != base_currency:
+            return c.convert(currency, base_currency, amount)
+        return amount
+    except RatesNotAvailableError:
+        return 0
 
+def calculate_total_donations_in_base(partner_donations, base_currency='USD'):
+    total_in_base_currency = 0
+    for donation in partner_donations:
+        converted_amount = convert_to_base_currency(donation['amount'], donation['currency'], base_currency)
+        total_in_base_currency += converted_amount
+    return total_in_base_currency
 
+def assign_medal(total_in_base_currency):
+    if total_in_base_currency >= 500000:
+        return "Crown Jewel Medal"
+    elif total_in_base_currency >= 250000:
+        return "Pearl Medal"
+    elif total_in_base_currency >= 100000:
+        return "Sapphire Medal"
+    elif total_in_base_currency >= 50000:
+        return "Emerald Medal"
+    elif total_in_base_currency >= 10000:
+        return "Ruby Medal"
+    elif total_in_base_currency >= 1000:
+        return "Amethyst Medal"
+    else:
+        return "Contributor Medal"
+
+        
+
+'''
 
 @app.route('/success')
 def success():
@@ -674,6 +727,7 @@ def success():
 
 
     
+
 
 
 # Logout route
