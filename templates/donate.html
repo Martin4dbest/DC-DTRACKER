@@ -26,13 +26,13 @@
             left: 0;
             padding: 20px 15px;
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-            color: greenyellow;
+            color: gold;
             display: flex;
             flex-direction: column;
         }
     
         .sidebar h1 {
-            font-size: 0.7em;
+            font-size: 1.3em;
             margin-bottom: 30px;
             text-align: center;
             font-weight: 300;
@@ -40,7 +40,7 @@
     
         .sidebar a {
             display: block;
-            color: gold;
+            color: white;
             text-decoration: none;
             margin: 10px 0;
             padding: 10px;
@@ -64,7 +64,7 @@
         }
     
         h2 {
-            font-size: 1.2em;
+            font-size: 1.5em;
             margin-bottom: 15px;
             color: green;
             font-weight: 400;
@@ -170,7 +170,7 @@
             }
     
             h2 {
-                font-size: 1.5em;
+                font-size: 2.5em;
             }
     
             input[type="number"],
@@ -242,7 +242,7 @@
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
             <label style="margin-top: 30px; display: block;">
                 <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()"> 
-                <p style="color: gold; margin-left: 20px;">Thank you for your support! Please check the box to confirm your donation now that payment is complete.</p>
+                <p style="color: blue; margin-left: 20px;">Thank you for your support! Please check the box to confirm your donation now that payment is complete.</p>
                 
             </label>
         
