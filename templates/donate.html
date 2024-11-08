@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dominion City Partnership Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
     <style>
         /* General styles here */
         body {
@@ -18,21 +19,21 @@
         /* Sidebar */
         .sidebar {
             background-color: #003C8F;
-            width: 250px;
+            width: 220px; /* Reduced width */
             height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            padding: 30px 20px;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+            padding: 20px 15px; /* Reduced padding */
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
             color: greenyellow;
             display: flex;
             flex-direction: column;
         }
     
         .sidebar h1 {
-            font-size: 0.8em;
-            margin-bottom: 40px;
+            font-size: 0.7em; /* Slightly smaller */
+            margin-bottom: 30px; /* Reduced margin */
             text-align: center;
             font-weight: 300;
         }
@@ -41,9 +42,9 @@
             display: block;
             color: gold;
             text-decoration: none;
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 8px;
+            margin: 10px 0; /* Reduced margin */
+            padding: 10px; /* Reduced padding */
+            border-radius: 5px; /* Smaller border radius */
             transition: background-color 0.3s ease;
             font-weight: 500;
         }
@@ -54,23 +55,23 @@
     
         /* Main Content */
         .content {
-            margin-left: 270px;
-            padding: 50px;
-            width: calc(100% - 270px);
+            margin-left: 240px; /* Adjusted to sidebar width */
+            padding: 30px; /* Reduced padding */
+            width: calc(100% - 240px);
             background-color: #f9fafc;
             color: #333;
             min-height: 100vh;
         }
     
         h2 {
-            font-size: 1.5em;
-            margin-bottom: 20px;
+            font-size: 1.2em; /* Reduced size */
+            margin-bottom: 15px; /* Reduced margin */
             color: green;
             font-weight: 400;
         }
     
         label {
-            font-size: 1.2em;
+            font-size: 1em; /* Reduced size */
             font-weight: 500;
             margin-bottom: 5px;
             display: block;
@@ -80,29 +81,29 @@
         input[type="number"],
         select,
         input[type="date"] {
-            padding: 12px;
-            width: 500px; /* Reduced width */
-            border-radius: 8px;
+            padding: 10px; /* Reduced padding */
+            width: 90%; /* Relative width */
+            border-radius: 5px; /* Smaller border radius */
             border: 1px solid #ccc;
-            margin-bottom: 2px; /* Reduced spacing */
-            font-size: 1em;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: block; /* Ensure each input appears on a new line */
-            margin-left: auto; /* Center the fields */
-            margin-right: auto; /* Center the fields */
+            margin-bottom: 8px; /* Adjusted spacing */
+            font-size: 0.9em; /* Reduced font size */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
         }
-
+    
         button {
             background-color: #0052D4;
             color: white;
-            padding: 12px 25px;
+            padding: 10px 20px; /* Reduced padding */
             border: none;
-            border-radius: 8px;
-            font-size: 1.2em;
+            border-radius: 5px; /* Smaller border radius */
+            font-size: 1em; /* Reduced font size */
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
     
         button:hover {
@@ -114,42 +115,42 @@
             display: none;
             margin-top: 10px;
             background-color: #f1f5fc;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 8px; /* Reduced padding */
+            border-radius: 5px; /* Smaller border radius */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
     
         /* Amount Entry Section */
         #amount-entry {
             display: none;
-            margin-top: 20px;
+            margin-top: 15px; /* Reduced margin */
         }
     
         /* Get Account Details Button */
         #show_account_btn {
-            margin-top: 20px;
-            padding: 12px 20px;
-            background-color: #dc3545;
+            margin-top: 15px; /* Reduced margin */
+            padding: 10px 15px; /* Reduced padding */
+            background-color: green;
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px; /* Smaller border radius */
             cursor: pointer;
         }
     
         /* Welcome message */
         .welcome-message {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px; /* Reduced margin */
         }
     
         .welcome-message h1 {
-            font-size: 2.5em;
+            font-size: 2em; /* Reduced font size */
             color: #003C8F;
             font-weight: 700;
         }
     
         .welcome-message p {
-            font-size: 1em;
+            font-size: 0.9em; /* Reduced font size */
             color: purple;
             font-style: italic;
         }
@@ -157,7 +158,7 @@
         /* Calendar input */
         .calendar-label {
             font-weight: 500;
-            margin-top: 20px;
+            margin-top: 15px; /* Reduced margin */
         }
     
         /* Responsive adjustments */
@@ -172,14 +173,22 @@
     
             .content {
                 margin-left: 0;
-                padding: 20px;
+                padding: 15px; /* Reduced padding for smaller screens */
             }
     
             h2 {
-                font-size: 2em;
+                font-size: 1.5em; /* Slightly larger for mobile */
+            }
+    
+            input[type="number"],
+            select,
+            input[type="date"] {
+                width: 100%; /* Full width on small screens */
             }
         }
     </style>
+    
+    
 </head>
 <body>
     <!-- Sidebar -->
@@ -207,34 +216,44 @@
         <h3>
             Medal: 
             {% if user.medal == 'Platinum Partner' %}
-                <span style="color: #7a7272;">📱 Platinum Partner</span>
+                <span class="medal medal-platinum">💎 Platinum Partner</span>
             {% elif user.medal == 'Gold Partner' %}
-                <span style="color: gold;">🏅 Gold Partner</span>
+                <span class="medal medal-gold">🏆 Gold Partner</span>
             {% elif user.medal == 'Silver Partner' %}
-                <span style="color: silver;">🏅 Silver Partner</span>
+                <span class="medal medal-silver">🥈 Silver Partner</span>
             {% elif user.medal == 'Bronze Partner' %}
-                <span style="color: #cd7f32;">🥉 Bronze Partner</span>
+                <span class="medal medal-bronze">🥉 Bronze Partner</span>
             {% elif user.medal == 'Supporter' %}
-                <span style="color: #007bff;">👨‍👩‍👧‍👦 Supporter</span>
+                <span class="medal medal-supporter">🤝 Supporter</span>
             {% elif user.medal == 'Friend' %}
-                <span style="color: #32cd32;">👳‍♂️ Friend</span>
+                <span class="medal medal-friend">🌱 Friend</span>
             {% elif user.medal == 'Contributor' %}
-                <span style="color: #3a2626;">🏇 Contributor</span>
+                <span class="medal medal-contributor">💼 Contributor</span>
             {% else %}
-                <span>Unknown Medal</span>
+                <span class="medal">🎖 Unknown Medal</span>
             {% endif %}
         </h3>
-
+        
         <p>Pledged Amount: {{ user.pledged_amount }} {{ user.pledge_currency }} </p>
-
+        
+        <button type="button" id="show_account_btn" onclick="showAccountDetails()" style="margin-bottom: 30px;">
+            Proceed to Make Payment
+        </button>
+        
+        <div id="account-details" style="margin-bottom: 30px;">
+            <h3>Bank Account Details</h3>
+            <p>Account Name: Dominion City</p>
+            <p>Account Number: 123456789</p>
+            <p>Bank Name: ABC Bank</p>
+        </div>
+        
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
-            <label>
+            <label style="margin-top: 30px; display: block;">
                 <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()"> 
-                Have you made your donation offline?
+                Done with payment? Please Confirm your paid donation here
             </label>
-            <br>
-
-            <div id="amount-entry">
+        
+            <div id="amount-entry" style="margin-top: 20px;">
                 <label for="amount">Enter the amount you donated:</label><br>
                 <input type="number" id="amount" name="amount" step="0.01" required><br>
                 
@@ -251,13 +270,16 @@
                     <option value="CHF">&#67;&#72;F (Swiss Franc)</option>
                     <option value="ZAR">&#82; ZAR (South African Rand)</option>
                     <option value="INR">&#8377; INR (Indian Rupee)</option>
-                    <option value="KES">&#75; KES (Kenyan Shilling)</option>
-                </select><br><br>
+                    <option value="BRL">&#82;&#36; BRL (Brazilian Real)</option>
+                </select><br>
+        
+                <label for="donation_date" class="calendar-label">Select donation date:</label><br>
+                <input type="date" id="donation_date" name="donation_date" required><br>
+        
+                <button type="submit" style="margin-top: 20px;">Confirm Donation</button>
             </div>
-
-            <button type="submit">Submit Donation</button>
         </form>
-    </div>
+        
 
     <script>
         function toggleFields() {
@@ -293,3 +315,7 @@
     </script>
 </body>
 </html>
+
+
+
+
