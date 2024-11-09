@@ -216,9 +216,21 @@
                         <td>{{ donation.currency }}</td>
                         <td>{{ donation.donation_date }}</td>
                         <td>
-                            <form action="{{ url_for('delete_donation', donation_id=donation.id) }}" method="POST" style="display:inline;">
+                            
+                            <form action="{{ url_for('delete_donation', donation_id=donation.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDeletion('donation')">
                                 <button type="submit" class="delete-button">Delete</button>
                             </form>
+                            <script>
+                                function confirmDeletion(type) {
+                                    if (type === 'user') {
+                                        return confirm("Are you sure you want to delete this user?");
+                                    } else if (type === 'donation') {
+                                        return confirm("Are you sure you want to delete this donation?");
+                                    }
+                                    return false;
+                                }
+                            </script>
+                            
                         </td>
                     </tr>
                     {% else %}
@@ -265,9 +277,21 @@
                                 {% endif %}
                             {% endif %}
                             <a href="#" class="button view-details" data-id="{{ user.id }}">View Details</a>
-                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                            
+                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDeletion('user')">
                                 <button type="submit" class="delete-button">Delete</button>
                             </form>
+                            <script>
+                                function confirmDeletion(type) {
+                                    if (type === 'user') {
+                                        return confirm("Are you sure you want to delete this user?");
+                                    } else if (type === 'donation') {
+                                        return confirm("Are you sure you want to delete this donation?");
+                                    }
+                                    return false;
+                                }
+                            </script>
+
                         </td>
                     </tr>
                     {% else %}
