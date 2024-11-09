@@ -141,18 +141,30 @@
                 <label for="phone">Phone:</label>
                 <input type="text" name="phone" required>
             </div>
+
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" name="password" required>
+            </div>
+
             <div class="form-group">
                 <label for="email">Email:</label>
                 <input type="email" name="email" required>
             </div>
+
+            <div class="form-group">
+                <label for="birthday">Birthday:</label>
+                <input type="date" name="birthday">
+            </div>
+
             <div class="form-group">
                 <label for="address">Address:</label>
                 <input type="text" name="address">
             </div>
 
             <div class="form-group">
-                <label for="birthday">Birthday:</label>
-                <input type="date" name="birthday">
+                <label for="church_branch">Local Church:</label>
+                <input type="text" name="church_branch" required>
             </div>
 
             <div class="form-group">
@@ -193,15 +205,7 @@
                 <label for="manual_state">Or type your state:</label>
                 <input type="text" id="manual_state" name="manual_state" placeholder="Type your state if not listed">
             </div>
-            <div class="form-group">
-                <label for="church_branch">Local Church:</label>
-                <input type="text" name="church_branch" required>
-            </div>
     
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" name="password" required>
-            </div>
             <button type="submit">Register</button>
             <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
         </form>
