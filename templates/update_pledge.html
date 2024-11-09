@@ -1,135 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Pledge</title>
-    <style>
-        /* Basic reset and font styling */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f9;
-        }
-
-        /* Main container styling */
-        .container {
-            max-width: 500px;
-            width: 100%;
-            padding: 2rem;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Header styling */
-        h1 {
-            color: #333;
-            font-size: 1.5rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
-        /* User info styling */
-        p {
-            color: #555;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        /* Form and input styling */
-        form label {
-            display: block;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-
-        form input[type="number"],
-        form select {
-            width: 100%;
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-            color: #333;
-        }
-
-        /* Button styling */
-        .button {
-            width: 100%;
-            padding: 0.75rem;
-            margin-top: 0.5rem;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            color: #ffffff;
-        }
-
-        .button.update {
-            background-color: #007bff;
-        }
-
-        .button.update:hover {
-            background-color: #0056b3;
-        }
-
-        .button.confirm {
-            background-color: #28a745;
-        }
-
-        .button.confirm:hover {
-            background-color: #218838;
-        }
-
-        /* Media queries for responsive design */
-        @media (max-width: 600px) {
-            .container {
-                padding: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h1>Confirm and Reset Paid Pledge</h1>
-
-        {% if user %}
-            <p>Partner: {{ user.name }} (Email: {{ user.email }})</p>
-            <form action="{{ url_for('update_pledge', user_id=user.id) }}" method="POST">
-                <label for="pledged_amount">Pledged Amount:</label>
-                <input type="number" id="pledged_amount" name="pledged_amount" required min="0" step="0.01"
-                       value="{{ current_pledge.pledged_amount if current_pledge else '' }}">
-
-                <label for="currency">Currency:</label>
-                <select id="currency" name="currency" required>
-                    <option value="USD" {% if current_pledge and current_pledge.pledge_currency == 'USD' %} selected {% endif %}>$ USD</option>
-                    <option value="EUR" {% if current_pledge and current_pledge.pledge_currency == 'EUR' %} selected {% endif %}>€ EUR</option>
-                    <option value="GBP" {% if current_pledge and current_pledge.pledge_currency == 'GBP' %} selected {% endif %}>£ GBP</option>
-                    <option value="NGN" {% if current_pledge and current_pledge.pledge_currency == 'NGN' %} selected {% endif %}>₦ NGN</option>
-                    <option value="GHS" {% if current_pledge and current_pledge.pledge_currency == 'GHS' %} selected {% endif %}>₵ GHS</option>
-                </select>
-                
-                <!-- Button to confirm payment and reset pledge -->
-                <button type="submit" class="button confirm" name="payment_made" value="true">Confirm Payment (Reset to 0)</button>
-                
-                <!-- Button to update the pledge -->
-                <button type="submit" class="button update">Update Pledge</button>
-            </form>
-        {% else %}
-            <p>User not found.</p>
-        {% endif %}
+<form method="POST" style="width: 400px; margin: 0 auto; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 20px;">
+    <div style="text-align: center; color: #0056b3; margin-bottom: 20px;">
+        <h2 style="font-size: 24px;">Partner Payment Verified</h2>
+        <p style="font-size: 16px; color: #333; margin-top: 5px;">Donation has been successfully settled.</p>
     </div>
-
-</body>
-</html>
+    <div style="margin-bottom: 20px;">
+        <label for="pledged_amount" style="display: block; font-size: 16px; margin-bottom: 5px; color: #555;">Pledged Amount:</label>
+        <input type="text" name="pledged_amount" value="{{ user.pledged_amount }}" disabled 
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; color: #333; background-color: #f9f9f9;">
+    </div>
+    <button type="submit" style="width: 100%; padding: 12px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.3s;">
+        Confirm Donation Settlement
+    </button>
+</form>

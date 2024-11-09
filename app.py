@@ -605,61 +605,53 @@ def get_user_by_id(user_id):
 @app.route('/update_pledge/<int:user_id>', methods=['GET', 'POST'])
 def update_pledge(user_id):
     if request.method == 'POST':
-        pledged_amount = request.form.get('pledged_amount')
-        currency = request.form.get('currency')
-
-        # Fetch the user from the database
-        user = db.session.get(User, user_id)
+        # Fetch the user's record from the User table
+        user = User.query.filter_by(id=user_id).first()
 
         if user:
-            # Fetch the current pledge for the user
-            pledge = Pledge.query.filter_by(user_id=user_id).first()
+            print(f"Before update - User ID {user_id} - Pledged Amount: {user.pledged_amount}")  # Debugging line
 
-            if pledged_amount is None or currency is None:
-                flash('Missing pledged amount or currency!')
-                return redirect(url_for('update_pledge', user_id=user_id))
+            # Reset pledged amount to zero
+            user.pledged_amount = 0
 
-            # If the payment is made, reset the pledge to 0
-            if 'payment_made' in request.form:
-                reset_pledge_to_zero(user_id)
-                flash('Payment confirmed, pledge reset to 0!')
+            try:
+                db.session.commit()  # Commit the change to the database
+                print(f"After update - User ID {user_id} - Pledged Amount: {user.pledged_amount}")  # Debugging line
+            except Exception as e:
+                print(f"Error committing to database: {e}")
+                db.session.rollback()  # Rollback in case of an error
+
+            # Verify if the change was successful
+            updated_user = User.query.filter_by(id=user_id).first()
+            if updated_user and updated_user.pledged_amount == 0:
+                flash(f'Pledge for user {user_id} has been reset to zero!')
             else:
-                # Otherwise, update the pledge
-                if pledge:
-                    pledge.pledged_amount = float(pledged_amount)
-                    pledge.pledge_currency = currency
-                    db.session.commit()
-                    flash('Pledge updated successfully!')
-                else:
-                    flash('No pledge found for this user.', 'error')
+                flash('Error: Unable to reset the pledge amount.', 'error')
 
-            return redirect(url_for('admin_dashboard'))  # Redirect to admin dashboard
+        else:
+            flash(f'No user found with ID {user_id}.', 'error')
+            print(f"No user found with ID {user_id}")  # Debugging line
 
-        flash('User not found.', 'error')
-        return redirect(url_for('admin_dashboard'))
+        # Redirect to the admin dashboard to reflect the updated pledge
+        return redirect(url_for('admin_dashboard'))  # If 'dashboard' is the endpoint of the admin page
 
-    # If the request is GET, render the page to show the user info or the form
-    user = db.session.get(User, user_id)
-    current_pledge = get_current_pledge(user_id)
-    return render_template('update_pledge.html', user=user, current_pledge=current_pledge)
 
-def reset_pledge_to_zero(user_id):
-    pledge = Pledge.query.filter_by(user_id=user_id).first()
-    if pledge:
-        pledge.pledged_amount = 0  # Reset pledge to 0
-        pledge.pledge_currency = 'USD'  # Optionally reset to default currency
-        db.session.commit()
+    # For GET requests, display the update page with current pledge information
+    user = User.query.filter_by(id=user_id).first()
+
+    if user is None:
+        print(f"No user found with ID {user_id}.")  # Debugging line
+    else:
+        print(f"GET request - Current pledge for user {user_id}: {user.pledged_amount}")  # Debugging line
+        
+    return render_template('update_pledge.html', user=user)
+
+
+
 
 def get_current_pledge(user_id):
     return Pledge.query.filter_by(user_id=user_id).first()
 
-
-
-
-# Fetch user by ID
-
-def get_user_by_id(user_id):
-    return db.session.get(User, user_id) if user_id else None
 
 
 
@@ -742,3 +734,12 @@ def logout():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+
+
+
+
+
+
+
