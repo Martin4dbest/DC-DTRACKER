@@ -7,6 +7,7 @@ from datetime import datetime, date
 from werkzeug.security import generate_password_hash
 from sqlalchemy import Text
 from sqlalchemy import Column, Boolean, DateTime, DECIMAL
+from flask_login import current_user
 
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -283,6 +284,9 @@ def login():
             flash('Invalid email or password.', 'danger')
 
     return render_template('login.html')
+
+
+
 
 
 @app.route("/donate", methods=["GET", "POST"])
@@ -662,6 +666,22 @@ def view_partners_pledges():
     # Fetch all users' pledge data from the database except admins
     users = User.query.filter(User.is_admin == False).all()  # Exclude admins based on is_admin
     return render_template('view_partners_pledges.html', users=users)
+
+
+
+# View donations made by the logged-in user
+@app.route('/view_my_donations')
+def view_my_donations():
+    # Manually check if the user is authenticated (using a session)
+    if 'user_id' not in session:
+        # If the user is not logged in, redirect them to the login page
+        return redirect(url_for('login'))  # Replace 'login' with your actual login route
+
+    # Fetch donations for the logged-in user
+    user_id = session['user_id']  # Get user_id from the session
+    donations = Donation.query.filter_by(user_id=user_id).all()  # Filter donations based on the logged-in user
+
+    return render_template('view_my_donations.html', donations=donations)
 
 
 

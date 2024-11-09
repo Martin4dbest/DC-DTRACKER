@@ -186,8 +186,9 @@
     <div class="sidebar">
         <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
         <h1>Partner</h1>
+
+        <a href="{{ url_for('view_my_donations') }}">View My Donations</a>        
         <a href="#">Church Updates</a>
-        <a href="#">Recent Donations</a>
         <a href="{{ url_for('logout') }}">Logout</a>
     </div>
 
