@@ -654,64 +654,23 @@ def get_current_pledge(user_id):
 
 
 
+#Admin view Partner Pledges
+@app.route('/view_partners_pledges')
+@login_required  # Ensure the user is logged in
+@admin_required  # Ensure the user is an admin
+def view_partners_pledges():
+    # Fetch all users' pledge data from the database except admins
+    users = User.query.filter(User.is_admin == False).all()  # Exclude admins based on is_admin
+    return render_template('view_partners_pledges.html', users=users)
 
-'''
-@app.route('/track')
-def track():
-    # Fetch all users with their donations (pledges)
-    users_with_pledges = User.query.join(Donation).all()
 
-    # Create a list of dictionaries with user and pledge data
-    pledges_data = []
-    for user in users_with_pledges:
-        for pledge in user.donations:  # `donations` backref on User model
-            pledges_data.append({
-                'user': user,
-                'pledge': pledge
-            })
-    
-    # Print data to check if it's correct
-    print(pledges_data)  # Debug line, you can check this in your terminal or console
-    
-    return render_template('track.html', pledges=pledges_data)
 
-'''
-'''
-# Donation and Medal assignment functions
-def convert_to_base_currency(amount, currency, base_currency='USD'):
-    try:
-        if currency != base_currency:
-            return c.convert(currency, base_currency, amount)
-        return amount
-    except RatesNotAvailableError:
-        return 0
 
-def calculate_total_donations_in_base(partner_donations, base_currency='USD'):
-    total_in_base_currency = 0
-    for donation in partner_donations:
-        converted_amount = convert_to_base_currency(donation['amount'], donation['currency'], base_currency)
-        total_in_base_currency += converted_amount
-    return total_in_base_currency
+@app.errorhandler(403)
+def forbidden_error(error):
+    return render_template('403.html'), 403
 
-def assign_medal(total_in_base_currency):
-    if total_in_base_currency >= 500000:
-        return "Crown Jewel Medal"
-    elif total_in_base_currency >= 250000:
-        return "Pearl Medal"
-    elif total_in_base_currency >= 100000:
-        return "Sapphire Medal"
-    elif total_in_base_currency >= 50000:
-        return "Emerald Medal"
-    elif total_in_base_currency >= 10000:
-        return "Ruby Medal"
-    elif total_in_base_currency >= 1000:
-        return "Amethyst Medal"
-    else:
-        return "Contributor Medal"
 
-        
-
-'''
 
 @app.route('/success')
 def success():
