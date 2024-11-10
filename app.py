@@ -428,10 +428,16 @@ def admin_login():
 
 
 
+
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 @admin_required
 def admin_dashboard():
-    # Handle bulk SMS and email
+    # Initialize the search filters as empty
+    search_date = None
+    search_country = None
+    recent_donations = Donation.query.order_by(Donation.donation_date.desc()).all()  # Default query
+
+    # Handle bulk SMS and email (added to the merged route)
     if request.method == "POST":
         if "send_bulk_sms" in request.form:
             message = request.form["sms_message"]
@@ -442,15 +448,38 @@ def admin_dashboard():
             body = request.form["email_body"]
             send_bulk_email(subject, body)
             flash("Bulk email sent successfully!", "success")
-        return redirect(url_for("admin_dashboard"))
+        
+        # Handle search functionality within the same POST request
+        search_date = request.form.get('search_date')
+        search_country = request.form.get('search_country')
+        
+        # Base query for filtering donations
+        query = Donation.query.join(User).order_by(Donation.donation_date.desc())
+        
+        # Apply filters if search parameters are provided
+        if search_date:
+            query = query.filter(Donation.donation_date == datetime.strptime(search_date, '%Y-%m-%d').date())
+        if search_country:
+            query = query.filter(User.country.ilike(f"%{search_country}%"))
+        
+        
+        # Fetch the filtered donations
+        recent_donations = query.all()
 
-    # Fetch all donations and users
+    else:
+        # If it's a GET request, fetch all donations
+        recent_donations = Donation.query.order_by(Donation.donation_date.desc()).all()
+
+    # Fetch all users and total donations (if needed for display)
     users = User.query.all()
-    donations = Donation.query.all()
-    total_donations = sum(donation.amount for donation in donations)
+    total_donations = sum(donation.amount for donation in recent_donations)
 
-    return render_template("admin_dashboard.html", users=users, recent_donations=donations, total_donations=total_donations)
-
+    return render_template("admin_dashboard.html", 
+                           users=users, 
+                           recent_donations=recent_donations, 
+                           total_donations=total_donations, 
+                           search_date=search_date, 
+                           search_country=search_country)
 
 
 

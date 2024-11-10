@@ -176,6 +176,47 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        /* Styling Search Form Inline and Right-aligned */
+        .search-form {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-form label {
+            font-size: 1em;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .search-form input {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            width: 150px;
+            box-sizing: border-box;
+        }
+
+        .search-form button {
+            background-color: #0072ff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-form button:hover {
+            background-color: #0056b3;
+        }
+
+        
     </style>
 </head>
 <body>
@@ -186,15 +227,32 @@
         <a href="{{ url_for('admin_register') }}">Register Admin</a>
         <a href="{{ url_for('register') }}">Register Partner</a>
         <a href="{{ url_for('view_partners_pledges') }}">View Partners Pledges</a>
-        
-
- 
         <a href="{{ url_for('logout') }}">Logout</a>
     </div>
 
     <!-- Main Content -->
     <div class="content">
         <h2>Admin Dashboard</h2>
+
+        <!-- Search Form -->
+        <div class="search-form">
+            <form method="POST" action="{{ url_for('admin_dashboard') }}">
+                <div>
+                    <label for="search_date">Search by Date:</label>
+                    <input type="date" id="search_date" name="search_date" value="{{ search_date }}">
+                </div>
+                <div>
+                    <label for="search_country">Search by Country:</label>
+                    <input type="text" id="search_country" name="search_country" value="{{ search_country }}" placeholder="Enter Country">
+                </div>
+
+              
+                
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        
+
         <!-- Recent Donations -->
         <h3>Recent Donations</h3>
         <div class="table-container">
@@ -202,6 +260,8 @@
                 <thead>
                     <tr>
                         <th>Partner</th>
+                        <th>Country</th>
+                        <th>State</th>
                         <th>Amount</th>
                         <th>Currency</th>
                         <th>Donation Date</th> 
@@ -212,11 +272,13 @@
                     {% for donation in recent_donations %}
                     <tr>
                         <td>{{ donation.user.name }}</td>
+                        <td>{{ donation.user.country }}</td>
+                        <td>{{ donation.user.state }}</td>
+
                         <td>{{ donation.amount }}</td>
                         <td>{{ donation.currency }}</td>
                         <td>{{ donation.donation_date }}</td>
                         <td>
-                            
                             <form action="{{ url_for('delete_donation', donation_id=donation.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDeletion('donation')">
                                 <button type="submit" class="delete-button">Delete</button>
                             </form>
@@ -230,7 +292,6 @@
                                     return false;
                                 }
                             </script>
-                            
                         </td>
                     </tr>
                     {% else %}
