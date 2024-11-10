@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Partner Pledges</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th, td {
+            padding: 12px;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .back-link {
+            font-size: 40px;  /* Slightly smaller size */
+            color: #007bff;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 20px;  /* Adjusted padding */
+            border-radius: 25px;  /* Curved effect */
+            transition: color 0.3s ease, transform 0.3s ease;  /* Smooth hover effect */
+        }
+        .back-link:hover {
+            color: #0056b3;
+            transform: scale(1.2);  /* Slightly larger on hover */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Partners Contact Details</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Partner Name</th>
+                    <th>Email</th>
+                    <th>Country</th>
+                    <th>State</th>
+                    <th>Local Church</th>
+                    <th>Address</th>
+                    <th>Birthday</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.country }}</td>
+                        <td>{{ user.state }}</td>
+                        <td>{{ user.church_branch }}</td>
+                        <td>{{ user.address }}</td>
+                        <td>{{ user.birthday }}</td>
+
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Smaller emoji arrow link with curved edges -->
+        <a href="{{ url_for('admin_dashboard') }}" class="back-link">
+            🔙
+        </a>
+    </div>
+
+</body>
+</html>

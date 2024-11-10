@@ -227,6 +227,7 @@
         <a href="{{ url_for('admin_register') }}">Register Admin</a>
         <a href="{{ url_for('register') }}">Register Partner</a>
         <a href="{{ url_for('view_partners_pledges') }}">View Partners Pledges</a>
+        <a href="{{ url_for('view_partners_details') }}">View Partners Details</a>
         <a href="{{ url_for('logout') }}">Logout</a>
     </div>
 
@@ -322,7 +323,7 @@
                         <td>{{ user.email }}</td>
                         <td>
                             {% if user.is_admin %}
-                                <span style="color: gold;">(Admin)</span>
+                                <span style="color: rgb(255, 171, 15);">(Admin)</span>
                             {% else %}
                                 (Partner)
                             {% endif %}
@@ -331,7 +332,7 @@
                         <td>
                             {% if not user.is_admin %}  <!-- Show buttons only for non-admin users -->
                                 {% if user.pledged_amount %}
-                                    <a href="{{ url_for('update_pledge', user_id=user.id) }}" class="button" style="background-color: gold; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Pledge Pending</a>
+                                    <a href="{{ url_for('update_pledge', user_id=user.id) }}" class="button" style="background-color: rgb(230, 158, 25); color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Pledge Pending</a>
                                 {% else %}
                                     <a href="{{ url_for('add_pledge', user_id=user.id) }}" class="button" style="background-color: green; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Add Pledge</a>
 

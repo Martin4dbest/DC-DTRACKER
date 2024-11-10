@@ -683,6 +683,16 @@ def view_partners_pledges():
 
 
 
+#Admin view Partner Full Contact Details
+@app.route('/view_partners_details')
+@login_required  # Ensure the user is logged in
+@admin_required  # Ensure the user is an admin
+def view_partners_details():
+    # Fetch all users' pledge data from the database except admins
+    users = User.query.filter(User.is_admin == False).all()  # Exclude admins based on is_admin
+    return render_template('view_partners_details.html', users=users)
+
+
 # View donations made by the logged-in partner
 @app.route('/view_my_donations')
 def view_my_donations():
