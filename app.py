@@ -7,8 +7,6 @@ from datetime import datetime, date
 from werkzeug.security import generate_password_hash
 from sqlalchemy import Text
 from sqlalchemy import Column, Boolean, DateTime, DECIMAL
-from flask_login import current_user
-
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from twilio.rest import Client
@@ -54,17 +52,6 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 
-
-''''
-#Verify the Database Connection: 
-with app.app_context():
-    try:
-        db.create_all()  # Create all tables
-        print("Database connected successfully!")
-    except Exception as e:
-        print(f"Database connection failed: {e}")
-
-'''
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -120,16 +107,7 @@ class Donation(db.Model):
     
 
 
-'''
 
-class Pledge(db.Model):
-    __tablename__ = 'pledge'
-    id = db.Column(db.Integer, primary_key=True)
-    amount = db.Column(db.Float, nullable=False)
-    date_pledged = db.Column(db.Date, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-'''
 class Pledge(db.Model):
     __tablename__ = 'pledges'
 
@@ -425,6 +403,7 @@ def admin_register():
     return render_template('admin_register.html')  # Render the registration form template
 
 
+
 # Admin login
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -446,6 +425,7 @@ def admin_login():
             flash('Invalid email or password.', 'danger')
 
     return render_template('admin_login.html')
+
 
 
 @app.route("/admin_dashboard", methods=["GET", "POST"])
@@ -544,6 +524,9 @@ def delete_donation(donation_id):
     return redirect(url_for("admin_dashboard"))
 
 
+
+
+# Route to add Pledge to Partners
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
     if request.method == 'POST':
@@ -606,6 +589,8 @@ def get_user_by_id(user_id):
     return User.query.get(user_id)  
 
 
+
+#Route to Update Partners' Pledgee
 @app.route('/update_pledge/<int:user_id>', methods=['GET', 'POST'])
 def update_pledge(user_id):
     if request.method == 'POST':
@@ -669,7 +654,7 @@ def view_partners_pledges():
 
 
 
-# View donations made by the logged-in user
+# View donations made by the logged-in partner
 @app.route('/view_my_donations')
 def view_my_donations():
     # Manually check if the user is authenticated (using a session)
@@ -695,9 +680,6 @@ def forbidden_error(error):
 @app.route('/success')
 def success():
     return "Pledge added successfully!", 200
-
-
-    
 
 
 
