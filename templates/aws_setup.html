@@ -1,0 +1,84 @@
+AWS Credentials Setup for Boto3
+1. Ensure AWS Credentials Are Set Up Properly
+AWS SDK (boto3) looks for credentials in specific locations. If you haven't configured your AWS credentials yet, you'll need to do so. You can set up AWS credentials using the following methods:
+
+Using AWS CLI:
+You can use the AWS Command Line Interface (CLI) to configure your credentials.
+
+Run the following command to set up your AWS access keys (if you haven’t already done so):
+
+bash
+Copy code
+aws configure
+This will prompt you to enter:
+
+AWS Access Key ID
+AWS Secret Access Key
+Default region name (e.g., us-east-1)
+Default output format (e.g., json)
+Manually in the Environment Variables:
+You can set your AWS credentials directly in your environment variables.
+
+For Linux/macOS:
+bash
+Copy code
+export AWS_ACCESS_KEY_ID='your-access-key-id'
+export AWS_SECRET_ACCESS_KEY='your-secret-access-key'
+For Windows:
+bash
+Copy code
+set AWS_ACCESS_KEY_ID=your-access-key-id
+set AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS Credentials File:
+You can also set up the credentials file manually at:
+
+Linux/macOS: ~/.aws/credentials
+Windows: C:\Users\<YourUsername>\.aws\credentials
+Add the following contents:
+
+ini
+Copy code
+[default]
+aws_access_key_id = your-access-key-id
+aws_secret_access_key = your-secret-access-key
+Using IAM Roles (if running on AWS EC2):
+If your application is running on an EC2 instance with an IAM role, make sure that the role has appropriate permissions to access SNS. AWS SDK will automatically use the credentials associated with that role.
+
+2. Verify AWS SDK Configuration
+After setting up the credentials, restart your application to ensure that the SDK recognizes the credentials.
+
+3. Test Your Configuration
+You can test if the credentials are being used correctly by running a simple boto3 script like this:
+
+python
+Copy code
+import boto3
+
+sns_client = boto3.client('sns')
+response = sns_client.list_topics()
+print(response)
+If it returns a list of SNS topics (or an empty list if you don’t have any), then your credentials are set up correctly.
+
+To Set Your AWS Credentials on Windows:
+Here’s how you can set AWS credentials using environment variables on Windows.
+
+Option 1: Set Environment Variables in Command Prompt (Temporary)
+This method will set your AWS credentials for the current session of the Command Prompt. Once you close the Command Prompt window, the credentials will no longer be available.
+
+Open Command Prompt:
+
+Press Windows + R, type cmd, and hit Enter.
+Set Environment Variables: In the Command Prompt window, use the following commands to set your AWS Access Key ID and Secret Access Key. Replace your-access-key-id and your-secret-access-key with your actual AWS credentials.
+
+bash
+Copy code
+set AWS_ACCESS_KEY_ID=your-access-key-id
+set AWS_SECRET_ACCESS_KEY=your-secret-access-key
+Example:
+
+bash
+Copy code
+set AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+set AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+Run Your Application: Now that the credentials are set, you can run your Python application from the same Command Prompt window, and boto3 should be able to locate and use the credentials.
+

@@ -15,6 +15,15 @@ import os
 from dotenv import load_dotenv
 
 
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+# Initialize AWS clients for SES and SNS
+ses_client = boto3.client("ses", region_name="us-west-2")  # Update region if necessary
+sns_client = boto3.client("sns", region_name="us-west-2")
+
+
+
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -431,6 +440,7 @@ def admin_login():
 
 
 
+
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 @admin_required
 def admin_dashboard():
@@ -441,17 +451,6 @@ def admin_dashboard():
     
     if request.method == "POST":
         try:
-            # Handle bulk SMS sending
-            if "send_bulk_sms" in request.form:
-                message = request.form["sms_message"]
-                send_bulk_sms(message)
-                flash("Bulk SMS sent successfully!", "success")
-            elif "send_bulk_email" in request.form:
-                subject = request.form["email_subject"]
-                body = request.form["email_body"]
-                send_bulk_email(subject, body)
-                flash("Bulk email sent successfully!", "success")
-            
             # Retrieve search parameters
             search_date = request.form.get('search_date')
             search_country = request.form.get('search_country')
@@ -489,6 +488,62 @@ def admin_dashboard():
                            search_country=search_country)
 
 
+
+#SENDING NOTIFICATIONS(MAIL AND SMS USING AWS)
+@app.route("/mail_sms", methods=["GET", "POST"])
+def mail_sms():
+    if request.method == "POST":
+        try:
+            # Handle bulk SMS sending
+            if "send_bulk_sms" in request.form:
+                message = request.form["sms_message"]
+                phone_numbers = request.form["phone_numbers"].split(",")  # Split by commas to get a list
+                phone_numbers = [num.strip() for num in phone_numbers]  # Remove any extra whitespace
+                send_bulk_sms(message, phone_numbers)
+                flash("Bulk SMS sent successfully!", "success")
+
+            # Handle bulk email sending
+            elif "send_bulk_email" in request.form:
+                subject = request.form["email_subject"]
+                body = request.form["email_body"]
+                recipients = request.form["recipients"].split(",")  # Split by commas to get a list
+                recipients = [email.strip() for email in recipients]  # Remove any extra whitespace
+                send_bulk_email(subject, body, recipients)
+                flash("Bulk email sent successfully!", "success")
+                
+            return redirect(url_for('admin_dashboard'))
+        
+        except Exception as e:
+            flash("An error occurred: " + str(e), "danger")
+    
+    return render_template("mail_sms.html")
+
+# Function to send bulk email using AWS SES
+def send_bulk_email(subject, body, recipients):
+    try:
+        response = ses_client.send_email(
+            Source='your-email@example.com',  # Replace with your verified SES email
+            Destination={'ToAddresses': recipients},
+            Message={
+                'Subject': {'Data': subject},
+                'Body': {'Text': {'Data': body}}
+            }
+        )
+        print("Email sent! Message ID:", response['MessageId'])
+    except (BotoCoreError, ClientError) as error:
+        print(f"An error occurred with SES: {error}")
+
+# Function to send bulk SMS using AWS SNS
+def send_bulk_sms(message, phone_numbers):
+    try:
+        for number in phone_numbers:
+            response = sns_client.publish(
+                PhoneNumber=number,
+                Message=message
+            )
+            print(f"Message sent to {number} with response: {response}")
+    except (BotoCoreError, ClientError) as error:
+        print(f"An error occurred with SNS: {error}")
 
 
 
@@ -562,7 +617,7 @@ def delete_donation(donation_id):
 
 
 
-
+#Add Pledges to new Partners and also already onboarded partners
 # Route to add Pledge to Partners
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
@@ -617,7 +672,7 @@ def add_pledge():
             else:
                 return jsonify({'success': False, 'message': 'User not found.'}), 404
 
-    return render_template('add_pledge.html')  # Render the form for adding pledges
+    return render_template('add_pledge.html') 
 
 
 
@@ -659,7 +714,7 @@ def update_pledge(user_id):
             print(f"No user found with ID {user_id}")  # Debugging line
 
         # Redirect to the admin dashboard to reflect the updated pledge
-        return redirect(url_for('admin_dashboard'))  # If 'dashboard' is the endpoint of the admin page
+        return redirect(url_for('admin_dashboard')) 
 
 
     # For GET requests, display the update page with current pledge information
@@ -680,9 +735,11 @@ def get_current_pledge(user_id):
 
 
 
+
+#View Partners Pledges
 @app.route('/view_partners_pledges', methods=['GET', 'POST'])
-@login_required  # Ensure the user is logged in
-@admin_required  # Ensure the user is an admin
+@login_required  
+@admin_required 
 def view_partners_pledges():
     # Retrieve the search_country from the form if it's a POST request
     search_country = request.form.get('search_country') if request.method == 'POST' else None
@@ -696,6 +753,8 @@ def view_partners_pledges():
     return render_template('view_partners_pledges.html', users=users, search_country=search_country)
 
 
+
+#View Partnere Details
 @app.route('/view_partners_details', methods=['GET', 'POST'])
 @login_required  # Ensure the user is logged in
 @admin_required  # Ensure the user is an admin
@@ -712,9 +771,11 @@ def view_partners_details():
     return render_template('view_partners_details.html', users=users, search_country=search_country)
 
 
+
+#View Admin Details
 @app.route('/view_admin_details', methods=['GET', 'POST'])
-@login_required  # Ensure the user is logged in
-@admin_required  # Ensure the user is an admin
+@login_required  
+@admin_required
 def view_admin_details():
     # Retrieve the search_country from the form if it's a POST request
     search_country = request.form.get('search_country') if request.method == 'POST' else None
