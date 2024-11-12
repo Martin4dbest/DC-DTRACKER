@@ -712,6 +712,23 @@ def view_partners_details():
     return render_template('view_partners_details.html', users=users, search_country=search_country)
 
 
+@app.route('/view_admin_details', methods=['GET', 'POST'])
+@login_required  # Ensure the user is logged in
+@admin_required  # Ensure the user is an admin
+def view_admin_details():
+    # Retrieve the search_country from the form if it's a POST request
+    search_country = request.form.get('search_country') if request.method == 'POST' else None
+
+    # Filter out non-admins and apply country filter if search_country is provided
+    if search_country:
+        admins = User.query.filter(User.is_admin == True, User.country.ilike(f"%{search_country}%")).all()
+    else:
+        admins = User.query.filter(User.is_admin == True).all()  # Fetch all admin users
+
+    return render_template('view_admin_details.html', admins=admins, search_country=search_country)
+
+
+
 # View donations made by the logged-in partner
 @app.route('/view_my_donations')
 def view_my_donations():

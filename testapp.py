@@ -269,7 +269,6 @@ def login():
 
 
 
-from datetime import datetime, date
 
 @app.route("/donate", methods=["GET", "POST"])
 @login_required
@@ -287,7 +286,7 @@ def donate():
             # User is entering an offline donation amount
             amount = request.form.get("amount")
             currency = request.form.get("currency")
-            donation_date = request.form.get("donation_date")  # Get date from form, if provided
+            donation_date = request.form.get("date_donated")  # Get date from form, if provided
 
             # Validate the amount
             try:
@@ -328,14 +327,13 @@ def donate():
                 flash("You need to be logged in to donate.", "danger")
                 return redirect(url_for("login"))
 
-        if request.form.get("show_account"):
-            # Logic to show bank account details
-            return render_template("donate.html", user=user, show_account_details=True)
-
     # Retrieve all pledges made by users from the database by joining User and Pledge
     pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
 
-    return render_template("donate.html", user=user, pledges=pledges, show_account_details=False)
+    # Render the form again, passing back the donation_date so it can be displayed in the input
+    return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
+
+
 
 
 def get_current_user():
@@ -429,8 +427,9 @@ def admin_login():
     return render_template('admin_login.html')
 
 
-from datetime import datetime
-from flask import flash, render_template, request
+
+
+
 
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 @admin_required
