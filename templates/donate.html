@@ -280,7 +280,7 @@
                 </select>
             
                 <label class="calendar-label" for="date_donated" style="font-size: 0.9em; margin-top: 8px;">Payment Date:</label><br>
-                <input type="date" id="date_donated" name="date_donated" required style="width: 30%; padding: 8px; font-size: 0.9em;">
+                <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required style="width: 30%; padding: 8px; font-size: 0.9em;">
             
                 <button type="submit" style="margin-top: 10px; padding: 5px 10px; background-color: blue; color: white; font-size: 1em; font-weight: 500; border: none; border-radius: 5px; cursor: pointer; width: 20%; transition: background-color 0.3s ease;">
                     Submit Donation

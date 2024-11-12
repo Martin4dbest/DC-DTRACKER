@@ -267,6 +267,8 @@ def login():
 
     return render_template('login.html')
 
+
+
 from datetime import datetime, date
 
 @app.route("/donate", methods=["GET", "POST"])
@@ -679,25 +681,36 @@ def get_current_pledge(user_id):
 
 
 
-#Admin view Partner Pledges
-@app.route('/view_partners_pledges')
+@app.route('/view_partners_pledges', methods=['GET', 'POST'])
 @login_required  # Ensure the user is logged in
 @admin_required  # Ensure the user is an admin
 def view_partners_pledges():
-    # Fetch all users' pledge data from the database except admins
-    users = User.query.filter(User.is_admin == False).all()  # Exclude admins based on is_admin
-    return render_template('view_partners_pledges.html', users=users)
+    # Retrieve the search_country from the form if it's a POST request
+    search_country = request.form.get('search_country') if request.method == 'POST' else None
+
+    # Filter out admins and apply country filter if search_country is provided
+    if search_country:
+        users = User.query.filter(User.is_admin == False, User.country.ilike(f"%{search_country}%")).all()
+    else:
+        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users
+
+    return render_template('view_partners_pledges.html', users=users, search_country=search_country)
 
 
-
-#Admin view Partner Full Contact Details
-@app.route('/view_partners_details')
+@app.route('/view_partners_details', methods=['GET', 'POST'])
 @login_required  # Ensure the user is logged in
 @admin_required  # Ensure the user is an admin
 def view_partners_details():
-    # Fetch all users' pledge data from the database except admins
-    users = User.query.filter(User.is_admin == False).all()  # Exclude admins based on is_admin
-    return render_template('view_partners_details.html', users=users)
+    # Retrieve the search_country from the form if it's a POST request
+    search_country = request.form.get('search_country') if request.method == 'POST' else None
+
+    # Filter out admins and apply country filter if search_country is provided
+    if search_country:
+        users = User.query.filter(User.is_admin == False, User.country.ilike(f"%{search_country}%")).all()
+    else:
+        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users
+
+    return render_template('view_partners_details.html', users=users, search_country=search_country)
 
 
 # View donations made by the logged-in partner
