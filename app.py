@@ -8,6 +8,8 @@ from werkzeug.security import generate_password_hash
 from sqlalchemy import Text
 from sqlalchemy import Column, Boolean, DateTime, DECIMAL
 
+
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from twilio.rest import Client
 from functools import wraps
@@ -57,6 +59,76 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'your_twilio_phone_n
 
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+
+
+
+
+from googleapiclient.discovery import build
+from google.oauth2.service_account import Credentials
+
+# Define SCOPES (Google Sheets API Scope)
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+# Route for exporting to Google Sheets
+@app.route('/export_to_google_sheets', methods=['POST'])
+def export_to_google_sheets():
+    # Authenticate using credentials (with the actual path to your JSON file)
+    creds = Credentials.from_service_account_file(
+        'C:/Users/DELL/Desktop/DCDTRACKER GLOBAL/dominion-city-dtracker-238ba4b6c99a.json', scopes=SCOPES)  # Corrected file path
+   
+
+    # Create a Sheets API service
+    service = build('sheets', 'v4', credentials=creds)
+
+    # ID of your Google Sheet (use the ID from the provided URL)
+    SPREADSHEET_ID = '1EHceFWYA9P8uZXnkkDUFmulrcafXwBjwhVaEbOZh0mc'  # Your actual Spreadsheet ID
+
+    # Fetch data from the database (assuming you have a User model and you're querying users from your database)
+    users = User.query.all()
+
+    # Prepare data for Google Sheets
+    values = [
+        ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']  # Column headers
+    ]
+
+    # Add actual user data to the values list
+    for user in users:
+        values.append([
+            user.name,          # Partner Name
+            'Admin' if user.is_admin else 'Partner',  # Convert True/False to 'admin' or 'partner'
+            user.phone,         # Phone
+            user.email,         # Email
+            user.country,       # Country
+            user.state,         # State
+            user.church_branch, # Local Church (assuming it's called 'church_branch')
+            user.address,       # Address
+            user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A' , # Birthday (formatted as needed)
+            user.pledged_amount,
+            user.pledge_currency,
+
+        ])
+
+    # Prepare the data for the API request
+    body = {
+        'values': values  # The actual data to be written to the sheet
+    }
+
+    # Call the Sheets API to write data to the sheet
+    sheet = service.spreadsheets()
+    sheet.values().update(
+        spreadsheetId=SPREADSHEET_ID, 
+        range='Sheet1!A1', 
+        valueInputOption='RAW', 
+        body=body
+    ).execute()
+
+    # After successful export, redirect back to the view page
+    return redirect(url_for('view_partners_pledges'))
+
+
+
+
 
 
 
