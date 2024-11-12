@@ -48,19 +48,27 @@
         tr:hover {
             background-color: #f1f1f1;
         }
+        .status-settled {
+            color: #28a745;  /* Green color for settled pledge */
+            font-weight: bold;
+        }
+        .status-pending {
+            color: #ee0018;  /* Red color for pending status */
+            font-weight: bold;
+        }
         .back-link {
-            font-size: 40px;  /* Slightly smaller size */
+            font-size: 40px;
             color: #007bff;
             text-decoration: none;
             display: inline-block;
             margin-top: 30px;
-            padding: 10px 20px;  /* Adjusted padding */
-            border-radius: 25px;  /* Curved effect */
-            transition: color 0.3s ease, transform 0.3s ease;  /* Smooth hover effect */
+            padding: 10px 20px;
+            border-radius: 25px;
+            transition: color 0.3s ease, transform 0.3s ease;
         }
         .back-link:hover {
             color: #0056b3;
-            transform: scale(1.2);  /* Slightly larger on hover */
+            transform: scale(1.2);
         }
     </style>
 </head>
@@ -79,6 +87,7 @@
                     <th>State</th>
                     <th>Local Church</th>
                     <th>Medal</th>
+                    <th>Pledge Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -91,12 +100,18 @@
                         <td>{{ user.state }}</td>
                         <td>{{ user.church_branch }}</td>
                         <td>{{ user.medal }}</td>
+                        <td>
+                            {% if user.pledged_amount == 0 %}
+                                <span class="status-settled">Pledge Settled ✅</span>
+                            {% else %}
+                                <span class="status-pending">Pending ⏳</span>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <!-- Smaller emoji arrow link with curved edges -->
         <a href="{{ url_for('admin_dashboard') }}" class="back-link">
             🔙
         </a>

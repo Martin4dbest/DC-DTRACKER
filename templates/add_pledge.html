@@ -1,16 +1,16 @@
 <!-- Add Pledge to User -->
 <h3 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #007bff;">Add Pledge to Partner</h3>
 
-<form action="{{ url_for('add_pledge') }}" method="POST" style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+<form id="pledgeForm" action="{{ url_for('add_pledge') }}" method="POST" style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
 
     <label for="user_id" style="font-size: 16px; font-weight: 500; margin-bottom: 8px; display: block; color: #333;">User ID:</label>
     <input type="text" id="user_id" name="user_id" required 
            style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 20px;">
     
     <label for="pledged_amount" style="font-size: 16px; font-weight: 500; margin-bottom: 8px; display: block; color: #333;">Pledged Amount:</label>
-    <input type="number" id="pledged_amount" name="pledged_amount" required min="0" step="0.01" 
-           style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 20px;">
-    
+    <input type="text" id="pledged_amount" name="pledged_amount" required 
+           style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 20px;" oninput="formatPledgedAmount(this)">
+
     <label for="currency" style="font-size: 16px; font-weight: 500; margin-bottom: 8px; display: block; color: #333;">Currency:</label>
     <select id="currency" name="currency" required
             style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 20px;">
@@ -41,7 +41,6 @@
         <option value="Contributor" style="color: #d3d3d3;">💼 Contributor (< $1,000)</option>
     </select>
 
-
     <!-- Carousel with Buttons -->
     <div style="display: flex; justify-content: space-between; margin-top: 20px;">
         <!-- Add Pledge Button -->
@@ -58,6 +57,23 @@
     </div>
 
 </form>
+
+<!-- JavaScript for comma formatting -->
+<script>
+function formatPledgedAmount(input) {
+    // Remove any commas and non-numeric characters except the decimal
+    let value = input.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+    
+    // Reformat the value with commas
+    input.value = parseFloat(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+// Remove commas before form submission
+document.getElementById('pledgeForm').addEventListener('submit', function (event) {
+    const pledgedAmountInput = document.getElementById('pledged_amount');
+    pledgedAmountInput.value = pledgedAmountInput.value.replace(/,/g, '');  // Remove commas
+});
+</script>
 
 <!-- Carousel effect (CSS only) -->
 <style>

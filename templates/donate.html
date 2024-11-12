@@ -249,7 +249,11 @@
         
             <div id="amount-entry" style="margin-top: 10px; padding: 10px;">
                 <label for="amount" style="font-size: 0.9em;">Enter the amount you donated:</label><br>
-                <input type="number" id="amount" name="amount" step="0.01" required style="width: 30%; padding: 8px; font-size: 0.9em;">
+                <!-- Input for the raw number (hidden or styled as needed) -->
+                 <input type="number" id="amountRaw" name="amount" step="0.01" required style="width: 30%; padding: 8px; font-size: 0.9em;" oninput="formatAmount(this)" />
+                 <!-- Input for displaying the formatted amount (with commas) -->
+                  <input type="text" id="formattedAmount" readonly style="width: 30%; padding: 8px; font-size: 0.9em;"/>
+
             
                 <label for="currency" style="font-size: 0.9em; margin-top: 8px;">Currency:</label><br>
                 <select id="currency" name="currency" required style="width: 30%; padding: 8px; font-size: 0.9em;">
@@ -288,33 +292,59 @@
     </div>
 
     <script>
+        // Show or hide account details
         function showAccountDetails() {
             const accountDetails = document.getElementById("account-details");
             accountDetails.style.display = accountDetails.style.display === "none" ? "block" : "none";
         }
-
+    
+        // Toggle amount entry visibility based on offline donation checkbox
         function toggleFields() {
             const amountEntry = document.getElementById("amount-entry");
             const offlineDonation = document.getElementById("offline_donation");
             amountEntry.style.display = offlineDonation.checked ? "block" : "none";
         }
-
+    
+        // Format the amount input field with commas and display it in the second input
+        function formatAmount(input) {
+            let value = input.value.replace(/,/g, ''); // Remove commas for calculation
+            if (!isNaN(value) && value !== '') {
+                // Format the value with commas and update the formatted amount input field
+                document.getElementById("formattedAmount").value = Number(value).toLocaleString();
+            } else {
+                document.getElementById("formattedAmount").value = ''; // Reset if input is not valid
+            }
+        }
+    
+        // Validate form before submitting
         function checkForm() {
-            const amount = document.getElementById("amount").value;
+            const rawAmount = document.getElementById("amountRaw").value; // Raw value for validation
+            const formattedAmount = document.getElementById("formattedAmount").value; // Displayed formatted value
             const currency = document.getElementById("currency").value;
             const date = document.getElementById("date_donated").value;
-
-            if (!amount || !currency || !date) {
+    
+            // Check for valid amount (raw value)
+            if (!rawAmount || isNaN(rawAmount) || rawAmount <= 0) {
+                alert("Please enter a valid amount before submitting.");
+                return false;
+            }
+    
+            // Check for other required fields
+            if (!currency || !date) {
                 alert("Please complete all fields.");
                 return false;
             }
+    
             return true;
         }
-
+    
+        // Redirect to payment options
         function redirectToPaymentOptions() {
             alert("Redirecting to payment options.");
             window.location.href = "payment_options.html"; 
         }
     </script>
+    
+    
 </body>
 </html>
