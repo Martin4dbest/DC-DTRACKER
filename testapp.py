@@ -99,7 +99,11 @@ class Donation(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     currency = db.Column(db.String(50), default='USD')
-    donation_date = db.Column(db.Date, nullable=False, default=date.today) 
+    donation_date = db.Column(db.Date, nullable=False, default=date.today)
+    
+    
+
+    
 
     user = db.relationship("User", backref="donations")
     medal = db.Column(db.String(50))  # field to store medal type
@@ -263,16 +267,13 @@ def login():
 
     return render_template('login.html')
 
-
-
-
+from datetime import datetime, date
 
 @app.route("/donate", methods=["GET", "POST"])
 @login_required
 def donate():
     user = get_current_user()  # Retrieve the current logged-in user
     app.logger.debug(f"User object: {user}")  # Log the user object to see its attributes
-
 
     # Ensure the user object has the latest pledge data, including the medal
     db.session.refresh(user)  # Refresh the user to make sure we have the latest data from the database
@@ -297,14 +298,15 @@ def donate():
                 return redirect(url_for("donate"))
 
             # Validate or set the donation date
-            if not donation_date:
-                donation_date = date.today()  # Default to today's date if not provided
-            else:
+            if donation_date:
                 try:
+                    # Ensure the entered date is parsed correctly into a date object
                     donation_date = datetime.strptime(donation_date, '%Y-%m-%d').date()
                 except ValueError:
                     flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
                     return redirect(url_for("donate"))
+            else:
+                donation_date = date.today()  # Default to today's date if not provided
 
             if user_id:
                 # Create a new Donation object
@@ -332,8 +334,6 @@ def donate():
     pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
 
     return render_template("donate.html", user=user, pledges=pledges, show_account_details=False)
-
-
 
 
 def get_current_user():
@@ -427,50 +427,56 @@ def admin_login():
     return render_template('admin_login.html')
 
 
-
+from datetime import datetime
+from flask import flash, render_template, request
 
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 @admin_required
 def admin_dashboard():
-    # Initialize the search filters as empty
+    # Initialize search filters as empty
     search_date = None
     search_country = None
     recent_donations = Donation.query.order_by(Donation.donation_date.desc()).all()  # Default query
-
-    # Handle bulk SMS and email (added to the merged route)
+    
     if request.method == "POST":
-        if "send_bulk_sms" in request.form:
-            message = request.form["sms_message"]
-            send_bulk_sms(message)
-            flash("Bulk SMS sent successfully!", "success")
-        elif "send_bulk_email" in request.form:
-            subject = request.form["email_subject"]
-            body = request.form["email_body"]
-            send_bulk_email(subject, body)
-            flash("Bulk email sent successfully!", "success")
+        try:
+            # Handle bulk SMS sending
+            if "send_bulk_sms" in request.form:
+                message = request.form["sms_message"]
+                send_bulk_sms(message)
+                flash("Bulk SMS sent successfully!", "success")
+            elif "send_bulk_email" in request.form:
+                subject = request.form["email_subject"]
+                body = request.form["email_body"]
+                send_bulk_email(subject, body)
+                flash("Bulk email sent successfully!", "success")
+            
+            # Retrieve search parameters
+            search_date = request.form.get('search_date')
+            search_country = request.form.get('search_country')
+            
+            # Start with the base query and apply filters
+            query = Donation.query.join(User, User.id == Donation.user_id).order_by(Donation.donation_date.desc())
+            
+            # Apply date filter if provided
+            if search_date:
+                query = query.filter(Donation.donation_date == datetime.strptime(search_date, '%Y-%m-%d').date())
+            
+            # Apply country filter if provided
+            if search_country:
+                query = query.filter(User.country.ilike(f"%{search_country}%"))
+            
+            # Fetch the filtered donations
+            recent_donations = query.all()
         
-        # Handle search functionality within the same POST request
-        search_date = request.form.get('search_date')
-        search_country = request.form.get('search_country')
-        
-        # Base query for filtering donations
-        query = Donation.query.join(User).order_by(Donation.donation_date.desc())
-        
-        # Apply filters if search parameters are provided
-        if search_date:
-            query = query.filter(Donation.donation_date == datetime.strptime(search_date, '%Y-%m-%d').date())
-        if search_country:
-            query = query.filter(User.country.ilike(f"%{search_country}%"))
-        
-        
-        # Fetch the filtered donations
-        recent_donations = query.all()
-
+        except ValueError as e:
+            flash("Invalid date format. Please use YYYY-MM-DD.", "error")
+    
     else:
-        # If it's a GET request, fetch all donations
+        # Default query for GET request
         recent_donations = Donation.query.order_by(Donation.donation_date.desc()).all()
 
-    # Fetch all users and total donations (if needed for display)
+    # Fetch all users and calculate total donations
     users = User.query.all()
     total_donations = sum(donation.amount for donation in recent_donations)
 
@@ -480,6 +486,7 @@ def admin_dashboard():
                            total_donations=total_donations, 
                            search_date=search_date, 
                            search_country=search_country)
+
 
 
 
@@ -734,3 +741,12 @@ def logout():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+
+
+
+
+
+
+
