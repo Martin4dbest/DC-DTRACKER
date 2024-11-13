@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Dominion City Global</title>
+    <style>
+        /* Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+        /* General Styling */
+        body { background-color: #f4f4f4; color: #333; line-height: 1.6; padding: 0 20px; }
+        h1 { text-align: center; color: #004d99; margin-top: 50px; font-size: 2.5em; }
+        .contact-container { max-width: 800px; margin: 40px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+
+        /* Form Styling */
+        form { display: flex; flex-direction: column; gap: 20px; }
+        label { font-size: 1.2em; color: #004d99; }
+        input, textarea { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; width: 100%; }
+        input[type="submit"] { background-color: #004d99; color: #fff; border: none; cursor: pointer; font-size: 1.2em; padding: 12px; }
+        input[type="submit"]:hover { background-color: #0066cc; }
+
+        textarea { resize: vertical; min-height: 150px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .contact-container { padding: 15px; }
+            h1 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Contact Us</h1>
+
+    <div class="contact-container">
+        <form action="/submit-contact-form" method="POST">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" name="name" required placeholder="Enter your full name">
+
+            <label for="email">Email Address:</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email address">
+
+            <label for="subject">Subject:</label>
+            <input type="text" id="subject" name="subject" required placeholder="Enter the subject of your message">
+
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" required placeholder="Write your message here"></textarea>
+
+            <input type="submit" value="Send Message">
+        </form>
+    </div>
+
+</body>
+</html>

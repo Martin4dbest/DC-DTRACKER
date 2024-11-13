@@ -16,12 +16,21 @@ from functools import wraps
 import os
 from dotenv import load_dotenv
 
-
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+# AWS SES Setup
+AWS_REGION = 'us-east-1'  # Use your AWS region
+SENDER_EMAIL = 'your-ses-verified-email@example.com'  # SES verified email address
+
+# Initialize the SES client
+ses_client = boto3.client('ses', region_name=AWS_REGION)
+
+
 # Initialize AWS clients for SES and SNS
 ses_client = boto3.client("ses", region_name="us-west-2")  # Update region if necessary
 sns_client = boto3.client("sns", region_name="us-west-2")
+
+
 
 
 
@@ -919,6 +928,58 @@ def change_password():
         
     return render_template('change_password.html')  # Render the password change form
 
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        # Get data from the form
+        name = request.form['name']
+        email = request.form['email']
+        subject = request.form['subject']
+        message = request.form['message']
+
+        # Construct the email body
+        email_body = f"Name: {name}\nEmail: {email}\n\nMessage: {message}"
+
+        # The recipient email is taken from the form (can be dynamic based on the form as well)
+        recipient_email = 'admin@example.com'  # Replace with your desired recipient email
+
+        try:
+            # Send email using SES
+            response = ses_client.send_email(
+                Source=SENDER_EMAIL,
+                Destination={
+                    'ToAddresses': [recipient_email],
+                },
+                Message={
+                    'Subject': {
+                        'Data': subject,
+                    },
+                    'Body': {
+                        'Text': {
+                            'Data': email_body,
+                        },
+                    },
+                },
+            )
+
+            # Print the response for debugging (optional)
+            print(f"Email sent! Message ID: {response['MessageId']}")
+
+            # Redirect to thank you page
+            return redirect(url_for('thank_you'))
+
+        except NoCredentialsError:
+            print("Credentials not found!")
+            # Handle the error or redirect to an error page if needed
+            return "Error: No credentials found to send email."
+
+    return render_template('contact.html')
+
+# Route for thank you page
+@app.route('/thank-you')
+def thank_you():
+    return render_template('thank_you.html')
 
 
 

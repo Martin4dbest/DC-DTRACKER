@@ -15,7 +15,12 @@
         /* Navigation */
         .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #004d99; color: #fff; }
         .navbar-brand { font-size: 1.5em; font-weight: bold; display: flex; align-items: center; }
-        .navbar-brand img { height: 40px; margin-right: 10px; }
+        .navbar-brand img {
+            width: 40px; /* Reduced size */
+            height: 40px; /* Height reduced to maintain aspect ratio */
+            border-radius: 50%; /* Make the image circular */
+            object-fit: cover; /* Ensure the image is not stretched */
+        }
         .menu { list-style: none; display: flex; gap: 15px; }
         .menu li { margin: 0; }
         .menu a:hover { color: #ffc107; }
@@ -25,10 +30,9 @@
         .hero { position: relative; height: 60vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #333; }
         .carousel { display: flex; transition: transform 0.5s ease; width: 300%; }
         .carousel-item { min-width: 100%; height: 60vh; background-size: cover; background-position: center; }
-        /* Updated background image for the first carousel item */
-
-        .carousel-item:nth-child(2) { background-image: url('image2.jpg'); }
-        .carousel-item:nth-child(3) { background-image: url('image3.jpg'); }
+        .carousel-item:nth-child(1) { background-image: url('/static/images/dc1.jpeg'); }
+        .carousel-item:nth-child(2) { background-image: url('/static/images/dc2.jpeg'); }
+        .carousel-item:nth-child(3) { background-image: url('/static/images/dc3.jpeg'); }
         .carousel-controls { position: absolute; top: 50%; left: 0; right: 0; display: flex; justify-content: space-between; transform: translateY(-50%); }
         .carousel-controls button { background-color: rgba(0, 0, 0, 0.5); color: #fff; border: none; font-size: 2em; padding: 5px 15px; cursor: pointer; }
 
@@ -72,13 +76,13 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-brand">
-            <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
+            <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo">
             Dominion City Global
         </div>
         <ul class="menu">
             <li><a href="home2">Login</a></li>
             <li><a href="admin/login">Admin</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="{{ url_for('contact') }}">Contact</a></li>
             <li><a href="https://www.dominioncity.cc">About</a></li>
         </ul>
         <button class="menu-button" onclick="toggleMenu()">☰</button>
@@ -87,7 +91,7 @@
     <!-- Hero Section with Carousel -->
     <section class="hero" id="home">
         <div class="carousel" id="carousel">
-            <div class="carousel-item"></div> <!-- First carousel item with dominion_city.jpg -->
+            <div class="carousel-item"></div> <!-- First carousel item -->
             <div class="carousel-item"></div> <!-- Second carousel item -->
             <div class="carousel-item"></div> <!-- Third carousel item -->
         </div>
