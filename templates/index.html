@@ -3,125 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dominion City Partnership Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Dominion City Global</title>
     <style>
-        /* General styles */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0A3D62, #3C6382, #F5F6FA);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Use space-between to push footer down */
-            align-items: center;
-            min-height: 100vh;
-            color: #fff;
-            text-align: center;
-            position: relative;
+        /* Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+        /* General Styling */
+        body { color: #333; line-height: 1.6; background-color: #f4f4f4; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navigation */
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #004d99; color: #fff; }
+        .navbar-brand { font-size: 1.5em; font-weight: bold; display: flex; align-items: center; }
+        .navbar-brand img { height: 40px; margin-right: 10px; }
+        .menu { list-style: none; display: flex; gap: 15px; }
+        .menu li { margin: 0; }
+        .menu a:hover { color: #ffc107; }
+        .menu-button { display: none; font-size: 1.5em; cursor: pointer; }
+
+        /* Hero Section with Carousel */
+        .hero { position: relative; height: 60vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #333; }
+        .carousel { display: flex; transition: transform 0.5s ease; width: 300%; }
+        .carousel-item { min-width: 100%; height: 60vh; background-size: cover; background-position: center; }
+        /* Updated background image for the first carousel item */
+
+        .carousel-item:nth-child(2) { background-image: url('image2.jpg'); }
+        .carousel-item:nth-child(3) { background-image: url('image3.jpg'); }
+        .carousel-controls { position: absolute; top: 50%; left: 0; right: 0; display: flex; justify-content: space-between; transform: translateY(-50%); }
+        .carousel-controls button { background-color: rgba(0, 0, 0, 0.5); color: #fff; border: none; font-size: 2em; padding: 5px 15px; cursor: pointer; }
+
+        /* Sections */
+        section { padding: 50px 20px; text-align: center; }
+        h2 { font-size: 2em; margin-bottom: 20px; color: #004d99; }
+        p { max-width: 700px; margin: 0 auto; color: #555; }
+
+        /* Login Section */
+        .login-section { background-color: #f9f9f9; }
+        .login-form { max-width: 400px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .login-form input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .login-form button { padding: 10px 20px; background-color: #004d99; color: #fff; border: none; cursor: pointer; width: 100%; }
+
+        /* Admin Section */
+        .admin-controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .admin-controls button { padding: 10px 20px; background-color: #333; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
+        .admin-controls button:hover { background-color: #555; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu { display: none; flex-direction: column; gap: 10px; padding: 20px; background-color: #004d99; }
+            .menu.show { display: flex; }
+            .menu-button { display: block; color: #fff; background: none; border: none; cursor: pointer; }
+            .hero, .carousel-item { height: 40vh; }
+            .carousel-controls button { font-size: 1.5em; padding: 5px 10px; }
+            .navbar { flex-direction: column; align-items: flex-start; }
+            .navbar-brand { font-size: 1.2em; margin-bottom: 10px; }
+            .admin-controls { flex-direction: column; gap: 10px; }
         }
 
-        .container {
-            background: rgba(0, 0, 0, 0.85);
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-            max-width: 600px;
-            width: 90%;
-            margin: 40px 0; /* Adjusted margin to ensure spacing */
-            transition: transform 0.3s;
-        }
-
-        .container:hover {
-            transform: scale(1.02);
-        }
-
-        /* Logo Styling */
-        .logo {
-            width: 100px;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-size: 2.2em; /* Reduced font size */
-            margin-bottom: 10px;
-            color: #00c6ff;
-        }
-
-        h2 {
-            font-size: 1.5em; /* Reduced font size */
-            margin: 10px 0;
-            color: #fff;
-        }
-
-        p {
-            font-size: 1em; /* Reduced font size */
-            margin-bottom: 20px;
-        }
-
-        /* Buttons */
-        a {
-            color: #fff;
-            text-decoration: none;
-            background-color: green;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: background-color 0.3s, transform 0.3s;
-            margin: 10px;
-            display: inline-block;
-            font-weight: 600;
-        }
-
-        a:hover {
-            background-color: #00c6ff;
-            transform: translateY(-2px);
-        }
-
-        /* Footer styling */
-        footer {
-            font-size: 0.75em; /* Reduced font size */
-            color: #fff;
-            padding: 5px 0;
-            background: rgba(0, 0, 0, 0.85);
-            border-top: 1px solid #00c6ff;
-            text-align: center;
-            width: 100%;
-        }
-
-        footer p {
-            margin: 0;
-            padding: 3px 0;
-        }
-
-        footer a {
-            color: #00c6ff;
-            text-decoration: none;
-            margin: 0 8px;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-            color: #fff;
+        @media (max-width: 480px) {
+            .login-form { max-width: 90%; }
+            h2 { font-size: 1.5em; }
+            p { font-size: 1em; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Add Dominion City Logo -->
-        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
 
-        <h1>Welcome to Dominion City</h1>
-        <h2>Partnership Platform</h2>
-        <p>Track your donations 💰 effortlessly and help make a difference.</p>
-        <p>See how your contributions are making an impact! 🙏💖</p>
-        <div>
-            <a href="{{ url_for('login') }}">Login</a>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
+            Dominion City Global
         </div>
-    </div>
-    <footer>
-        <p>&copy; 2024 Dominion City. All rights reserved.</p>
-        
-    </footer>
+        <ul class="menu">
+            <li><a href="home2">Login</a></li>
+            <li><a href="admin/login">Admin</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="https://www.dominioncity.cc">About</a></li>
+        </ul>
+        <button class="menu-button" onclick="toggleMenu()">☰</button>
+    </nav>
+
+    <!-- Hero Section with Carousel -->
+    <section class="hero" id="home">
+        <div class="carousel" id="carousel">
+            <div class="carousel-item"></div> <!-- First carousel item with dominion_city.jpg -->
+            <div class="carousel-item"></div> <!-- Second carousel item -->
+            <div class="carousel-item"></div> <!-- Third carousel item -->
+        </div>
+        <div class="carousel-controls">
+            <button onclick="prevSlide()">‹</button>
+            <button onclick="nextSlide()">›</button>
+        </div>
+    </section>
+
+    <!-- Inline JavaScript for Carousel and Menu Toggle -->
+    <script>
+        let currentIndex = 0;
+        const carousel = document.getElementById('carousel');
+        const slides = document.querySelectorAll('.carousel-item');
+
+        function showSlide(index) {
+            carousel.style.transform = `translateX(-${index * 100}%)`;
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % slides.length;
+            showSlide(currentIndex);
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+            showSlide(currentIndex);
+        }
+
+        function toggleMenu() {
+            document.querySelector('.menu').classList.toggle('show');
+        }
+
+        // Auto Slide Transition
+        setInterval(nextSlide, 3000);
+    </script>
+
 </body>
 </html>

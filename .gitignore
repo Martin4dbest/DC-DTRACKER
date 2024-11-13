@@ -1,6 +1,10 @@
 # Environment variables
 .env
 
+dominion-city-dtracker-238ba4b6c99a.json
+
+*.json
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

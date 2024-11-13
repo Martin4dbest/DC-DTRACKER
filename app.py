@@ -130,9 +130,6 @@ def export_to_google_sheets():
 
 
 
-
-
-
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -323,6 +320,12 @@ def register():
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route('/home2')
+def home2():
+    return render_template('home2.html')
+
+
 
 # User login
 @app.route('/login', methods=['GET', 'POST'])
@@ -882,6 +885,41 @@ def view_my_donations():
 @app.errorhandler(403)
 def forbidden_error(error):
     return render_template('403.html'), 403
+
+
+
+
+
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if request.method == 'POST':
+        email_or_phone = request.form.get('email_or_phone')
+        new_password = request.form.get('new_password')
+        
+        # Validate email or phone (check if it exists in the database)
+        user = User.query.filter((User.email == email_or_phone) | (User.phone == email_or_phone)).first()
+        
+        if not user:
+            flash('Invalid email or phone number', 'error')
+            return redirect(url_for('change_password'))
+        
+        # Hash the new password
+        hashed_password = generate_password_hash(new_password)
+        
+        # Update the password in the database
+        try:
+            user.password_hash = hashed_password
+            db.session.commit()
+            flash('Password successfully changed', 'success')
+            return redirect(url_for('login'))  # Redirect to login after successful update
+        except Exception as e:
+            db.session.rollback()
+            flash('Error updating password. Please try again.', 'error')
+            return redirect(url_for('change_password'))
+        
+    return render_template('change_password.html')  # Render the password change form
+
+
 
 
 

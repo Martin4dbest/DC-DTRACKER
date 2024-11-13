@@ -187,20 +187,19 @@
         <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
         <h1>Partner</h1>
 
-        <a href="{{ url_for('view_my_donations') }}">View My Donations</a>        
-        <a href="#">Church Updates</a>
+        <a href="{{ url_for('view_my_donations') }}">My Donations</a>        
+        <a href="#">Events</a>
         <a href="{{ url_for('logout') }}">Logout</a>
     </div>
 
     <!-- Main Content -->
     <div class="content">
         <div class="welcome-message">
-            <h1>Welcome to Dominion City Partnership Platform</h1>
+            <h1>Thank You For Partnering with Us</h1>
             <p>"God loves a cheerful giver" - 2 Corinthians 9:7</p>
-            <p>Track your donations seamlessly and partner with us in spreading the gospel.</p>
         </div>
 
-        <h2>Partner: {{ user.name }}</h2>
+        <h2> {{ user.name }}</h2>
 
         <h3>
             Medal: 

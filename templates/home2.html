@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominion City Partnership Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* General styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0A3D62, #3C6382, #F5F6FA);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Use space-between to push footer down */
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+            text-align: center;
+            position: relative;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+            max-width: 600px;
+            width: 90%;
+            margin: 40px 0; /* Adjusted margin to ensure spacing */
+            transition: transform 0.3s;
+        }
+
+        .container:hover {
+            transform: scale(1.02);
+        }
+
+        /* Logo Styling */
+        .logo {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.2em; /* Reduced font size */
+            margin-bottom: 10px;
+            color: #00c6ff;
+        }
+
+        h2 {
+            font-size: 1.5em; /* Reduced font size */
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        p {
+            font-size: 1em; /* Reduced font size */
+            margin-bottom: 20px;
+        }
+
+        /* Buttons */
+        a {
+            color: #fff;
+            text-decoration: none;
+            background-color: green;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.3s;
+            margin: 10px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        a:hover {
+            background-color: #00c6ff;
+            transform: translateY(-2px);
+        }
+
+        /* Footer styling */
+        footer {
+            font-size: 0.75em; /* Reduced font size */
+            color: #fff;
+            padding: 5px 0;
+            background: rgba(0, 0, 0, 0.85);
+            border-top: 1px solid #00c6ff;
+            text-align: center;
+            width: 100%;
+        }
+
+        footer p {
+            margin: 0;
+            padding: 3px 0;
+        }
+
+        footer a {
+            color: #00c6ff;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Add Dominion City Logo -->
+        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
+
+        <h1>Welcome to Dominion City Global</h1>
+        <div>
+            <a href="{{ url_for('login') }}">Login</a>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Dominion City. All rights reserved.</p>
+        
+    </footer>
+</body>
+</html>
