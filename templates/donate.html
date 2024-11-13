@@ -199,7 +199,7 @@
             <p>"God loves a cheerful giver" - 2 Corinthians 9:7</p>
         </div>
 
-        <h2> {{ user.name }}</h2>
+        <h2> Welcome {{ user.name }}</h2>
 
         <h3>
             Medal: 
@@ -242,9 +242,13 @@
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
             <label style="margin-top: 30px; display: block;">
                 <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()"> 
-                <p style="color: blue; margin-left: 20px;">Thank you for your support! Please check the box to confirm your donation now that payment is complete.</p>
-                
+                <p style="color: blue; margin-left: 20px;">
+                    🙏 Thank you for your donation!<br>
+                    Kindly check this box to track your donations. It's optional, but we encourage you to do so. ✅
+                </p>
             </label>
+            
+            
         
             <div id="amount-entry" style="margin-top: 10px; padding: 10px;">
                 <label for="amount" style="font-size: 0.9em;">Enter the amount you donated:</label><br>
