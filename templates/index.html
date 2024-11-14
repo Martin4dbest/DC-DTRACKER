@@ -251,6 +251,23 @@
             .menu-button { display: block; color: #fff; background: none; border: none; cursor: pointer; }
         }
         
+        /* Styling for the text with a professional curved effect */
+        .logo-text {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #004d99; /* Dark blue for a professional touch */
+            margin-left: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Roboto', sans-serif; /* You can use any elegant font here */
+            background-image: linear-gradient(45deg, #004d99, #007bff);
+            -webkit-background-clip: text;
+            color: transparent;
+            transform: rotate(-5deg); /* Slight curve effect */
+            display: inline-block;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for emphasis */
+        }
+        
 
 
 
@@ -260,9 +277,9 @@
 
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="navbar-brand">
+        <div class="navbar-brand">    
             <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo">
-            Dominion City Global
+            <span class="logo-text">Dominion City Global</span>
         </div>
         <ul class="menu">
             <li><a href="{{ url_for('home2') }}">Login</a></li>
