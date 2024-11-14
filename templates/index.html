@@ -59,11 +59,11 @@
         }
 
         .carousel-item:nth-child(1) { background-image: url('/static/images/dc10.PNG'); }
-        .carousel-item:nth-child(2) { background-image: url('/static/images/dc6.PNG'); }
-        .carousel-item:nth-child(3) { background-image: url('/static/images/dc2.jpeg'); }
+        .carousel-item:nth-child(2) { background-image: url('/static/images/dc7.PNG'); }
+        .carousel-item:nth-child(3) { background-image: url('/static/images/dc6.PNG'); }
         .carousel-item:nth-child(4) { background-image: url('/static/images/dc3.jpeg'); }
         .carousel-item:nth-child(5) { background-image: url('/static/images/dc5.PNG'); }
-        .carousel-item:nth-child(6) { background-image: url('/static/images/dc7.PNG'); }
+        .carousel-item:nth-child(6) { background-image: url('/static/images/dc2.jpeg'); }
         .carousel-item:nth-child(7) { background-image: url('/static/images/dc8.PNG'); }
         .carousel-item:nth-child(8) { background-image: url('/static/images/dc9.PNG'); 
     }
@@ -265,7 +265,7 @@
             color: transparent;
             transform: rotate(-5deg); /* Slight curve effect */
             display: inline-block;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for emphasis */
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Subtle shadow for emphasis */
         }
         
 
@@ -285,7 +285,9 @@
             <li><a href="{{ url_for('home2') }}">Login</a></li>
             <li><a href="{{ url_for('admin_login') }}">Admin</a></li>
 
-            <li><a href="{{ url_for('contact') }}">Contact</a></li>
+            <!-- <li><a href="{{ url_for('contact') }}">Contact</a></li>  -->
+            <li><a href="https://www.dominioncity.cc/contact">Contact</a></li>
+            
             <li><a href="https://www.dominioncity.cc/">About</a></li>
         </ul>
         <button class="menu-button" onclick="toggleMenu()">☰</button>
@@ -324,10 +326,18 @@
     </section>
 
     <!-- About Us Section -->
+    <section class="about-carousel-container">
     <section class="about">
-        <h2>About Dominion City Global</h2>
-        <p>Dominion City is a global network of believers united by the message of Jesus Christ. We are passionate about spreading love, inspiring change, and empowering individuals to live their best lives. Our mission is to provide a nurturing environment for spiritual growth, leadership development, and community outreach.</p>
+        <h2 style="color: rgb(32, 32, 209);">About Dominion City Global</h2>
+        <p style="color: black;">Dominion City is a global network of believers united by the message of Jesus Christ. We are passionate about spreading love, inspiring change, and empowering individuals to live their best lives. Our mission is to provide a nurturing environment for spiritual growth, leadership development, and community outreach.</p>
     </section>
+
+    <section class="carousel">
+        <!-- Carousel content here -->
+    </section>
+</section>
+
+    
 
         <!-- Footer -->
     <footer class="footer">
