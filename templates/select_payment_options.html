@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Options</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1E3A8A;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            max-width: 700px;
+        }
+        .option-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #4364F7;
+            border: none;
+            border-radius: 50%;
+            padding: 15px;
+            color: white;
+            font-size: 0.9em;
+            cursor: pointer;
+            text-align: center;
+            width: 120px;
+            height: 120px;
+            text-decoration: none;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .option-button:hover {
+            background-color: #2C52DF;
+            transform: scale(1.05);
+        }
+        .option-text {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .emoji {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        .back-button {
+            background-color: #1E40AF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+        .back-button:hover {
+            background-color: #1A2F8A;
+        }
+        /* PayPal logo styling */
+        .paypal-logo img {
+            width: 70px; /* Adjusted to fit inside the circle */
+            height: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Select Payment Options</h1>
+    <p>Please choose your preferred payment method from the options below:</p>
+
+    <div class="options-container">
+        <!-- PayPal Option -->
+        <a href="https://www.paypal.com/paypalme/dominioncityglobal" class="option-button" target="_blank">
+            <div class="option-text">
+                <strong>Donate with PayPal</strong>
+                <small>SECURED | USD, GBP, EUR, CAD</small>
+            </div>
+            <!-- PayPal Logo -->
+            <div class="paypal-logo">
+                <table border="0" cellpadding="10" cellspacing="0" align="center">
+                    <tr>
+                        <td align="center">
+                            <a href="https://www.paypal.com/webapps/mpp/paypal-popup" title="How PayPal Works" onclick="javascript:window.open('https://www.paypal.com/webapps/mpp/paypal-popup','WIPaypal','toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=1060, height=700'); return false;">
+                                <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" border="0" alt="PayPal Logo">
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </a>
+
+        <!-- Other Payment Options (e.g., Card, Bank Transfer) -->
+        <a href="https://www.dominioncity.cc/give/offerings" class="option-button" target="_blank">
+            <span class="emoji">💳</span> <!-- Credit Card Icon -->
+            <div class="option-text">
+                <strong>Donate with Card</strong>
+                <small>SECURED</small>
+            </div>
+        </a>
+
+        <a href="https://www.dominioncity.cc/give/bank-transfer" class="option-button" target="_blank">
+            <span class="emoji">🏦</span> <!-- Bank Icon -->
+            <div class="option-text">
+                <strong>Donate via Bank Transfer</strong>
+                <small>SECURED | USD, NGN</small>
+            </div>
+        </a>
+
+        <a href="mailto:give@dominioncityglobal.org" class="option-button" target="_blank">
+            <span class="emoji">💰</span> <!-- Zelle Icon -->
+            <div class="option-text">
+                <strong>Zelle to Dominion City Global</strong>
+                <small>Email: give@dominioncityglobal.org</small>
+            </div>
+        </a>
+    </div>
+
+    <a href="{{ url_for('donate') }}" class="back-button">Go Back to Donation Page</a>
+</body>
+</html>

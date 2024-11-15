@@ -929,6 +929,9 @@ def change_password():
     return render_template('change_password.html')  # Render the password change form
 
 
+
+
+#Send notifications
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
@@ -976,6 +979,15 @@ def contact():
 
     return render_template('contact.html')
 
+
+    
+@app.route("/select_payment_options", methods=["GET"])
+@login_required
+def select_payment_options():
+    return render_template("select_payment_options.html")
+
+
+
 # Route for thank you page
 @app.route('/thank-you')
 def thank_you():
@@ -1005,6 +1017,13 @@ application = app
 
 if __name__ == "__main__":
     application.run(debug=True)
+
+
+
+
+
+
+
 
 
 

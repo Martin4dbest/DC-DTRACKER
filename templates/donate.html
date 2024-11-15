@@ -230,14 +230,48 @@
         
         <div id="account-details" style="margin-bottom: 30px;">
             <h3>Bank Account Details</h3>
-            <p>Account Name: Dominion City</p>
-            <p>Account Number: 123456789</p>
-            <p>Bank Name: ABC Bank</p>
-
-            <button type="button" onclick="redirectToPaymentOptions()" style="margin-top: 20px; background-color: #4364F7; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
-                Select Other Payment Options
-            </button>
-        </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+              <div>
+                <h4>International Audience</h4>
+                <p><strong>WELLS FARGO BANK (USD)</strong></p>
+                <p>Dominion City Global</p>
+                <p>A/C: 3240700074</p>
+                <p>Intl routing no: 121000248</p>
+                <p>Domestic routing no: 061000227</p>
+              </div>
+              
+              <div>
+                <h4>Local & International Audience</h4>
+                <p><strong>Guaranty Trust Bank PLC (USD)</strong></p>
+                <p>Dominion City</p>
+                <p>A/C: 028-326-5588</p>
+                <p>Swift: GTBINGLA</p>
+                <p>Sort code: 058152403</p>
+              </div>
+          
+              <div>
+                <h4>Other Projects</h4>
+                <p><strong>Fidelity Bank (NGN)</strong></p>
+                <p>Dominion City (Main Account)</p>
+                <p>A/C: 4110041341</p>
+              </div>
+            </div>
+            
+            <div style="text-align: center;">
+              <h4>For Enquiries, please call:</h4>
+              <p>+234-9036370546</p>
+              <p>+234-8103526864</p>
+            </div>
+          
+                       
+            <a href="{{ url_for('select_payment_options') }}">
+                <button style="margin-top: 20px; background-color: #4364F7; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+                    Select Other Payment Options
+                </button>
+            </a>
+            
+          
 
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
             <label style="margin-top: 30px; display: block;">
@@ -341,11 +375,9 @@
             return true;
         }
     
-        // Redirect to payment options
-        function redirectToPaymentOptions() {
-            alert("Redirecting to payment options.");
-            window.location.href = "payment_options.html"; 
-        }
+        
+         
+
     </script>
     
     
