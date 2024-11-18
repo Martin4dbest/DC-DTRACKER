@@ -188,8 +188,14 @@
         <h1>Partner</h1>
 
         <a href="{{ url_for('view_my_donations') }}">My Donations</a>        
-        <a href="https://www.dominioncity.cc/">Events</a>
+        <a href="https://www.dominioncity.cc/">Events</a>     
+        <a href="{{ url_for('update_user_details', user_id=current_user.id) }}" class="btn btn-primary">Update Details</a>
+
         <a href="{{ url_for('logout') }}">Logout</a>
+        
+        
+
+
     </div>
 
     <!-- Main Content -->
@@ -202,7 +208,7 @@
         <h2> Welcome {{ user.name }}</h2>
 
         <h3>
-            Medal: 
+            
             {% if user.medal == 'Platinum Partner' %}
                 <span class="medal medal-platinum">💎 Platinum Partner</span>
             {% elif user.medal == 'Gold Partner' %}
@@ -222,76 +228,37 @@
             {% endif %}
         </h3>
         
-        <p>Pledged Amount: {{ user.pledged_amount }} {{ user.pledge_currency }} </p>
+        <p>Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }} </p>
         
-        <button type="button" id="show_account_btn" onclick="showAccountDetails()" style="margin-bottom: 30px;">
-            Proceed to Make Payment
-        </button>
-        
-        <div id="account-details" style="margin-bottom: 30px;">
-            <h3>Bank Account Details</h3>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-              <div>
-                <h4>International Audience</h4>
-                <p><strong>WELLS FARGO BANK (USD)</strong></p>
-                <p>Dominion City Global</p>
-                <p>A/C: 3240700074</p>
-                <p>Intl routing no: 121000248</p>
-                <p>Domestic routing no: 061000227</p>
-              </div>
-              
-              <div>
-                <h4>Local & International Audience</h4>
-                <p><strong>Guaranty Trust Bank PLC (USD)</strong></p>
-                <p>Dominion City</p>
-                <p>A/C: 028-326-5588</p>
-                <p>Swift: GTBINGLA</p>
-                <p>Sort code: 058152403</p>
-              </div>
-          
-              <div>
-                <h4>Other Projects</h4>
-                <p><strong>Fidelity Bank (NGN)</strong></p>
-                <p>Dominion City (Main Account)</p>
-                <p>A/C: 4110041341</p>
-              </div>
-            </div>
-            
-            <div style="text-align: center;">
-              <h4>For Enquiries, please call:</h4>
-              <p>+234-9036370546</p>
-              <p>+234-8103526864</p>
-            </div>
-          
-                       
+        <div id="payment-options" style="text-align: center; margin-top: 30px;">
+            <h3>Make Payment</h3>
             <a href="{{ url_for('select_payment_options') }}">
-                <button style="margin-top: 20px; background-color: #4364F7; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
-                    Select Other Payment Options
+                <button type="button" style="margin-bottom: 30px; background-color: #4364F7; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+                    Make Payment
                 </button>
             </a>
-            
-          
-
+        </div>
+        
+        <!-- Thank-you message block -->
+        <div style="margin-top: 20px;">
+            <p style="color: blue; margin-left: 20px;">
+                🙏 Thank you for your donation!<br>
+                Kindly check this box to track your donations. It's optional, but we encourage you to do so. ✅
+            </p>
+        </div>
+        
         <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
             <label style="margin-top: 30px; display: block;">
                 <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()"> 
-                <p style="color: blue; margin-left: 20px;">
-                    🙏 Thank you for your donation!<br>
-                    Kindly check this box to track your donations. It's optional, but we encourage you to do so. ✅
-                </p>
             </label>
             
-            
-        
             <div id="amount-entry" style="margin-top: 10px; padding: 10px;">
                 <label for="amount" style="font-size: 0.9em;">Enter the amount you donated:</label><br>
                 <!-- Input for the raw number (hidden or styled as needed) -->
-                 <input type="number" id="amountRaw" name="amount" step="0.01" required style="width: 30%; padding: 8px; font-size: 0.9em;" oninput="formatAmount(this)" />
-                 <!-- Input for displaying the formatted amount (with commas) -->
-                  <input type="text" id="formattedAmount" readonly style="width: 30%; padding: 8px; font-size: 0.9em;"/>
-
-            
+                <input type="number" id="amountRaw" name="amount" step="0.01" required style="width: 30%; padding: 8px; font-size: 0.9em;" oninput="formatAmount(this)" />
+                <!-- Input for displaying the formatted amount (with commas) -->
+                <input type="text" id="formattedAmount" readonly style="width: 30%; padding: 8px; font-size: 0.9em;"/>
+        
                 <label for="currency" style="font-size: 0.9em; margin-top: 8px;">Currency:</label><br>
                 <select id="currency" name="currency" required style="width: 30%; padding: 8px; font-size: 0.9em;">
                     <option value="USD">&#36; USD - United States Dollar</option>
@@ -315,18 +282,16 @@
                     <option value="TRY">₺ TRY - Turkish Lira</option>
                     <option value="AED">&#163; AED - UAE Dirham</option>
                 </select>
-            
+        
                 <label class="calendar-label" for="date_donated" style="font-size: 0.9em; margin-top: 8px;">Payment Date:</label><br>
                 <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required style="width: 30%; padding: 8px; font-size: 0.9em;">
             
                 <button type="submit" style="margin-top: 10px; padding: 5px 10px; background-color: blue; color: white; font-size: 1em; font-weight: 500; border: none; border-radius: 5px; cursor: pointer; width: 20%; transition: background-color 0.3s ease;">
                     Submit Donation
                 </button>
-
-
             </div>
         </form>
-    </div>
+        
 
     <script>
         // Show or hide account details

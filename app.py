@@ -7,15 +7,15 @@ from datetime import datetime, date
 from werkzeug.security import generate_password_hash
 from sqlalchemy import Text
 from sqlalchemy import Column, Boolean, DateTime, DECIMAL
-
-
-
+from flask_login import LoginManager, login_required, current_user
 from apscheduler.schedulers.background import BackgroundScheduler
 from twilio.rest import Client
 from functools import wraps
 import os
-from dotenv import load_dotenv
 
+from googleapiclient.discovery import build
+from google.oauth2.service_account import Credentials
+from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 # AWS SES Setup
@@ -43,6 +43,11 @@ load_dotenv()
 
 # App and database setup
 app = Flask(__name__)
+
+# Initialize LoginManager
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["SQLALCHEMY_DATABASE_URI"]  # Use only the environment variable for PostgreSQL URI
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]  # Use only the environment variable for security
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -70,11 +75,6 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'your_twilio_phone_n
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
-
-
-
-from googleapiclient.discovery import build
-from google.oauth2.service_account import Credentials
 
 # Define SCOPES (Google Sheets API Scope)
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -325,6 +325,35 @@ def register():
     return render_template('register.html')  # Render the registration form template
 
 
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.query(User).get(user_id)  # Assuming `User` is your user table
+
+
+#Partner can update their details after admin registered them but admin cannot update them here@app.route('/update-details', methods=['GET', 'POST'])
+@login_required
+def update_user_details():
+    user = current_user  # Get the logged-in user
+
+    if request.method == 'POST':
+        # Get new values from the form
+        user.phone = request.form['phone']
+        user.email = request.form['email']
+        user.address = request.form['address']
+        user.country = request.form['country']
+        user.state = request.form['state']
+        user.church_branch = request.form['church_branch']
+        user.birthday = datetime.strptime(request.form['birthday'], "%Y-%m-%d") if request.form['birthday'] else None
+
+        db.session.commit()  # Commit changes to the database
+        flash("Your details have been updated!", "success")
+        return redirect(url_for('profile'))  # Redirect to user's profile or dashboard
+
+    return render_template('update_user.html', user=user)
+
+
 # Home route
 @app.route("/")
 def index():
@@ -362,7 +391,7 @@ def login():
 
 
 
-
+#Partner Donation
 @app.route("/donate", methods=["GET", "POST"])
 @login_required
 def donate():
@@ -986,6 +1015,56 @@ def contact():
 def select_payment_options():
     return render_template("select_payment_options.html")
 
+
+
+@app.route('/update_user_details', methods=['GET', 'POST'])
+def update_user_details():
+    user_id = request.args.get('user_id')  # Retrieve the user_id from the query parameter
+    if user_id:
+        user = User.query.get(user_id)  # Fetch user from the database by ID
+        if user:
+            if request.method == 'POST':
+                # Handling the form data to update the user's details
+                name = request.form.get('name')
+                email = request.form.get('email')
+                phone = request.form.get('phone')
+                address = request.form.get('address')
+                country = request.form.get('country')
+                state = request.form.get('state')
+                church_branch = request.form.get('church_branch')
+                birthday = request.form.get('birthday')
+
+                # Update user details
+                user.name = name
+                user.email = email
+                user.phone = phone
+                user.address = address
+                user.country = country
+                user.state = state
+                user.church_branch = church_branch
+                user.birthday = birthday
+
+                # Commit the changes to the database
+                db.session.commit()
+                flash('Your details have been updated successfully!', 'success')
+                return redirect(url_for('login'))  # Redirect after successful update
+
+            return render_template('update_user_details.html', user=user)  # Render the form pre-filled with user details
+        else:
+            flash('User not found', 'error')
+            return redirect(url_for('index'))  # Redirect if user not found
+    else:
+        flash('User ID is missing', 'error')
+        return redirect(url_for('index'))  # Redirect if user_id is not provided
+    
+    #http://127.0.0.1:5000/update_user_details?user_id=47
+    
+
+
+# Route for 'paystack.html'
+@app.route('/paystack')
+def paystack():
+    return render_template('paystack.html')
 
 
 # Route for thank you page
