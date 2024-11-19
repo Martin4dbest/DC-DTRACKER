@@ -109,6 +109,7 @@
                     <th>Donation Date</th>
                     <th>Amount</th>
                     <th>Currency</th>
+                    <th>Payment Type</th> <!-- Added Payment Type column -->
                 </tr>
             </thead>
             <tbody>
@@ -118,6 +119,7 @@
                             <td>{{ donation.donation_date.strftime('%Y-%m-%d') }}</td>
                             <td>{{ donation.amount }}</td>
                             <td>{{ donation.currency }}</td>
+                            <td>{{ donation.payment_type }}</td> <!-- Display the payment type -->
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -149,4 +151,3 @@
 
 </body>
 </html>
-

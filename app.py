@@ -76,69 +76,6 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 
-# Define SCOPES (Google Sheets API Scope)
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
-# Route for exporting to Google Sheets
-@app.route('/export_to_google_sheets', methods=['POST'])
-def export_to_google_sheets():
-    # Authenticate using credentials (with the actual path to your JSON file)
-    creds = Credentials.from_service_account_file(
-        'C:/Users/DELL/Desktop/DCDTRACKER GLOBAL/dominion-city-dtracker-238ba4b6c99a.json', scopes=SCOPES)  # Corrected file path
-   
-
-    # Create a Sheets API service
-    service = build('sheets', 'v4', credentials=creds)
-
-    # ID of your Google Sheet (use the ID from the provided URL)
-    SPREADSHEET_ID = '1EHceFWYA9P8uZXnkkDUFmulrcafXwBjwhVaEbOZh0mc'  # Your actual Spreadsheet ID
-
-    # Fetch data from the database (assuming you have a User model and you're querying users from your database)
-    users = User.query.all()
-
-    # Prepare data for Google Sheets
-    values = [
-        ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']  # Column headers
-    ]
-
-    # Add actual user data to the values list
-    for user in users:
-        values.append([
-            user.name,          # Partner Name
-            'Admin' if user.is_admin else 'Partner',  # Convert True/False to 'admin' or 'partner'
-            user.phone,         # Phone
-            user.email,         # Email
-            user.country,       # Country
-            user.state,         # State
-            user.church_branch, # Local Church (assuming it's called 'church_branch')
-            user.address,       # Address
-            user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A' , # Birthday (formatted as needed)
-            user.pledged_amount,
-            user.pledge_currency,
-
-        ])
-
-    # Prepare the data for the API request
-    body = {
-        'values': values  # The actual data to be written to the sheet
-    }
-
-    # Call the Sheets API to write data to the sheet
-    sheet = service.spreadsheets()
-    sheet.values().update(
-        spreadsheetId=SPREADSHEET_ID, 
-        range='Sheet1!A1', 
-        valueInputOption='RAW', 
-        body=body
-    ).execute()
-
-    # After successful export, redirect back to the view page
-    return redirect(url_for('view_partners_pledges'))
-
-
-
-
-
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -187,10 +124,7 @@ class Donation(db.Model):
     amount = db.Column(db.Float, nullable=False)
     currency = db.Column(db.String(50), default='USD')
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
-    
-    
-
-    
+    payment_type = db.Column(db.String(20), nullable=False, default="full")  # New field for payment type
 
     user = db.relationship("User", backref="donations")
     medal = db.Column(db.String(50))  # field to store medal type
@@ -212,7 +146,85 @@ class Pledge(db.Model):
     #user = db.relationship('User', backref='pledges')
     donor = db.relationship('User', back_populates='pledges')  # This should reference 'pledges' in User
     
-    
+
+
+# Define SCOPES (Google Sheets API Scope)
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+# Google Sheets API setup (replace with your actual credentials and spreadsheet ID)
+SERVICE_ACCOUNT_FILE = 'C:/Users/DELL/Desktop/DCDTRACKER GLOBAL/dominion-city-dtracker-238ba4b6c99a.json'  # Corrected file path
+SPREADSHEET_ID = '1EHceFWYA9P8uZXnkkDUFmulrcafXwBjwhVaEbOZh0mc'  # Your actual Spreadsheet ID
+
+
+
+# Route for exporting to Google Sheets
+@app.route('/export_to_google_sheets', methods=['POST'])
+def export_to_google_sheets():
+    # Authenticate using credentials
+    creds = Credentials.from_service_account_file(
+        'C:/Users/DELL/Desktop/DCDTRACKER GLOBAL/dominion-city-dtracker-238ba4b6c99a.json',
+        scopes=SCOPES
+    )
+    # Create a Sheets API service
+    service = build('sheets', 'v4', credentials=creds)
+
+    # ID of your Google Sheet
+    SPREADSHEET_ID = '1EHceFWYA9P8uZXnkkDUFmulrcafXwBjwhVaEbOZh0mc'
+
+    # Prepare data for Partners_Pledges sheet
+    partner_values = [
+        ['Name', 'Pledged Amount', 'Currency', 'Country', 'State', 'Local Church', 'Medal', 'Pledge Status']
+    ]
+    users = User.query.all()
+    for user in users:
+        pledge_status = "Paid" if user.paid_status else "Unpaid"
+        partner_values.append([
+            user.name,
+            user.pledged_amount,
+            user.pledge_currency,
+            user.country,
+            user.state,
+            user.church_branch,
+            user.medal if user.medal else 'None',
+            pledge_status
+        ])
+
+    # Update the Partners_Pledges sheet
+    service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range='Partners_Pledges!A1',
+        valueInputOption='RAW',
+        body={'values': partner_values}
+    ).execute()
+
+    # Prepare data for Recent_Donations sheet
+    donation_values = [
+        ['Partner', 'Country', 'State', 'Amount', 'Currency', 'Payment Type', 'Donation Date']
+    ]
+    donations = Donation.query.all()
+    for donation in donations:
+        donation_values.append([
+            donation.user.name,
+            donation.user.country,
+            donation.user.state,
+            donation.amount,
+            donation.currency,
+            donation.payment_type,
+            donation.donation_date.strftime('%Y-%m-%d') if donation.donation_date else 'N/A'
+        ])
+
+    # Update the Recent_Donations sheet
+    service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range='Recent_Donations!A1',
+        valueInputOption='RAW',
+        body={'values': donation_values}
+    ).execute()
+
+    # After successful export, redirect back to the view page
+    return redirect(url_for('view_partners_pledges'))
+
+
 
 # Schedule for sending birthday emails
 def send_birthday_emails():
@@ -391,7 +403,6 @@ def login():
 
 
 
-#Partner Donation
 @app.route("/donate", methods=["GET", "POST"])
 @login_required
 def donate():
@@ -403,6 +414,7 @@ def donate():
 
     if request.method == "POST":
         user_id = session.get("user_id")
+        payment_type = request.form.get("payment_type")  # Get the selected payment type
 
         if request.form.get("offline_donation"):
             # User is entering an offline donation amount
@@ -423,7 +435,6 @@ def donate():
             # Validate or set the donation date
             if donation_date:
                 try:
-                    # Ensure the entered date is parsed correctly into a date object
                     donation_date = datetime.strptime(donation_date, '%Y-%m-%d').date()
                 except ValueError:
                     flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
@@ -433,13 +444,19 @@ def donate():
 
             if user_id:
                 # Create a new Donation object
-                donation = Donation(user_id=user_id, amount=amount, currency=currency, donation_date=donation_date)
+                donation = Donation(
+                    user_id=user_id,
+                    amount=amount,
+                    currency=currency,
+                    donation_date=donation_date,
+                    payment_type=payment_type  # Save the selected payment type
+                )
 
                 try:
                     db.session.add(donation)
                     db.session.commit()
-                    flash("Thank you for confirming your offline donation!", "success")
-                    app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Date: {donation_date}")
+                    flash(f"Thank you for your {payment_type} donation!", "success")
+                    app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
                     return redirect(url_for("donation_success"))
                 except Exception as e:
                     db.session.rollback()
@@ -454,6 +471,32 @@ def donate():
 
     # Render the form again, passing back the donation_date so it can be displayed in the input
     return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
+
+
+@app.route('/recent_donations', methods=['GET', 'POST'])
+def recent_donations():
+    search_country = request.form.get('search_country', '').strip()  # Get search country from form, with trimming
+    search_payment_type = request.form.get('search_payment_type', '').strip()  # Get payment type filter from form
+
+    # Build the query for donations
+    query = Donation.query
+
+    # Filter by country if provided
+    if search_country:
+        query = query.filter(Donation.user.has(country=search_country.lower()))
+
+    # Filter by payment type if provided
+    if search_payment_type:
+        query = query.filter(Donation.payment_type == search_payment_type.lower())
+
+    # Fetch donations, ordered by donation date
+    recent_donations = query.order_by(Donation.donation_date.desc()).all()
+
+    return render_template('recent_donations.html', recent_donations=recent_donations, search_country=search_country, search_payment_type=search_payment_type)
+
+
+
+
 
 
 
@@ -730,7 +773,7 @@ def delete_donation(donation_id):
 
 
 
-#Add Pledges to new Partners and also already onboarded partners
+#Add Pledges to new Partners and also already-onboarded partners
 # Route to add Pledge to Partners
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():

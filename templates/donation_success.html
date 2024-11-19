@@ -29,15 +29,35 @@
         }
         a {
             text-decoration: none;
-            color: #007bff;
+            color: rgb(30, 30, 230);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Thank You!</h1>
-        <p>Your donation has been successfully processed and is pending admin verification.</p>
-        <p><a href="{{ url_for('donate') }}">Return to Home</a></p>
+        <p>Your donation details and payment type have been submitted to admin.</p>
+        <p>
+            <a href="{{ url_for('select_payment_options') }}" 
+               style="font-weight: bold; font-size: 18px; text-decoration: none; 
+                      padding: 10px 20px; background-color: rgb(9, 9, 110); color: white; 
+                      border-radius: 5px; display: inline-block; text-align: center; 
+                      transition: background-color 0.3s ease, transform 0.3s ease;">
+                You can now proceed with your payment.
+            </a>
+        </p>
+        
+        <!-- Hover effect to make it more clickable -->
+        <style>
+            a:hover {
+                background-color: #021c38;
+                transform: scale(1.1);
+            }
+        </style>
+        
+        
+
+
     </div>
 </body>
 </html>

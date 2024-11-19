@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Dominion City Admin</title>
     <style>
         /* General styles */
@@ -16,7 +17,7 @@
 
         /* Sidebar */
         .sidebar {
-            background-color: #0052D4;
+            background-color: #073a8b;
             width: 230px;
             height: 100vh;
             position: fixed;
@@ -224,17 +225,91 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
-        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">  
-        <h1>Admin</h1>
-        <a href="{{ url_for('admin_register') }}">Register Admin</a>
-        <a href="{{ url_for('register') }}">Register Partner</a>
-        <a href="{{ url_for('view_partners_pledges') }}">Partners Pledges</a>
-        <a href="{{ url_for('view_partners_details') }}">Partners Contacts</a>
-        <a href="{{ url_for('view_admin_details') }}">Admin Contacts</a>
+    <div class="sidebar" style="width: 250px; background-color: rgb(10, 10, 145); padding: 20px; position: fixed; height: 100%; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);">
+        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover; display: block; margin: 0 auto;">
+        <h1 style="text-align: center; font-size: 22px; margin-top: 20px; color: white;">Admin</h1>
 
-        <a href="{{ url_for('logout') }}">Logout</a>
+        <a href="{{ url_for('admin_register') }}" class="nav-link" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-user-plus" style="font-size: 24px; color: #ff6347;"></i> <!-- Tomato color for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Register Admin
+            </span>
+        </a>
+
+        <a href="{{ url_for('register') }}" class="nav-link" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-users" style="font-size: 24px; color: #1e90ff;"></i> <!-- Dodger blue for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Register Partner
+            </span>
+        </a>
+
+        <a href="{{ url_for('recent_donations') }}" class="nav-link" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-chart-line" style="font-size: 24px; color: #32cd32;"></i> <!-- Lime green for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Partners Recent Donations
+            </span>
+        </a>
+
+        <a href="{{ url_for('view_partners_pledges') }}" class="nav-link" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-handshake" style="font-size: 24px; color: #ff1493;"></i> <!-- Deep pink for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Partners Pledges
+            </span>
+        </a>
+
+        <a href="{{ url_for('view_partners_details') }}" class="nav-link" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-address-book" style="font-size: 24px; color: #ff8c00;"></i> <!-- Dark orange for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Partners Contacts
+            </span>
+        </a>
+
+        <a href="{{ url_for('view_admin_details') }}" class="nav-link" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-user-cog" style="font-size: 24px; color: #d2691e;"></i> <!-- Chocolate color for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Admin Contacts
+            </span>
+        </a>
+
+        <a href="{{ url_for('logout') }}" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-sign-out-alt" style="font-size: 24px; color: #dc143c;"></i> <!-- Crimson for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Logout
+            </span>
+        </a>
     </div>
+
+    <script>
+        // Hover effect to show text with icon, but don't change icon color
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('mouseover', function() {
+                const text = this.querySelector('.nav-text');
+                text.style.display = 'block';
+                text.style.opacity = '1';
+            });
+            link.addEventListener('mouseout', function() {
+                const text = this.querySelector('.nav-text');
+                text.style.display = 'none';
+                text.style.opacity = '0';
+            });
+        });
+    </script>
+    
 
     <!-- Main Content -->
     <div class="content">
@@ -270,6 +345,7 @@
                         <th>State</th>
                         <th>Amount</th>
                         <th>Currency</th>
+                        <th>Payment Type</th>
                         <th>Donation Date</th> 
                         <th>Actions</th>
                     </tr>
@@ -283,6 +359,7 @@
 
                         <td>{{ donation.amount }}</td>
                         <td>{{ donation.currency }}</td>
+                        <td>{{ donation.payment_type }}</td>
                         <td>{{ donation.donation_date }}</td>
                         <td>
                             <form action="{{ url_for('delete_donation', donation_id=donation.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDeletion('donation')">
