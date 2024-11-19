@@ -208,25 +208,29 @@
         <h2> Welcome {{ user.name }}</h2>
 
         <h3>
-            
-            {% if user.medal == 'Platinum Partner' %}
-                <span class="medal medal-platinum">💎 Platinum Partner</span>
+            {% if user.medal == 'Diamond Partner' %}
+                <span class="medal medal-diamond">
+                    <img src="/static/images/diamond.png" alt="Diamond Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
+                    Diamond Partner
+                </span>
+            {% elif user.medal == 'Platinum Partner' %}
+                <span class="medal medal-platinum">
+                    <img src="/static/images/platinum.png" alt="Platinum Icon" style="height: 80px; width: 80px; vertical-align: middle;"> 
+                    Platinum Partner
+                </span>
             {% elif user.medal == 'Gold Partner' %}
-                <span class="medal medal-gold">🏆 Gold Partner</span>
+                <span class="medal medal-gold">
+                    <img src="/static/images/gold.PNG" alt="Gold Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
+                    Gold Partner
+                </span>
             {% elif user.medal == 'Silver Partner' %}
-                <span class="medal medal-silver">🥈 Silver Partner</span>
-            {% elif user.medal == 'Bronze Partner' %}
-                <span class="medal medal-bronze">🥉 Bronze Partner</span>
-            {% elif user.medal == 'Supporter' %}
-                <span class="medal medal-supporter">🤝 Supporter</span>
-            {% elif user.medal == 'Friend' %}
-                <span class="medal medal-friend">🌱 Friend</span>
-            {% elif user.medal == 'Contributor' %}
-                <span class="medal medal-contributor">💼 Contributor</span>
-            {% else %}
-                <span class="medal">🎖 No Medal Yet</span>
+                <span class="medal medal-silver">
+                    <img src="/static/images/silver.png" alt="Silver Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
+                    Silver Partner
+                </span>
             {% endif %}
         </h3>
+        
         
         <p>Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }} </p>
         
@@ -240,58 +244,67 @@
         </div>
         
         <!-- Thank-you message block -->
-        <div style="margin-top: 20px;">
-            <p style="color: blue; margin-left: 20px;">
-                🙏 Thank you for your donation!<br>
-                Kindly check this box to track your donations. It's optional, but we encourage you to do so. ✅
-            </p>
+        <!-- Donation Block -->
+<div style="margin-top: 50px; position: relative; min-height: 300px;">
+    <!-- Spacer to push content towards the footer -->
+    <div style="height: calc(50vh - 350px);"></div>
+
+    <!-- Thank-you message block -->
+    <div style="margin-top: 20px;">
+        <p style="color: blue; margin-left: 20px;">
+            🙏 Thank you for your donation!<br>
+            Kindly check this box to track your donations. It's optional, but we encourage you to do so. ✅
+        </p>
+    </div>
+
+    <!-- Donation Form -->
+    <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
+        <label style="margin-top: 30px; display: block;">
+            <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()" 
+                   style="width: 30px; height: 30px; accent-color: blue;">
+        </label>
+        
+        
+        
+        <div id="amount-entry" style="margin-top: 10px; padding: 10px;">
+            <label for="amount" style="font-size: 0.9em;">Enter the amount you donated:</label><br>
+            <input type="number" id="amountRaw" name="amount" step="0.01" required style="width: 30%; padding: 8px; font-size: 0.9em;" oninput="formatAmount(this)" />
+            <input type="text" id="formattedAmount" readonly style="width: 30%; padding: 8px; font-size: 0.9em;"/>
+            
+            <label for="currency" style="font-size: 0.9em; margin-top: 8px;">Currency:</label><br>
+            <select id="currency" name="currency" required style="width: 30%; padding: 8px; font-size: 0.9em;">
+                <option value="USD">&#36; USD - United States Dollar</option>
+                <option value="EUR">&#8364; EUR - Euro</option>
+                <option value="GBP">&#163; GBP - British Pound</option>
+                <option value="NGN">&#8358; NGN - Nigerian Naira</option>
+                <option value="KES">KSH KES - Kenyan Shilling</option>
+                <option value="AUD">&#36; AUD - Australian Dollar</option>
+                <option value="CAD">&#36; CAD - Canadian Dollar</option>
+                <option value="JPY">&#165; JPY - Japanese Yen</option>
+                <option value="INR">&#8377; INR - Indian Rupee</option>
+                <option value="CNY">&#165; CNY - Chinese Yuan</option>
+                <option value="MXN">&#36; MXN - Mexican Peso</option>
+                <option value="BRL">R&#36; BRL - Brazilian Real</option>
+                <option value="ZAR">R ZAR - South African Rand</option>
+                <option value="CHF">&#8356; CHF - Swiss Franc</option>
+                <option value="HKD">&#36; HKD - Hong Kong Dollar</option>
+                <option value="SGD">&#36; SGD - Singapore Dollar</option>
+                <option value="MYR">&#8369; MYR - Malaysian Ringgit</option>
+                <option value="PHP">&#8369; PHP - Philippine Peso</option>
+                <option value="TRY">₺ TRY - Turkish Lira</option>
+                <option value="AED">&#163; AED - UAE Dirham</option>
+            </select>
+
+            <label class="calendar-label" for="date_donated" style="font-size: 0.9em; margin-top: 8px;">Payment Date:</label><br>
+            <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required style="width: 30%; padding: 8px; font-size: 0.9em;">
+        
+            <button type="submit" style="margin-top: 10px; padding: 5px 10px; background-color: blue; color: white; font-size: 1em; font-weight: 500; border: none; border-radius: 5px; cursor: pointer; width: 20%; transition: background-color 0.3s ease;">
+                Submit Donation
+            </button>
         </div>
-        
-        <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
-            <label style="margin-top: 30px; display: block;">
-                <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()"> 
-            </label>
-            
-            <div id="amount-entry" style="margin-top: 10px; padding: 10px;">
-                <label for="amount" style="font-size: 0.9em;">Enter the amount you donated:</label><br>
-                <!-- Input for the raw number (hidden or styled as needed) -->
-                <input type="number" id="amountRaw" name="amount" step="0.01" required style="width: 30%; padding: 8px; font-size: 0.9em;" oninput="formatAmount(this)" />
-                <!-- Input for displaying the formatted amount (with commas) -->
-                <input type="text" id="formattedAmount" readonly style="width: 30%; padding: 8px; font-size: 0.9em;"/>
-        
-                <label for="currency" style="font-size: 0.9em; margin-top: 8px;">Currency:</label><br>
-                <select id="currency" name="currency" required style="width: 30%; padding: 8px; font-size: 0.9em;">
-                    <option value="USD">&#36; USD - United States Dollar</option>
-                    <option value="EUR">&#8364; EUR - Euro</option>
-                    <option value="GBP">&#163; GBP - British Pound</option>
-                    <option value="NGN">&#8358; NGN - Nigerian Naira</option>
-                    <option value="KES">KSH KES - Kenyan Shilling</option>
-                    <option value="AUD">&#36; AUD - Australian Dollar</option>
-                    <option value="CAD">&#36; CAD - Canadian Dollar</option>
-                    <option value="JPY">&#165; JPY - Japanese Yen</option>
-                    <option value="INR">&#8377; INR - Indian Rupee</option>
-                    <option value="CNY">&#165; CNY - Chinese Yuan</option>
-                    <option value="MXN">&#36; MXN - Mexican Peso</option>
-                    <option value="BRL">R&#36; BRL - Brazilian Real</option>
-                    <option value="ZAR">R ZAR - South African Rand</option>
-                    <option value="CHF">&#8356; CHF - Swiss Franc</option>
-                    <option value="HKD">&#36; HKD - Hong Kong Dollar</option>
-                    <option value="SGD">&#36; SGD - Singapore Dollar</option>
-                    <option value="MYR">&#8369; MYR - Malaysian Ringgit</option>
-                    <option value="PHP">&#8369; PHP - Philippine Peso</option>
-                    <option value="TRY">₺ TRY - Turkish Lira</option>
-                    <option value="AED">&#163; AED - UAE Dirham</option>
-                </select>
-        
-                <label class="calendar-label" for="date_donated" style="font-size: 0.9em; margin-top: 8px;">Payment Date:</label><br>
-                <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required style="width: 30%; padding: 8px; font-size: 0.9em;">
-            
-                <button type="submit" style="margin-top: 10px; padding: 5px 10px; background-color: blue; color: white; font-size: 1em; font-weight: 500; border: none; border-radius: 5px; cursor: pointer; width: 20%; transition: background-color 0.3s ease;">
-                    Submit Donation
-                </button>
-            </div>
-        </form>
-        
+    </form>
+
+
 
     <script>
         // Show or hide account details
