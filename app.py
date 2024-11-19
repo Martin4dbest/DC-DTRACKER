@@ -75,6 +75,82 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'your_twilio_phone_n
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
+# Define SCOPES (Google Sheets API Scope)
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+
+# Get the values from the environment variables
+SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
+SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
+
+
+
+@app.route('/export_to_google_sheets', methods=['POST'])
+def export_to_google_sheets():
+    # Authenticate using credentials
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=creds)
+
+    # === Export Partners' Pledges Data ===
+    users = User.query.filter_by(is_admin=False).all()  # Only select non-admin users
+    partners_values = [
+        ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']  # Column headers
+    ]
+
+    for user in users:
+        partners_values.append([
+            user.name,
+            'Admin' if user.is_admin else 'Partner',
+            user.phone,
+            user.email,
+            user.country,
+            user.state,
+            user.church_branch,
+            user.address,
+            user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A',
+            user.pledged_amount,
+            user.pledge_currency,
+        ])
+
+    partners_body = {'values': partners_values}
+    service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range='Sheet1!A1',  # Separate sheet/tab for partners' pledges
+        valueInputOption='RAW',
+        body=partners_body
+    ).execute()
+
+    # === Export Recent Donations Data ===
+    donations = Donation.query.all()
+    donations_values = [
+        ['Partner', 'Country', 'State', 'Amount', 'Currency', 'Payment Type', 'Donation Date']  # Column headers
+    ]
+
+    for donation in donations:
+        donations_values.append([
+            donation.user.name,  # Assuming 'partner' is a relationship to User in Donation
+            donation.user.country,
+            donation.user.state,
+            donation.amount,
+            donation.currency,
+            donation.payment_type,
+            donation.donation_date.strftime('%m/%d/%Y') if donation.donation_date else 'N/A',
+        ])
+
+    donations_body = {'values': donations_values}
+    service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range='Sheet2!A1',  # Separate sheet/tab for recent donations
+        valueInputOption='RAW',
+        body=donations_body
+    ).execute()
+
+    # Redirect back to the view page after successful export
+    return redirect(url_for('view_partners_pledges'))
+
+
+
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -125,6 +201,10 @@ class Donation(db.Model):
     currency = db.Column(db.String(50), default='USD')
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
     payment_type = db.Column(db.String(20), nullable=False, default="full")  # New field for payment type
+    
+    
+
+    
 
     user = db.relationship("User", backref="donations")
     medal = db.Column(db.String(50))  # field to store medal type
@@ -146,85 +226,7 @@ class Pledge(db.Model):
     #user = db.relationship('User', backref='pledges')
     donor = db.relationship('User', back_populates='pledges')  # This should reference 'pledges' in User
     
-
-
-# Define SCOPES (Google Sheets API Scope)
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
-# Google Sheets API setup (replace with your actual credentials and spreadsheet ID)
-SERVICE_ACCOUNT_FILE = 'C:/Users/DELL/Desktop/DCDTRACKER GLOBAL/dominion-city-dtracker-238ba4b6c99a.json'  # Corrected file path
-SPREADSHEET_ID = '1EHceFWYA9P8uZXnkkDUFmulrcafXwBjwhVaEbOZh0mc'  # Your actual Spreadsheet ID
-
-
-
-# Route for exporting to Google Sheets
-@app.route('/export_to_google_sheets', methods=['POST'])
-def export_to_google_sheets():
-    # Authenticate using credentials
-    creds = Credentials.from_service_account_file(
-        'C:/Users/DELL/Desktop/DCDTRACKER GLOBAL/dominion-city-dtracker-238ba4b6c99a.json',
-        scopes=SCOPES
-    )
-    # Create a Sheets API service
-    service = build('sheets', 'v4', credentials=creds)
-
-    # ID of your Google Sheet
-    SPREADSHEET_ID = '1EHceFWYA9P8uZXnkkDUFmulrcafXwBjwhVaEbOZh0mc'
-
-    # Prepare data for Partners_Pledges sheet
-    partner_values = [
-        ['Name', 'Pledged Amount', 'Currency', 'Country', 'State', 'Local Church', 'Medal', 'Pledge Status']
-    ]
-    users = User.query.all()
-    for user in users:
-        pledge_status = "Paid" if user.paid_status else "Unpaid"
-        partner_values.append([
-            user.name,
-            user.pledged_amount,
-            user.pledge_currency,
-            user.country,
-            user.state,
-            user.church_branch,
-            user.medal if user.medal else 'None',
-            pledge_status
-        ])
-
-    # Update the Partners_Pledges sheet
-    service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID,
-        range='Partners_Pledges!A1',
-        valueInputOption='RAW',
-        body={'values': partner_values}
-    ).execute()
-
-    # Prepare data for Recent_Donations sheet
-    donation_values = [
-        ['Partner', 'Country', 'State', 'Amount', 'Currency', 'Payment Type', 'Donation Date']
-    ]
-    donations = Donation.query.all()
-    for donation in donations:
-        donation_values.append([
-            donation.user.name,
-            donation.user.country,
-            donation.user.state,
-            donation.amount,
-            donation.currency,
-            donation.payment_type,
-            donation.donation_date.strftime('%Y-%m-%d') if donation.donation_date else 'N/A'
-        ])
-
-    # Update the Recent_Donations sheet
-    service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID,
-        range='Recent_Donations!A1',
-        valueInputOption='RAW',
-        body={'values': donation_values}
-    ).execute()
-
-    # After successful export, redirect back to the view page
-    return redirect(url_for('view_partners_pledges'))
-
-
+    
 
 # Schedule for sending birthday emails
 def send_birthday_emails():
