@@ -373,10 +373,15 @@ def update_user_details():
 def index():
     return render_template("index.html")
 
+ # Renders the index page dynamically
+
+
+
+"""
 @app.route('/home2')
 def home2():
     return render_template('home2.html')
-
+"""
 
 
 # User login
@@ -395,13 +400,32 @@ def login():
 
             flash(f'Welcome, {user.name}!', 'success')
             
+            # Redirect admins to the admin dashboard
             if user.is_admin or user.is_super_admin:
                 return redirect(url_for('admin_dashboard'))
-            return redirect(url_for('donate'))
+            
+            # Redirect regular users to home2.html
+            return redirect(url_for('home2'))
         else:
             flash('Invalid email or password.', 'danger')
 
     return render_template('login.html')
+
+
+@app.route('/home2')
+def home2():
+    # Check if the user is logged in
+    if 'user_id' not in session:
+        flash('You need to log in first.', 'warning')
+        return redirect(url_for('login'))
+
+    # Retrieve user information
+    user = User.query.get(session['user_id'])
+
+    return render_template(
+        'home2.html',
+        user=user
+    )
 
 
 
@@ -495,11 +519,6 @@ def recent_donations():
     recent_donations = query.order_by(Donation.donation_date.desc()).all()
 
     return render_template('recent_donations.html', recent_donations=recent_donations, search_country=search_country, search_payment_type=search_payment_type)
-
-
-
-
-
 
 
 
@@ -690,6 +709,8 @@ def send_bulk_email(subject, body, recipients):
         print("Email sent! Message ID:", response['MessageId'])
     except (BotoCoreError, ClientError) as error:
         print(f"An error occurred with SES: {error}")
+
+
 
 # Function to send bulk SMS using AWS SNS
 def send_bulk_sms(message, phone_numbers):
@@ -1005,53 +1026,11 @@ def change_password():
 
 
 
-#Send notifications
-@app.route('/contact', methods=['GET', 'POST'])
+
+@app.route('/contact')
 def contact():
-    if request.method == 'POST':
-        # Get data from the form
-        name = request.form['name']
-        email = request.form['email']
-        subject = request.form['subject']
-        message = request.form['message']
+    return render_template('contact.html')  # Renders the contact page
 
-        # Construct the email body
-        email_body = f"Name: {name}\nEmail: {email}\n\nMessage: {message}"
-
-        # The recipient email is taken from the form (can be dynamic based on the form as well)
-        recipient_email = 'admin@example.com'  # Replace with your desired recipient email
-
-        try:
-            # Send email using SES
-            response = ses_client.send_email(
-                Source=SENDER_EMAIL,
-                Destination={
-                    'ToAddresses': [recipient_email],
-                },
-                Message={
-                    'Subject': {
-                        'Data': subject,
-                    },
-                    'Body': {
-                        'Text': {
-                            'Data': email_body,
-                        },
-                    },
-                },
-            )
-
-            # Print the response for debugging (optional)
-            print(f"Email sent! Message ID: {response['MessageId']}")
-
-            # Redirect to thank you page
-            return redirect(url_for('thank_you'))
-
-        except NoCredentialsError:
-            print("Credentials not found!")
-            # Handle the error or redirect to an error page if needed
-            return "Error: No credentials found to send email."
-
-    return render_template('contact.html')
 
 
     
