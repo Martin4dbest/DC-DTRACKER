@@ -154,33 +154,39 @@
         <h2>Welcome {{ user.name }}</h2>
 
         <h3>
-            {% if user.medal == 'Diamond Partner' %}
-                <span class="medal medal-diamond">
-                    <img src="/static/images/diamond.png" alt="Diamond Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
+                {% if user.medal == 'Diamond Partner' %}
+                <span style="color: #b9f2ff; font-weight: bold;">
+                    <img src="/static/images/diamond.png" alt="Diamond Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 50%;"> 
                     Diamond Partner
-                </span>
-            {% elif user.medal == 'Platinum Partner' %}
-                <span class="medal medal-platinum">
-                    <img src="/static/images/platinum.png" alt="Platinum Icon" style="height: 80px; width: 80px; vertical-align: middle;"> 
+                </span>            
+
+
+                {% elif user.medal == 'Platinum Partner' %}
+                <span style="color: #dac08d; font-weight: bold;">
+                    <img src="/static/images/platinum.png" alt="Platinum Icon" style="height: 80px; width: 80px; vertical-align: middle; border-radius: 50%;"> 
                     Platinum Partner
-                </span>
-            {% elif user.medal == 'Gold Partner' %}
-                <span class="medal medal-gold">
-                    <img src="/static/images/gold.PNG" alt="Gold Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
+                </span>       
+
+                {% elif user.medal == 'Gold Partner' %}
+                <span style="color: #ffd700; font-weight: bold;">
+                    <img src="/static/images/gold.PNG" alt="Gold Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 50%;"> 
                     Gold Partner
-                </span>
-            {% elif user.medal == 'Silver Partner' %}
-                <span class="medal medal-silver">
-                    <img src="/static/images/silver.png" alt="Silver Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
+                </span>                
+            
+                {% elif user.medal == 'Silver Partner' %}
+                <span style="color: #5e5e5e; font-weight: bold;">
+                    <img src="/static/images/silver.png" alt="Silver Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 15%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);"> 
                     Silver Partner
                 </span>
+                               
+                       
             {% endif %}
         </h3>
 
         <p>Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }} </p>
 
                 <!-- Donation Form -->
-        <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();" style="width: 100%; max-width: 500px; margin: 0 auto;">
+        <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();" style="width: 100%; max-width: 700px; margin: 0 auto;">
             <!-- Checkbox to Toggle Payment Form -->
             <label style="margin-top: 70px; display: flex; align-items: center; font-size: 1em; font-weight: bold;">
                 <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()" 
