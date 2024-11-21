@@ -140,6 +140,7 @@
                     <th>Country</th>
                     <th>State</th>
                     <th>Local Church</th>
+                    <th>Partner Since</th>
                     <th>Medal</th>
                     <th>Pledge Status</th>
                     
@@ -154,6 +155,7 @@
                         <td>{{ user.country }}</td>
                         <td>{{ user.state }}</td>
                         <td>{{ user.church_branch }}</td>
+                        <td>{{ user.partner_since }}</td>
                         <td>{{ user.medal }}</td>
                         <td>
                             {% if user.pledged_amount == 0 %}

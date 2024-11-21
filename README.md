@@ -100,7 +100,10 @@ class User(db.Model):
     pledged_amount = db.Column(db.Float, default=0.0)
     pledge_currency = db.Column(db.String(3), default="USD")
     paid_status = db.Column(db.Boolean, default=False)
-    medal = db.Column(db.String(100), nullable=True)  
+    medal = db.Column(db.String(100), nullable=True)  # In your User model
+    partner_since = db.Column(db.Integer, nullable=True)  # Year as an integer
+
+
 
 
     # Relationships
@@ -203,6 +206,7 @@ def admin_required(f):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # Get form data
         email = request.form['email']
         password = request.form['password']
         name = request.form['name']
@@ -221,7 +225,6 @@ def register():
 
         # Handle birthday input with optional year
         birthday_str = request.form.get('birthday')  # e.g., '10-10' or '2024-10-10'
-        # Convert the birthday string to a date object if provided
         birthday = None
         if birthday_str:
             try:
@@ -233,14 +236,24 @@ def register():
                     birthday = datetime.strptime(birthday_str, "%d-%m-%Y").date()
                 except ValueError:
                     flash('Invalid date format for birthday. Please use YYYY-MM-DD or DD-MM-YYYY.', 'error')
-                    return render_template('register.html')
-                
+                    return render_template('register.html', current_year=datetime.now().year)
 
-        # Ensure email is unique
+        # Get the 'Partner Since' year
+        partner_since = request.form.get('partner_since')
+        if partner_since:
+            try:
+                partner_since = int(partner_since)
+                if partner_since < 1900 or partner_since > datetime.now().year:
+                    raise ValueError
+            except ValueError:
+                flash('Invalid year for Partner Since. Please provide a valid year.', 'error')
+                return render_template('register.html', current_year=datetime.now().year)
+
+        # Check if email is already registered
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Email address already registered.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', current_year=datetime.now().year)
 
         # Create a new user
         new_user = User(
@@ -248,23 +261,26 @@ def register():
             phone=phone,
             email=email,
             address=address,
-            country=country,  # Store the selected or manual country
-            state=state,      # Store the selected or manual state
+            country=country,
+            state=state,
             church_branch=request.form['church_branch'],  # Ensure this field is also included
             birthday=birthday,
+            partner_since=partner_since,  # Store the Partner Since year
             is_admin=False,
             is_super_admin=False
         )
         new_user.set_password(password)  # Set hashed password
 
+        # Save user to the database
         db.session.add(new_user)
         db.session.commit()
 
+        # Success message and redirect
         flash('Registration successful! You can now log in.', 'success')
         return redirect(url_for('login'))
 
-    return render_template('register.html')  # Render the registration form template
-
+    # Render the registration form
+    return render_template('register.html', current_year=datetime.now().year)
 
 
 

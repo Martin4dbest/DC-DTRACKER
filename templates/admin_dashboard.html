@@ -343,7 +343,8 @@
                         <th>Partner</th>
                         <th>Country</th>
                         <th>State</th>
-                        <th>Local Church</th>                       
+                        <th>Local Church</th>
+                        <th>Partner Since</th>                      
                         <th>Amount</th>
                         <th>Currency</th>
                         <th>Payment Type</th>
@@ -358,6 +359,7 @@
                         <td>{{ donation.user.country }}</td>
                         <td>{{ donation.user.state }}</td>
                         <td>{{ donation.user.church_branch }}</td>
+                        <td>{{ donation.user.partner_since }}</td>
 
                         <td>{{ donation.amount }}</td>
                         <td>{{ donation.currency }}</td>
@@ -397,6 +399,7 @@
                 <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Partner Since</th> 
                 <th>Actions</th>
                 <th></th>
                 <th>Send Notification</th>
@@ -414,6 +417,9 @@
                     (Partner)
                     {% endif %}
                 </td>
+
+                <td>{{ user.partner_since }}</td>
+                
                 <td>
                     {% if not user.is_admin %}  <!-- Show buttons only for non-admin users -->
                     {% if user.pledged_amount %}
@@ -498,6 +504,7 @@
                                 <p><strong>State:</strong> ${data.state || 'N/A'}</p>       
                                 <p><strong>Local Church:</strong> ${data.church_branch || 'N/A'}</p>
                                 <p><strong>Birthday:</strong> ${data.birthday ? new Date(data.birthday).toLocaleString('default', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}</p>
+                                <p><strong>Partner Since:</strong> ${data.partner_since || 'N/A'}</p>
 
                             
 

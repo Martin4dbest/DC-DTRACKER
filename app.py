@@ -100,7 +100,10 @@ class User(db.Model):
     pledged_amount = db.Column(db.Float, default=0.0)
     pledge_currency = db.Column(db.String(3), default="USD")
     paid_status = db.Column(db.Boolean, default=False)
-    medal = db.Column(db.String(100), nullable=True)  
+    medal = db.Column(db.String(100), nullable=True)  # In your User model
+    partner_since = db.Column(db.Integer, nullable=True)  # Year as an integer
+
+
 
 
     # Relationships
@@ -203,6 +206,7 @@ def admin_required(f):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # Get form data
         email = request.form['email']
         password = request.form['password']
         name = request.form['name']
@@ -221,7 +225,6 @@ def register():
 
         # Handle birthday input with optional year
         birthday_str = request.form.get('birthday')  # e.g., '10-10' or '2024-10-10'
-        # Convert the birthday string to a date object if provided
         birthday = None
         if birthday_str:
             try:
@@ -233,14 +236,24 @@ def register():
                     birthday = datetime.strptime(birthday_str, "%d-%m-%Y").date()
                 except ValueError:
                     flash('Invalid date format for birthday. Please use YYYY-MM-DD or DD-MM-YYYY.', 'error')
-                    return render_template('register.html')
-                
+                    return render_template('register.html', current_year=datetime.now().year)
 
-        # Ensure email is unique
+        # Get the 'Partner Since' year
+        partner_since = request.form.get('partner_since')
+        if partner_since:
+            try:
+                partner_since = int(partner_since)
+                if partner_since < 1900 or partner_since > datetime.now().year:
+                    raise ValueError
+            except ValueError:
+                flash('Invalid year for Partner Since. Please provide a valid year.', 'error')
+                return render_template('register.html', current_year=datetime.now().year)
+
+        # Check if email is already registered
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Email address already registered.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', current_year=datetime.now().year)
 
         # Create a new user
         new_user = User(
@@ -248,23 +261,26 @@ def register():
             phone=phone,
             email=email,
             address=address,
-            country=country,  # Store the selected or manual country
-            state=state,      # Store the selected or manual state
+            country=country,
+            state=state,
             church_branch=request.form['church_branch'],  # Ensure this field is also included
             birthday=birthday,
+            partner_since=partner_since,  # Store the Partner Since year
             is_admin=False,
             is_super_admin=False
         )
         new_user.set_password(password)  # Set hashed password
 
+        # Save user to the database
         db.session.add(new_user)
         db.session.commit()
 
+        # Success message and redirect
         flash('Registration successful! You can now log in.', 'success')
         return redirect(url_for('login'))
 
-    return render_template('register.html')  # Render the registration form template
-
+    # Render the registration form
+    return render_template('register.html', current_year=datetime.now().year)
 
 
 
@@ -1012,173 +1028,158 @@ def update_user_details():
     #http://127.0.0.1:5000/update_user_details?user_id=47
 
 
-
-# Get the values from the environment variables
+# Load environment variables
 SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 
 # Define SCOPES (Google Sheets API Scope)
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
-
-
-
-@app.route('/export_to_google_sheets', methods=['POST'])
-def export_to_google_sheets():
-    # Authenticate using credentials
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    service = build('sheets', 'v4', credentials=creds)
-
-    # === Export Partners' Pledges Data ===
-    users = User.query.filter_by(is_admin=False).all()  # Only select non-admin users
-    partners_values = [
-        ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']  # Column headers
-    ]
-
-    for user in users:
-        partners_values.append([
-            user.name,
-            'Admin' if user.is_admin else 'Partner',
-            user.phone,
-            user.email,
-            user.country,
-            user.state,
-            user.church_branch,
-            user.address,
-            user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A',
-            user.pledged_amount,
-            user.pledge_currency,
-        ])
-
-    partners_body = {'values': partners_values}
-    service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID,
-        range='Sheet1!A1',  # Separate sheet/tab for partners' pledges
-        valueInputOption='RAW',
-        body=partners_body
-    ).execute()
-
-    # === Export Recent Donations Data ===
-    donations = Donation.query.all()
-    donations_values = [
-        ['Partner', 'Country', 'State', 'Local Church', 'Amount', 'Currency', 'Payment Type', 'Donation Date']  # Column headers
-    ]
-
-    for donation in donations:
-        donations_values.append([
-            donation.user.name,  # Assuming 'partner' is a relationship to User in Donation
-            donation.user.country,
-            donation.user.state,
-            donation.user.church_branch,
-            donation.amount,
-            donation.currency,
-            donation.payment_type,
-            donation.donation_date.strftime('%m/%d/%Y') if donation.donation_date else 'N/A',
-        ])
-
-    donations_body = {'values': donations_values}
-    service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID,
-        range='Sheet2!A1',  # Separate sheet/tab for recent donations
-        valueInputOption='RAW',
-        body=donations_body
-    ).execute()
-
-    # Redirect back to the view page after successful export
-    return redirect(url_for('view_partners_pledges'))
-
-
-
-@app.route('/import_from_google_sheets', methods=['POST'])
-def import_from_google_sheets():
-    # Authenticate using credentials
+@app.route('/sync_with_google_sheets', methods=['POST'])
+def sync_with_google_sheets():
+    # Authenticate using Google service account
     creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     service = build('sheets', 'v4', credentials=creds)
 
     try:
-        # Fetch Data from the Spreadsheet
+        # === Step 1: Import Data from Google Sheets ===
         result = service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
-            range='Sheet3!A2:L'  # Adjust range to include the password column (assuming 'L' is the last column)
+            range=f'Sheet1!A2:K'  # Assuming data starts at row 2, columns A to K
         ).execute()
-
         rows = result.get('values', [])
-        
-        # Debugging: Check if rows are fetched
-        print("Fetched rows from Google Sheets:", rows)  # This will print the raw rows
+
+        # Log data from the Google Sheet
+        print(f"Synchronizing with Google Sheets: {rows}")  # Log the rows fetched from Google Sheets
 
         if not rows:
-            print("No data found in the sheet.")
-            return "No data found in the sheet."
+            flash('No data found in the Google Sheet.', 'error')
+        else:
+            for row in rows:
+                # Extract data from the row
+                name = row[0] if len(row) > 0 else None
+                phone = row[1] if len(row) > 1 else None
+                email = row[2] if len(row) > 2 else None
+                address = row[3] if len(row) > 3 else None
+                country = row[4] if len(row) > 4 else None
+                state = row[5] if len(row) > 5 else None
+                church_branch = row[6] if len(row) > 6 else None
+                birthday_str = row[7] if len(row) > 7 else None
+                pledged_amount = row[8] if len(row) > 8 else None
+                pledge_currency = row[9] if len(row) > 9 else None
 
-        # === Import Data into Your App ===
-        for row in rows:
-            # Ensure the row contains all required columns (12 fields)
-            if len(row) < 12:
-                print(f"Skipping incomplete row: {row}")
-                continue
-
-            # Parse data from the row
-            name = row[0]
-            phone = row[1]
-            email = row[2]
-            password = row[3]  # Password from the sheet
-            country = row[4]
-            state = row[5]
-            church_branch = row[6]
-            address = row[7]
-            birthday = row[8]
-            pledged_amount = row[9]
-            pledge_currency = row[10]
-
-            # Convert birthday to a Python date object
-            try:
-                birthday = datetime.strptime(birthday, '%m/%d/%Y') if birthday != 'N/A' else None
-            except ValueError:
-                print(f"Invalid date format for {name}: {birthday}")
+                # Parse birthday if provided
                 birthday = None
+                if birthday_str:
+                    try:
+                        birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+                    except ValueError:
+                        birthday = None  # Skip invalid dates
 
-            # Check if the user already exists in the database
-            existing_user = User.query.filter_by(email=email).first()
-            if existing_user:
-                print(f"User with email {email} already exists. Skipping.")
-                continue
+                # Use phone number or email as the password
+                if phone:
+                    password = phone
+                elif email:
+                    password = email
+                else:
+                    flash(f"No phone or email available to set as a password for {name}. Skipping user.", "error")
+                    continue
 
-            # Use a password hashing function (e.g., bcrypt or werkzeug.security)
-            # Assuming you have a method 'set_password' in the User model for password hashing
-            new_user = User(
-                name=name,
-                phone=phone,
-                email=email,
-                address=address,
-                country=country,  # Store the selected or manual country
-                state=state,      # Store the selected or manual state
-                church_branch=church_branch,
-                birthday=birthday,
-                is_admin=False,  # Set default to False or based on your logic
-                is_super_admin=False  # Set default to False or based on your logic
-            )
-            new_user.set_password(password)  # Set the password with your hashing method
+                # Check if the user already exists by email
+                existing_user = User.query.filter_by(email=email).first()
+                if existing_user:
+                    flash(f"User with email {email} already exists. Skipping import for {name}.", "warning")
+                    continue
 
-            db.session.add(new_user)
+                # Create the new user
+                new_user = User(
+                    name=name,
+                    phone=phone,
+                    email=email,
+                    address=address,
+                    country=country,
+                    state=state,
+                    church_branch=church_branch,
+                    birthday=birthday,
+                    pledged_amount=pledged_amount,
+                    pledge_currency=pledge_currency,
+                    is_admin=False,
+                    is_super_admin=False
+                )
+                new_user.set_password(password)  # Hash and set the password
 
-        # Commit all changes
-        try:
-            db.session.commit()
-            print("Data imported successfully!")
-        except Exception as e:
-            print(f"Error committing to the database: {e}")
-            db.session.rollback()  # Rollback in case of error
+                # Save the user to the database
+                db.session.add(new_user)
+                db.session.commit()
+
+                # Log user import success
+                print(f"User {name} imported successfully.")  # Log each user import
+
+                flash(f"User {name} imported successfully.", "success")
+
+        # === Step 2: Export Data to Google Sheets ===
+
+        # Export partners' pledges data
+        users = User.query.filter_by(is_admin=False).all()  # Only select non-admin users
+        partners_values = [
+            ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']
+        ]
+
+        for user in users:
+            partners_values.append([
+                user.name,
+                'Admin' if user.is_admin else 'Partner',
+                user.phone,
+                user.email,
+                user.country,
+                user.state,
+                user.church_branch,
+                user.address,
+                user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A',
+                user.pledged_amount,
+                user.pledge_currency,
+            ])
+
+        partners_body = {'values': partners_values}
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'Sheet2!A1',
+            valueInputOption='RAW',
+            body=partners_body
+        ).execute()
+
+        # Export donations data
+        donations = Donation.query.all()
+        donations_values = [
+            ['Partner', 'Country', 'State', 'Local Church', 'Amount', 'Currency', 'Payment Type', 'Donation Date']
+        ]
+
+        for donation in donations:
+            donations_values.append([
+                donation.user.name,
+                donation.user.country,
+                donation.user.state,
+                donation.user.church_branch,
+                donation.amount,
+                donation.currency,
+                donation.payment_type,
+                donation.donation_date.strftime('%m/%d/%Y') if donation.donation_date else 'N/A',
+            ])
+
+        donations_body = {'values': donations_values}
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'Sheet3!A1',
+            valueInputOption='RAW',
+            body=donations_body
+        ).execute()
+
+        flash('Data synchronization with Google Sheets completed successfully.', 'success')
+        return redirect(url_for('view_partners_pledges'))
 
     except Exception as e:
-        print(f"Error fetching data from Google Sheets: {e}")
-        return f"Error: {e}"
-
-    # Redirect after successful import
-    return redirect(url_for('view_partners_pledges'))
-
-
-
+        flash(f"Error during Google Sheets synchronization: {str(e)}", 'error')
+        return redirect(url_for('view_partners_pledges'))
 
 
 
