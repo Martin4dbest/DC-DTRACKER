@@ -7,17 +7,20 @@ from datetime import datetime, date
 from werkzeug.security import generate_password_hash
 from sqlalchemy import Text
 from sqlalchemy import Column, Boolean, DateTime, DECIMAL
-
-
-
+from flask_login import LoginManager, login_required, current_user
 from apscheduler.schedulers.background import BackgroundScheduler
 from twilio.rest import Client
 from functools import wraps
 import os
-from dotenv import load_dotenv
 
+from googleapiclient.discovery import build
+from google.oauth2.service_account import Credentials
+from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+
+
+
 # AWS SES Setup
 AWS_REGION = 'us-east-1'  # Use your AWS region
 SENDER_EMAIL = 'your-ses-verified-email@example.com'  # SES verified email address
@@ -43,6 +46,11 @@ load_dotenv()
 
 # App and database setup
 app = Flask(__name__)
+
+# Initialize LoginManager
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["SQLALCHEMY_DATABASE_URI"]  # Use only the environment variable for PostgreSQL URI
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]  # Use only the environment variable for security
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -68,74 +76,6 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'your_twilio_phone_n
 
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-
-
-
-
-from googleapiclient.discovery import build
-from google.oauth2.service_account import Credentials
-
-# Define SCOPES (Google Sheets API Scope)
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
-# Route for exporting to Google Sheets
-@app.route('/export_to_google_sheets', methods=['POST'])
-def export_to_google_sheets():
-    # Authenticate using credentials (with the actual path to your JSON file)
-    creds = Credentials.from_service_account_file(
-        'C:/Users/DELL/Desktop/DCDTRACKER GLOBAL/dominion-city-dtracker-238ba4b6c99a.json', scopes=SCOPES)  # Corrected file path
-   
-
-    # Create a Sheets API service
-    service = build('sheets', 'v4', credentials=creds)
-
-    # ID of your Google Sheet (use the ID from the provided URL)
-    SPREADSHEET_ID = '1EHceFWYA9P8uZXnkkDUFmulrcafXwBjwhVaEbOZh0mc'  # Your actual Spreadsheet ID
-
-    # Fetch data from the database (assuming you have a User model and you're querying users from your database)
-    users = User.query.all()
-
-    # Prepare data for Google Sheets
-    values = [
-        ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']  # Column headers
-    ]
-
-    # Add actual user data to the values list
-    for user in users:
-        values.append([
-            user.name,          # Partner Name
-            'Admin' if user.is_admin else 'Partner',  # Convert True/False to 'admin' or 'partner'
-            user.phone,         # Phone
-            user.email,         # Email
-            user.country,       # Country
-            user.state,         # State
-            user.church_branch, # Local Church (assuming it's called 'church_branch')
-            user.address,       # Address
-            user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A' , # Birthday (formatted as needed)
-            user.pledged_amount,
-            user.pledge_currency,
-
-        ])
-
-    # Prepare the data for the API request
-    body = {
-        'values': values  # The actual data to be written to the sheet
-    }
-
-    # Call the Sheets API to write data to the sheet
-    sheet = service.spreadsheets()
-    sheet.values().update(
-        spreadsheetId=SPREADSHEET_ID, 
-        range='Sheet1!A1', 
-        valueInputOption='RAW', 
-        body=body
-    ).execute()
-
-    # After successful export, redirect back to the view page
-    return redirect(url_for('view_partners_pledges'))
-
-
 
 
 
@@ -187,6 +127,7 @@ class Donation(db.Model):
     amount = db.Column(db.Float, nullable=False)
     currency = db.Column(db.String(50), default='USD')
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
+    payment_type = db.Column(db.String(20), nullable=False, default="full")  # New field for payment type
     
     
 
@@ -325,15 +266,49 @@ def register():
     return render_template('register.html')  # Render the registration form template
 
 
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.query(User).get(user_id)  # Assuming `User` is your user table
+
+
+#Partner can update their details after admin registered them but admin cannot update them here@app.route('/update-details', methods=['GET', 'POST'])
+@login_required
+def update_user_details():
+    user = current_user  # Get the logged-in user
+
+    if request.method == 'POST':
+        # Get new values from the form
+        user.phone = request.form['phone']
+        user.email = request.form['email']
+        user.address = request.form['address']
+        user.country = request.form['country']
+        user.state = request.form['state']
+        user.church_branch = request.form['church_branch']
+        user.birthday = datetime.strptime(request.form['birthday'], "%Y-%m-%d") if request.form['birthday'] else None
+
+        db.session.commit()  # Commit changes to the database
+        flash("Your details have been updated!", "success")
+        return redirect(url_for('profile'))  # Redirect to user's profile or dashboard
+
+    return render_template('update_user.html', user=user)
+
+
 # Home route
 @app.route("/")
 def index():
     return render_template("index.html")
 
+ # Renders the index page dynamically
+
+
+
+"""
 @app.route('/home2')
 def home2():
     return render_template('home2.html')
-
+"""
 
 
 # User login
@@ -352,14 +327,32 @@ def login():
 
             flash(f'Welcome, {user.name}!', 'success')
             
+            # Redirect admins to the admin dashboard
             if user.is_admin or user.is_super_admin:
                 return redirect(url_for('admin_dashboard'))
-            return redirect(url_for('donate'))
+            
+            # Redirect regular users to home2.html
+            return redirect(url_for('home2'))
         else:
             flash('Invalid email or password.', 'danger')
 
     return render_template('login.html')
 
+
+@app.route('/home2')
+def home2():
+    # Check if the user is logged in
+    if 'user_id' not in session:
+        flash('You need to log in first.', 'warning')
+        return redirect(url_for('login'))
+
+    # Retrieve user information
+    user = User.query.get(session['user_id'])
+
+    return render_template(
+        'home2.html',
+        user=user
+    )
 
 
 
@@ -374,6 +367,7 @@ def donate():
 
     if request.method == "POST":
         user_id = session.get("user_id")
+        payment_type = request.form.get("payment_type")  # Get the selected payment type
 
         if request.form.get("offline_donation"):
             # User is entering an offline donation amount
@@ -394,7 +388,6 @@ def donate():
             # Validate or set the donation date
             if donation_date:
                 try:
-                    # Ensure the entered date is parsed correctly into a date object
                     donation_date = datetime.strptime(donation_date, '%Y-%m-%d').date()
                 except ValueError:
                     flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
@@ -404,13 +397,19 @@ def donate():
 
             if user_id:
                 # Create a new Donation object
-                donation = Donation(user_id=user_id, amount=amount, currency=currency, donation_date=donation_date)
+                donation = Donation(
+                    user_id=user_id,
+                    amount=amount,
+                    currency=currency,
+                    donation_date=donation_date,
+                    payment_type=payment_type  # Save the selected payment type
+                )
 
                 try:
                     db.session.add(donation)
                     db.session.commit()
-                    flash("Thank you for confirming your offline donation!", "success")
-                    app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Date: {donation_date}")
+                    flash(f"Thank you for your {payment_type} donation!", "success")
+                    app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
                     return redirect(url_for("donation_success"))
                 except Exception as e:
                     db.session.rollback()
@@ -426,6 +425,27 @@ def donate():
     # Render the form again, passing back the donation_date so it can be displayed in the input
     return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
 
+
+@app.route('/recent_donations', methods=['GET', 'POST'])
+def recent_donations():
+    search_country = request.form.get('search_country', '').strip()  # Get search country from form, with trimming
+    search_payment_type = request.form.get('search_payment_type', '').strip()  # Get payment type filter from form
+
+    # Build the query for donations
+    query = Donation.query
+
+    # Filter by country if provided
+    if search_country:
+        query = query.filter(Donation.user.has(country=search_country.lower()))
+
+    # Filter by payment type if provided
+    if search_payment_type:
+        query = query.filter(Donation.payment_type == search_payment_type.lower())
+
+    # Fetch donations, ordered by donation date
+    recent_donations = query.order_by(Donation.donation_date.desc()).all()
+
+    return render_template('recent_donations.html', recent_donations=recent_donations, search_country=search_country, search_payment_type=search_payment_type)
 
 
 
@@ -602,6 +622,7 @@ def mail_sms():
     
     return render_template("mail_sms.html")
 
+
 # Function to send bulk email using AWS SES
 def send_bulk_email(subject, body, recipients):
     try:
@@ -616,6 +637,8 @@ def send_bulk_email(subject, body, recipients):
         print("Email sent! Message ID:", response['MessageId'])
     except (BotoCoreError, ClientError) as error:
         print(f"An error occurred with SES: {error}")
+
+
 
 # Function to send bulk SMS using AWS SNS
 def send_bulk_sms(message, phone_numbers):
@@ -701,7 +724,7 @@ def delete_donation(donation_id):
 
 
 
-#Add Pledges to new Partners and also already onboarded partners
+#Add Pledges to new Partners and also already-onboarded partners
 # Route to add Pledge to Partners
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
@@ -931,53 +954,11 @@ def change_password():
 
 
 
-#Send notifications
-@app.route('/contact', methods=['GET', 'POST'])
+
+@app.route('/contact')
 def contact():
-    if request.method == 'POST':
-        # Get data from the form
-        name = request.form['name']
-        email = request.form['email']
-        subject = request.form['subject']
-        message = request.form['message']
+    return render_template('contact.html')  # Renders the contact page
 
-        # Construct the email body
-        email_body = f"Name: {name}\nEmail: {email}\n\nMessage: {message}"
-
-        # The recipient email is taken from the form (can be dynamic based on the form as well)
-        recipient_email = 'admin@example.com'  # Replace with your desired recipient email
-
-        try:
-            # Send email using SES
-            response = ses_client.send_email(
-                Source=SENDER_EMAIL,
-                Destination={
-                    'ToAddresses': [recipient_email],
-                },
-                Message={
-                    'Subject': {
-                        'Data': subject,
-                    },
-                    'Body': {
-                        'Text': {
-                            'Data': email_body,
-                        },
-                    },
-                },
-            )
-
-            # Print the response for debugging (optional)
-            print(f"Email sent! Message ID: {response['MessageId']}")
-
-            # Redirect to thank you page
-            return redirect(url_for('thank_you'))
-
-        except NoCredentialsError:
-            print("Credentials not found!")
-            # Handle the error or redirect to an error page if needed
-            return "Error: No credentials found to send email."
-
-    return render_template('contact.html')
 
 
     
@@ -986,6 +967,211 @@ def contact():
 def select_payment_options():
     return render_template("select_payment_options.html")
 
+
+
+@app.route('/update_user_details', methods=['GET', 'POST'])
+def update_user_details():
+    user_id = request.args.get('user_id')  # Retrieve the user_id from the query parameter
+    if user_id:
+        user = User.query.get(user_id)  # Fetch user from the database by ID
+        if user:
+            if request.method == 'POST':
+                # Handling the form data to update the user's details
+                name = request.form.get('name')
+                email = request.form.get('email')
+                phone = request.form.get('phone')
+                address = request.form.get('address')
+                country = request.form.get('country')
+                state = request.form.get('state')
+                church_branch = request.form.get('church_branch')
+                birthday = request.form.get('birthday')
+
+                # Update user details
+                user.name = name
+                user.email = email
+                user.phone = phone
+                user.address = address
+                user.country = country
+                user.state = state
+                user.church_branch = church_branch
+                user.birthday = birthday
+
+                # Commit the changes to the database
+                db.session.commit()
+                flash('Your details have been updated successfully!', 'success')
+                return redirect(url_for('login'))  # Redirect after successful update
+
+            return render_template('update_user_details.html', user=user)  # Render the form pre-filled with user details
+        else:
+            flash('User not found', 'error')
+            return redirect(url_for('index'))  # Redirect if user not found
+    else:
+        flash('User ID is missing', 'error')
+        return redirect(url_for('index'))  # Redirect if user_id is not provided
+    
+    #http://127.0.0.1:5000/update_user_details?user_id=47
+
+
+# Load environment variables
+SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
+SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
+
+# Define SCOPES (Google Sheets API Scope)
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+@app.route('/sync_with_google_sheets', methods=['POST'])
+def sync_with_google_sheets():
+    # Authenticate using Google service account
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=creds)
+
+    try:
+        # === Step 1: Import Data from Google Sheets ===
+        result = service.spreadsheets().values().get(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'Sheet1!A2:K'  # Assuming data starts at row 2, columns A to K
+        ).execute()
+        rows = result.get('values', [])
+
+        # Log data from the Google Sheet
+        print(f"Synchronizing with Google Sheets: {rows}")  # Log the rows fetched from Google Sheets
+
+        if not rows:
+            flash('No data found in the Google Sheet.', 'error')
+        else:
+            for row in rows:
+                # Extract data from the row
+                name = row[0] if len(row) > 0 else None
+                phone = row[1] if len(row) > 1 else None
+                email = row[2] if len(row) > 2 else None
+                address = row[3] if len(row) > 3 else None
+                country = row[4] if len(row) > 4 else None
+                state = row[5] if len(row) > 5 else None
+                church_branch = row[6] if len(row) > 6 else None
+                birthday_str = row[7] if len(row) > 7 else None
+                pledged_amount = row[8] if len(row) > 8 else None
+                pledge_currency = row[9] if len(row) > 9 else None
+
+                # Parse birthday if provided
+                birthday = None
+                if birthday_str:
+                    try:
+                        birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+                    except ValueError:
+                        birthday = None  # Skip invalid dates
+
+                # Use phone number or email as the password
+                if phone:
+                    password = phone
+                elif email:
+                    password = email
+                else:
+                    flash(f"No phone or email available to set as a password for {name}. Skipping user.", "error")
+                    continue
+
+                # Check if the user already exists by email
+                existing_user = User.query.filter_by(email=email).first()
+                if existing_user:
+                    flash(f"User with email {email} already exists. Skipping import for {name}.", "warning")
+                    continue
+
+                # Create the new user
+                new_user = User(
+                    name=name,
+                    phone=phone,
+                    email=email,
+                    address=address,
+                    country=country,
+                    state=state,
+                    church_branch=church_branch,
+                    birthday=birthday,
+                    pledged_amount=pledged_amount,
+                    pledge_currency=pledge_currency,
+                    is_admin=False,
+                    is_super_admin=False
+                )
+                new_user.set_password(password)  # Hash and set the password
+
+                # Save the user to the database
+                db.session.add(new_user)
+                db.session.commit()
+
+                # Log user import success
+                print(f"User {name} imported successfully.")  # Log each user import
+
+                flash(f"User {name} imported successfully.", "success")
+
+        # === Step 2: Export Data to Google Sheets ===
+
+        # Export partners' pledges data
+        users = User.query.filter_by(is_admin=False).all()  # Only select non-admin users
+        partners_values = [
+            ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']
+        ]
+
+        for user in users:
+            partners_values.append([
+                user.name,
+                'Admin' if user.is_admin else 'Partner',
+                user.phone,
+                user.email,
+                user.country,
+                user.state,
+                user.church_branch,
+                user.address,
+                user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A',
+                user.pledged_amount,
+                user.pledge_currency,
+            ])
+
+        partners_body = {'values': partners_values}
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'Sheet2!A1',
+            valueInputOption='RAW',
+            body=partners_body
+        ).execute()
+
+        # Export donations data
+        donations = Donation.query.all()
+        donations_values = [
+            ['Partner', 'Country', 'State', 'Local Church', 'Amount', 'Currency', 'Payment Type', 'Donation Date']
+        ]
+
+        for donation in donations:
+            donations_values.append([
+                donation.user.name,
+                donation.user.country,
+                donation.user.state,
+                donation.user.church_branch,
+                donation.amount,
+                donation.currency,
+                donation.payment_type,
+                donation.donation_date.strftime('%m/%d/%Y') if donation.donation_date else 'N/A',
+            ])
+
+        donations_body = {'values': donations_values}
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'Sheet3!A1',
+            valueInputOption='RAW',
+            body=donations_body
+        ).execute()
+
+        flash('Data synchronization with Google Sheets completed successfully.', 'success')
+        return redirect(url_for('view_partners_pledges'))
+
+    except Exception as e:
+        flash(f"Error during Google Sheets synchronization: {str(e)}", 'error')
+        return redirect(url_for('view_partners_pledges'))
+
+
+
+
+# Route for 'paystack.html'
+@app.route('/paystack')
+def paystack():
+    return render_template('paystack.html')
 
 
 # Route for thank you page
@@ -999,6 +1185,7 @@ def thank_you():
 @app.route('/success')
 def success():
     return "Pledge added successfully!", 200
+
 
 
 

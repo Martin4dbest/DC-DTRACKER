@@ -130,7 +130,8 @@
         </div>
 
         <!-- Export to Google Sheets Button -->
-        <form action="{{ url_for('export_to_google_sheets') }}" method="POST">
+        <form action="{{ url_for('sync_with_google_sheets') }}" method="POST">
+
             <button type="submit" class="export-button">
                 Export to Google Sheets
             </button>
@@ -142,6 +143,7 @@
                     <th>Partner</th>
                     <th>Country</th>
                     <th>State</th>
+                    <th>Local Church</th>
                     <th>Amount</th>
                     <th>Currency</th>
                     <th>Payment Type</th>
@@ -155,6 +157,7 @@
                         <td>{{ donation.user.name }}</td>
                         <td>{{ donation.user.country }}</td>
                         <td>{{ donation.user.state }}</td>
+                        <td>{{ donation.user.church_branch }}</td>
                         <td>{{ donation.amount }}</td>
                         <td>{{ donation.currency }}</td>
                         <td>{{ donation.payment_type }}</td>

@@ -1,11 +1,15 @@
 <!-- Add Pledge to User -->
-<h3 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #007bff;">Add Pledge to Partner</h3>
+<h3 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #007bff;">Partner Pledge</h3>
 
 <form id="pledgeForm" action="{{ url_for('add_pledge') }}" method="POST" style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
 
-    <label for="user_id" style="font-size: 16px; font-weight: 500; margin-bottom: 8px; display: block; color: #333;">User ID:</label>
+    <label for="user_id" style="font-size: 16px; font-weight: 500; margin-bottom: 8px; display: block; color: #333;">
+        User ID:
+    </label>
     <input type="text" id="user_id" name="user_id" required 
+           placeholder="Check the URL above to find your User ID" 
            style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 20px;">
+    
     
     <label for="pledged_amount" style="font-size: 16px; font-weight: 500; margin-bottom: 8px; display: block; color: #333;">Pledged Amount:</label>
     <input type="text" id="pledged_amount" name="pledged_amount" required 

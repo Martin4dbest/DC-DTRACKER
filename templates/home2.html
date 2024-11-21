@@ -122,11 +122,34 @@
         <h1 id="greeting">Welcome!</h1>
         <h2>Partner since: {{ user.partner_since }}</h2>
         <p id="realtime-date"></p>
-        <p>Thank you for being a part of Dominion City Global.</p>
 
-        <a href="{{ url_for('donate') }}" class="button">Proceed to Donate</a>
+        <p style="font-size: 1.5em; font-weight: bold; color: rgb(179, 255, 0)">
+            Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }}
+        </p>
+        
+
+        
+        <a href="{{ url_for('add_pledge', user_id=user.id) }}" style="color: #27d0ff; text-decoration: none; text-shadow: 0 0 15px rgba(0, 198, 255, 1), 0 0 25px rgba(0, 198, 255, 1), 0 0 35px rgba(0, 198, 255, 1);font-size: 1.1rem;">Haven't pledged yet? Make your pledge HERE.</a>
+
+
+        
+
 
         <div class="options-container">
+            <!-- New Feature: Pledge Option -->
+            <div class="option" style="background-color: #00274d;">
+                <i class="option-icon">&#9733;</i> <!-- Star Icon -->
+                <span>
+                    {% if not user.pledged_amount %}
+                        Not yet made a pledge? 
+                        <a href="http://127.0.0.1:5000/add_pledge?user_id={{ user.id }}" 
+                           style="color: #00c6ff; text-decoration: underline;">Make a Pledge</a>.
+                    {% else %}
+                        Ready to redeem your pledge? 
+                        <a href="{{ url_for('donate') }}" style="color: #00c6ff; text-decoration: underline;">Proceed to Donate</a>.
+                    {% endif %}
+                </span>
+            </div>
             <div class="option">
                 <i class="option-icon">&#128222;</i> <!-- Phone Icon -->
                 <span>Phone: {{ user.phone[:5] }}xxxxxxx</span>

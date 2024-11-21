@@ -18,6 +18,9 @@ from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+
+
+
 # AWS SES Setup
 AWS_REGION = 'us-east-1'  # Use your AWS region
 SENDER_EMAIL = 'your-ses-verified-email@example.com'  # SES verified email address
@@ -73,82 +76,6 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'your_twilio_phone_n
 
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-
-# Define SCOPES (Google Sheets API Scope)
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
-
-# Get the values from the environment variables
-SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
-SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
-
-
-
-@app.route('/export_to_google_sheets', methods=['POST'])
-def export_to_google_sheets():
-    # Authenticate using credentials
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    service = build('sheets', 'v4', credentials=creds)
-
-    # === Export Partners' Pledges Data ===
-    users = User.query.filter_by(is_admin=False).all()  # Only select non-admin users
-    partners_values = [
-        ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']  # Column headers
-    ]
-
-    for user in users:
-        partners_values.append([
-            user.name,
-            'Admin' if user.is_admin else 'Partner',
-            user.phone,
-            user.email,
-            user.country,
-            user.state,
-            user.church_branch,
-            user.address,
-            user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A',
-            user.pledged_amount,
-            user.pledge_currency,
-        ])
-
-    partners_body = {'values': partners_values}
-    service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID,
-        range='Sheet1!A1',  # Separate sheet/tab for partners' pledges
-        valueInputOption='RAW',
-        body=partners_body
-    ).execute()
-
-    # === Export Recent Donations Data ===
-    donations = Donation.query.all()
-    donations_values = [
-        ['Partner', 'Country', 'State', 'Amount', 'Currency', 'Payment Type', 'Donation Date']  # Column headers
-    ]
-
-    for donation in donations:
-        donations_values.append([
-            donation.user.name,  # Assuming 'partner' is a relationship to User in Donation
-            donation.user.country,
-            donation.user.state,
-            donation.amount,
-            donation.currency,
-            donation.payment_type,
-            donation.donation_date.strftime('%m/%d/%Y') if donation.donation_date else 'N/A',
-        ])
-
-    donations_body = {'values': donations_values}
-    service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID,
-        range='Sheet2!A1',  # Separate sheet/tab for recent donations
-        valueInputOption='RAW',
-        body=donations_body
-    ).execute()
-
-    # Redirect back to the view page after successful export
-    return redirect(url_for('view_partners_pledges'))
-
-
 
 
 
@@ -695,6 +622,7 @@ def mail_sms():
     
     return render_template("mail_sms.html")
 
+
 # Function to send bulk email using AWS SES
 def send_bulk_email(subject, body, recipients):
     try:
@@ -1082,7 +1010,177 @@ def update_user_details():
         return redirect(url_for('index'))  # Redirect if user_id is not provided
     
     #http://127.0.0.1:5000/update_user_details?user_id=47
-    
+
+
+
+# Get the values from the environment variables
+SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
+SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
+
+# Define SCOPES (Google Sheets API Scope)
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+
+
+
+@app.route('/export_to_google_sheets', methods=['POST'])
+def export_to_google_sheets():
+    # Authenticate using credentials
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=creds)
+
+    # === Export Partners' Pledges Data ===
+    users = User.query.filter_by(is_admin=False).all()  # Only select non-admin users
+    partners_values = [
+        ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']  # Column headers
+    ]
+
+    for user in users:
+        partners_values.append([
+            user.name,
+            'Admin' if user.is_admin else 'Partner',
+            user.phone,
+            user.email,
+            user.country,
+            user.state,
+            user.church_branch,
+            user.address,
+            user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A',
+            user.pledged_amount,
+            user.pledge_currency,
+        ])
+
+    partners_body = {'values': partners_values}
+    service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range='Sheet1!A1',  # Separate sheet/tab for partners' pledges
+        valueInputOption='RAW',
+        body=partners_body
+    ).execute()
+
+    # === Export Recent Donations Data ===
+    donations = Donation.query.all()
+    donations_values = [
+        ['Partner', 'Country', 'State', 'Local Church', 'Amount', 'Currency', 'Payment Type', 'Donation Date']  # Column headers
+    ]
+
+    for donation in donations:
+        donations_values.append([
+            donation.user.name,  # Assuming 'partner' is a relationship to User in Donation
+            donation.user.country,
+            donation.user.state,
+            donation.user.church_branch,
+            donation.amount,
+            donation.currency,
+            donation.payment_type,
+            donation.donation_date.strftime('%m/%d/%Y') if donation.donation_date else 'N/A',
+        ])
+
+    donations_body = {'values': donations_values}
+    service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range='Sheet2!A1',  # Separate sheet/tab for recent donations
+        valueInputOption='RAW',
+        body=donations_body
+    ).execute()
+
+    # Redirect back to the view page after successful export
+    return redirect(url_for('view_partners_pledges'))
+
+
+
+@app.route('/import_from_google_sheets', methods=['POST'])
+def import_from_google_sheets():
+    # Authenticate using credentials
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=creds)
+
+    try:
+        # Fetch Data from the Spreadsheet
+        result = service.spreadsheets().values().get(
+            spreadsheetId=SPREADSHEET_ID,
+            range='Sheet3!A2:L'  # Adjust range to include the password column (assuming 'L' is the last column)
+        ).execute()
+
+        rows = result.get('values', [])
+        
+        # Debugging: Check if rows are fetched
+        print("Fetched rows from Google Sheets:", rows)  # This will print the raw rows
+
+        if not rows:
+            print("No data found in the sheet.")
+            return "No data found in the sheet."
+
+        # === Import Data into Your App ===
+        for row in rows:
+            # Ensure the row contains all required columns (12 fields)
+            if len(row) < 12:
+                print(f"Skipping incomplete row: {row}")
+                continue
+
+            # Parse data from the row
+            name = row[0]
+            phone = row[1]
+            email = row[2]
+            password = row[3]  # Password from the sheet
+            country = row[4]
+            state = row[5]
+            church_branch = row[6]
+            address = row[7]
+            birthday = row[8]
+            pledged_amount = row[9]
+            pledge_currency = row[10]
+
+            # Convert birthday to a Python date object
+            try:
+                birthday = datetime.strptime(birthday, '%m/%d/%Y') if birthday != 'N/A' else None
+            except ValueError:
+                print(f"Invalid date format for {name}: {birthday}")
+                birthday = None
+
+            # Check if the user already exists in the database
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                print(f"User with email {email} already exists. Skipping.")
+                continue
+
+            # Use a password hashing function (e.g., bcrypt or werkzeug.security)
+            # Assuming you have a method 'set_password' in the User model for password hashing
+            new_user = User(
+                name=name,
+                phone=phone,
+                email=email,
+                address=address,
+                country=country,  # Store the selected or manual country
+                state=state,      # Store the selected or manual state
+                church_branch=church_branch,
+                birthday=birthday,
+                is_admin=False,  # Set default to False or based on your logic
+                is_super_admin=False  # Set default to False or based on your logic
+            )
+            new_user.set_password(password)  # Set the password with your hashing method
+
+            db.session.add(new_user)
+
+        # Commit all changes
+        try:
+            db.session.commit()
+            print("Data imported successfully!")
+        except Exception as e:
+            print(f"Error committing to the database: {e}")
+            db.session.rollback()  # Rollback in case of error
+
+    except Exception as e:
+        print(f"Error fetching data from Google Sheets: {e}")
+        return f"Error: {e}"
+
+    # Redirect after successful import
+    return redirect(url_for('view_partners_pledges'))
+
+
+
+
+
 
 
 # Route for 'paystack.html'
@@ -1102,6 +1200,7 @@ def thank_you():
 @app.route('/success')
 def success():
     return "Pledge added successfully!", 200
+
 
 
 
