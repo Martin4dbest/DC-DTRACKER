@@ -385,23 +385,21 @@ def home2():
         user=user
     )
 
-
-
 @app.route("/donate", methods=["GET", "POST"])
-@login_required
 def donate():
-    user = get_current_user()  # Retrieve the current logged-in user
-    app.logger.debug(f"User object: {user}")  # Log the user object to see its attributes
-
-    # Ensure the user object has the latest pledge data, including the medal
-    db.session.refresh(user)  # Refresh the user to make sure we have the latest data from the database
+    user = None
+    if "user_id" in session:
+        user = get_current_user()  # Retrieve the current logged-in user if available
+        app.logger.debug(f"User object: {user}")  # Log the user object to see its attributes
+        if user:
+            db.session.refresh(user)  # Refresh the user to ensure the latest data from the database
 
     if request.method == "POST":
-        user_id = session.get("user_id")
+        user_id = session.get("user_id")  # Check if a user is logged in
         payment_type = request.form.get("payment_type")  # Get the selected payment type
 
+        # Handle offline donation
         if request.form.get("offline_donation"):
-            # User is entering an offline donation amount
             amount = request.form.get("amount")
             currency = request.form.get("currency")
             donation_date = request.form.get("date_donated")  # Get date from form, if provided
@@ -426,31 +424,29 @@ def donate():
             else:
                 donation_date = date.today()  # Default to today's date if not provided
 
-            if user_id:
-                # Create a new Donation object
-                donation = Donation(
-                    user_id=user_id,
-                    amount=amount,
-                    currency=currency,
-                    donation_date=donation_date,
-                    payment_type=payment_type  # Save the selected payment type
-                )
+            # Create a new donation, with or without user association
+            donation = Donation(
+                user_id=user_id,  # Associate with logged-in user if available
+                amount=amount,
+                currency=currency,
+                donation_date=donation_date,
+                payment_type=payment_type  # Save the selected payment type
+            )
 
-                try:
-                    db.session.add(donation)
-                    db.session.commit()
-                    flash(f"Thank you for your {payment_type} donation!", "success")
-                    app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
-                    return redirect(url_for("donation_success"))
-                except Exception as e:
-                    db.session.rollback()
-                    app.logger.error(f"Error saving donation: {e}")
-                    flash("An error occurred while processing your donation. Please try again.", "danger")
-            else:
-                flash("You need to be logged in to donate.", "danger")
-                return redirect(url_for("login"))
+            try:
+                db.session.add(donation)
+                db.session.commit()
+                flash(f"Thank you for your {payment_type} donation!", "success")
+                app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
+                return redirect(url_for("donation_success"))
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(f"Error saving donation: {e}")
+                flash("There was an error processing your donation. Please try again.", "danger")
+                return redirect(url_for("donate"))
 
-    # Retrieve all pledges made by users from the database by joining User and Pledge
+
+    # Retrieve pledges made by all users
     pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
 
     # Render the form again, passing back the donation_date so it can be displayed in the input
