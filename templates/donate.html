@@ -6,344 +6,224 @@
     <title>Dominion City Partnership Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
     <style>
-        /* General styles */
+        /* General Styles */
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #021530; /* Dark blue background */
             margin: 0;
-            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #021530;
+            color: white;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
-    
+        h1, h3, h4 {
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        p {
+            font-size: 1em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
         /* App Container */
         .app-container {
             width: 100%;
-            max-width: 1300px;
+            max-width: 900px;
+            background-color: #061350;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             padding: 40px;
             text-align: center;
-            background-color: rgb(212, 208, 208);
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
-    
-        /* General styling for the action icons */
-        .action-icons {
+
+        /* Account Details */
+        .account-details {
             display: flex;
-            justify-content: center;
-            gap: 30px;
-            overflow: hidden;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 30px;
         }
-    
-        .welcome-message h1 {
-            font-size: 2.5em;
-            color: #003C8F;
-            font-weight: 900;
+        .account-item {
+            background-color: #002244;
+            border-radius: 10px;
+            padding: 20px;
+            flex: 1;
+            min-width: 250px;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-    
-        .welcome-message p {
-            font-size: 1.5em;
-            color: purple;
-            font-style: italic;
+        .account-item h4 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
         }
-    
-        .icon-card {
+        .account-item p {
+            margin: 5px 0;
+        }
+
+        /* Payment Options */
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+        }
+        .option-button {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 10px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .option-button i {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .option-button:hover {
+            transform: scale(1.1);
+        }
+        .option-paypal {
+            background-color: #00457C;
+        }
+        .option-paystack {
+            background-color: #D4AF37;
+        }
+        .option-zelle {
+            background-color: #007A33;
+        }
+
+        /* Action Icons */
+        .action-icons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .icon-card {
+            background-color: #1A2F8A;
+            padding: 15px;
             border-radius: 10px;
-            background-color: #f8f9fa;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 120px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            opacity: 0;
-            animation: slideIn 1s forwards;
         }
-    
-        /* Slide-in animation for carousel effect */
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-    
-        .icon-card:nth-child(1) {
-            animation-delay: 0s;
-        }
-        .icon-card:nth-child(2) {
-            animation-delay: 0.3s;
-        }
-        .icon-card:nth-child(3) {
-            animation-delay: 0.6s;
-        }
-        .icon-card:nth-child(4) {
-            animation-delay: 0.9s;
-        }
-    
         .icon-card:hover {
-            background-color: rgb(0, 0, 15);
-            transform: scale(1.2); /* Slight zoom effect on hover */
+            background-color: #004fd1;
+            transform: scale(1.1);
         }
-    
         .icon-card i {
-            font-size: 20px;
-            margin-bottom: 20px;
+            font-size: 2em;
+            margin-bottom: 10px;
         }
-    
         .icon-card span {
-            display: block;
-            font-size: 20px;
-            color: #333;
+            font-size: 1em;
             font-weight: bold;
+            color: white;
         }
-    
-        .nav-link {
-            text-decoration: none;
-            color: blue;
+
+        /* Back Button */
+        .back-button {
+            display: inline-block;
+            background-color: green;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1em;
+            transition: background-color 0.3s;
         }
-    
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .action-icons {
-                flex-direction: column;
-                align-items: center;
-            }
-    
-            .app-container {
-                width: 100%;
-                padding: 10px;
-            }
-    
-            .icon-card {
-                width: 120px;
-            }
-    
-            .welcome-message h1 {
-                font-size: 1.5em;
-            }
-        }
-    
-        /* Donation Box */
-        #amount-entry {
-            display: none; /* Initially hidden */
+        .back-button:hover {
+            background-color: #1A2F8A;
         }
     </style>
-    
 </head>
 <body>
-
     <div class="app-container">
-
-        <!-- Welcome Message -->
+        <!-- Welcome Section -->
         <div class="welcome-message">
-            <h1>Thank You For Partnering with Us</h1>
+            <h1>Dominion City Partnership Platform</h1>
             <p>"God loves a cheerful giver" - 2 Corinthians 9:7</p>
+            <p style="font-size: 1.2em;">Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }}</p>
         </div>
 
-        <h2 style="font-size: 2em; font-weight: bold; color: goldenrod; text-align: center; margin: 20px 0;">
-            Welcome {{ user.name }}
-        </h2>
-        
-
-        <h3>
-                {% if user.medal == 'Diamond Partner' %}
-                <span style="color: #b9f2ff; font-weight: bold;">
-                    <img src="/static/images/diamond.png" alt="Diamond Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 50%;"> 
-                    Diamond Partner
-                </span>            
-
-
-                {% elif user.medal == 'Platinum Partner' %}
-                <span style="color: #dac08d; font-weight: bold;">
-                    <img src="/static/images/platinum.png" alt="Platinum Icon" style="height: 80px; width: 80px; vertical-align: middle; border-radius: 50%;"> 
-                    Platinum Partner
-                </span>       
-
-                {% elif user.medal == 'Gold Partner' %}
-                <span style="color: #ffd700; font-weight: bold;">
-                    <img src="/static/images/gold.PNG" alt="Gold Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 50%;"> 
-                    Gold Partner
-                </span>                
-            
-                {% elif user.medal == 'Silver Partner' %}
-                <span style="color: #5e5e5e; font-weight: bold;">
-                    <img src="/static/images/silver.png" alt="Silver Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 15%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);"> 
-                    Silver Partner
-                </span>
-                               
-                       
-            {% endif %}
-        </h3>
-
-        <p style="font-size: 1.5em; font-weight: bold; color: #333;">
-            Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }}
-        </p>
-        
-
-                <!-- Donation Form -->
-        <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();" style="width: 100%; max-width: 500px; margin: 0 auto;">
-            <!-- Checkbox to Toggle Payment Form -->
-            <label style="margin-top: 70px; display: flex; align-items: center; font-size: 1.3em; font-weight: bold;">
-                <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()" 
-                    style="width: 20px; height: 20px; margin-right: 10px;">
-                Select your payment type
-            </label>
-
-            <!-- Payment Form Fields -->
-            <div id="amount-entry" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; display: none;">
-                <!-- Amount Input -->
-                <label for="amount" style="font-size: 1.5em; font-weight: bold; display: block; margin-bottom: 10px;">Enter the amount you want to pay:</label>
-                <input type="number" id="amountRaw" name="amount" step="0.01" required 
-                    style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;" 
-                    oninput="formatAmount(this)" />
-                <input type="text" id="formattedAmount" readonly 
-                    style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; background-color: #f7f7f7; margin-bottom: 15px;" />
-
-                <!-- Payment Type -->
-                <label for="payment_type" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">Payment Type:</label>
-                <select id="payment_type" name="payment_type" required 
-                    style="width: 100%; padding: 12px; font-size: 1.2em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
-                    <option value="" disabled selected>Select Payment Type</option>
-                    <option value="part_payment">Part</option>
-                    <option value="full_payment">Full</option>
-                </select>
-
-                <!-- Currency -->
-                <label for="currency" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">Currency:</label>
-                <select id="currency" name="currency" required 
-                    style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
-                    <!-- Currency Options -->
-                    
-                    <option value="USD">&#36; USD - United States Dollar</option>
-                    <option value="EUR">&#8364; EUR - Euro</option>
-                    <option value="GBP">&#163; GBP - British Pound</option>
-                    <option value="NGN">&#8358; NGN - Nigerian Naira</option>
-                    <option value="AUD">&#36; AUD - Australian Dollar</option>
-                    <option value="CAD">&#36; CAD - Canadian Dollar</option>
-                    <option value="JPY">&#165; JPY - Japanese Yen</option>
-                    <option value="CNY">&#165; CNY - Chinese Yuan</option>
-                    <option value="INR">&#8377; INR - Indian Rupee</option>
-                    <option value="MXN">&#36; MXN - Mexican Peso</option>
-                    <option value="CHF">&#67;&#72;&#70; CHF - Swiss Franc</option>
-                    <option value="RUB">&#8381; RUB - Russian Ruble</option>
-                    <option value="BRL">&#82;&#36; BRL - Brazilian Real</option>
-                    <option value="ZAR">&#82; ZAR - South African Rand</option>
-                    <option value="KRW">&#8361; KRW - South Korean Won</option>
-                    <option value="HKD">&#36; HKD - Hong Kong Dollar</option>
-                    <option value="SGD">&#36; SGD - Singapore Dollar</option>
-                    <option value="SEK">&#107;&#114; SEK - Swedish Krona</option>
-                    <option value="NOK">&#107;&#114; NOK - Norwegian Krone</option>
-                    <option value="DKK">&#107;&#114; DKK - Danish Krone</option>
-                    <option value="PLN">&#122;&#322; PLN - Polish Zloty</option>
-                    <option value="TRY">&#8378; TRY - Turkish Lira</option>
-                    <option value="IDR">&#82;&#112; IDR - Indonesian Rupiah</option>
-                    <option value="MYR">&#82;&#112; MYR - Malaysian Ringgit</option>
-                    <option value="THB">&#3647; THB - Thai Baht</option>
-                    <option value="PHP">&#8369; PHP - Philippine Peso</option>
-                    <option value="AED">&#1583;&#1604; AED - United Arab Emirates Dirham</option>
-                    <option value="SAR">&#65020; SAR - Saudi Riyal</option>
-                    <option value="EGP">&#1633; EGP - Egyptian Pound</option>
-                    <option value="KES">&#75;&#83; KES - Kenyan Shilling</option>
-                    <option value="TZS">&#84;&#90;&#83; TZS - Tanzanian Shilling</option>
-                    <option value="UGX">&#85;&#71;&#88; UGX - Ugandan Shilling</option>
-                    <option value="COP">&#36; COP - Colombian Peso</option>
-                    <option value="PEN">&#83;&#47;&#36; PEN - Peruvian Nuevo Sol</option>
-                    <option value="CLP">&#36; CLP - Chilean Peso</option>
-                    <option value="ARS">&#36; ARS - Argentine Peso</option>
-                    <option value="BWP">&#66;&#87;&#80; BWP - Botswanan Pula</option>
-                    <option value="GHS">&#162; GHS - Ghanaian Cedi</option>
-                    <option value="IQD">&#1603;&#1604; IQD - Iraqi Dinar</option>
-                    <option value="JOD">&#74;&#68; JOD - Jordanian Dinar</option>
-                    <option value="LKR">&#8360; LKR - Sri Lankan Rupee</option>
-                    <option value="VND">&#8363; VND - Vietnamese Dong</option>
-                    <option value="KHR">&#6163; KHR - Cambodian Riel</option>
-                    <option value="MMK">&#77;&#77;&#75; MMK - Myanmar Kyat</option>
-                    <!-- Add other currencies as needed -->
-                </select>
-
-                <!-- Payment Date -->
-                <label class="calendar-label" for="date_donated" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">Payment Date:</label>
-                <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required 
-                    style="width: 100%; padding: 12px; font-size: 1.2em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px;" />
-
-                <!-- Submit Button -->
-                <button type="submit" 
-                    style="margin-top: 20px; padding: 12px 20px; background-color: green; color: white; font-size: 1.1em; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; width: 40%; transition: background-color 0.3s ease;">
-                    Submit Donation
-                </button>
+        <!-- Account Details Section -->
+        <div class="account-details">
+            <div class="account-item">
+                <h4>International Audience</h4>
+                <p><strong>WELLS FARGO BANK (USD)</strong></p>
+                <p>Dominion City Global</p>
+                <p>A/C: 3240700074</p>
+                <p>Intl routing no: 121000248</p>
             </div>
-        </form>
-        <script>
-            // Show or hide account details
-            function toggleFields() {
-                const amountEntry = document.getElementById("amount-entry");
-                const offlineDonation = document.getElementById("offline_donation");
-                amountEntry.style.display = offlineDonation.checked ? "block" : "none";
-            }
-        
-            // Format the amount input field with commas and display it in the second input
-            function formatAmount(input) {
-                let value = input.value.replace(/,/g, ''); // Remove commas for calculation
-                if (!isNaN(value) && value !== '') {
-                    document.getElementById("formattedAmount").value = Number(value).toLocaleString();
-                } else {
-                    document.getElementById("formattedAmount").value = ''; // Reset if invalid
-                }
-            }
-        
-            // Check if the form is correctly filled before submission
-            function checkForm() {
-                const amount = document.getElementById('amountRaw').value;
-                if (amount <= 0 || isNaN(amount)) {
-                    alert("Please enter a valid amount to donate.");
-                    return false;
-                }
-                return true;
-            }
-        </script>
-        
-    </div>
+            <div class="account-item">
+                <h4>Local & International Audience</h4>
+                <p><strong>Guaranty Trust Bank PLC (USD)</strong></p>
+                <p>Dominion City</p>
+                <p>A/C: 028-326-5588</p>
+                <p>Swift: GTBINGLA</p>
+            </div>
+            <div class="account-item">
+                <h4>For Enquiries, call:</h4>
+                <p>+234-9036370546</p>
+                <p>+234-8103526864</p>
+            </div>
+        </div>
 
-<!-- Action Icons -->
-<div class="action-icons" style="margin-top: 50px;">
-    <div class="icon-card">
-        <a href="{{ url_for('view_my_donations') }}" class="nav-link">
-            <i class="fas fa-hand-holding-heart" style="color: #28a745;"></i>
-            <span>My Donations</span>
-        </a>
-    </div>
-    <div class="icon-card">
-        <a href="https://www.dominioncity.cc/" class="nav-link">
-            <i class="fas fa-calendar-alt" style="color: #007bff;"></i>
-            <span>Events</span>
-        </a>
-    </div>
-    <div class="icon-card">
-        <a href="{{ url_for('update_user_details', user_id=current_user.id) }}" class="nav-link">
-            <i class="fas fa-user-edit" style="color: #ffc107;"></i>
-            <span>Update Details</span>
-        </a>
-    </div>
-    <div class="icon-card">
-        <a href="{{ url_for('logout') }}" class="nav-link">
-            <i class="fas fa-sign-out-alt" style="color: #dc3545;"></i>
-            <span>Logout</span>
-        </a>
-    </div>
-</div>
+        <!-- Payment Options -->
+        <h3>Alternative Payment Options</h3>
+        <p>Explore secure alternatives to complete your donation:</p>
+        <div class="options-container">
+            <a href="https://www.paypal.com/paypalme/dominioncityglobal" class="option-button option-paypal" target="_blank">
+                <i class="fab fa-paypal"></i>
+                <span>PayPal</span>
+            </a>
+            <a href="{{ url_for('paystack') }}" class="option-button option-paystack" target="_blank">
+                <i class="fas fa-credit-card"></i>
+                <span>Paystack</span>
+            </a>
+            <a href="mailto:give@dominioncityglobal.org" class="option-button option-zelle" target="_blank">
+                <i class="fas fa-wallet"></i>
+                <span>Zelle</span>
+            </a>
+        </div>
 
+        <!-- Action Icons -->
+        <div class="action-icons">
+            
+            <div class="icon-card">
+                <a href="{{ url_for('update_user_details', user_id=current_user.id) }}">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Update Details</span>
+                </a>
+            </div>
+            <div class="icon-card">
+                <a href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
 
-
+        <!-- Back Button -->
+        <a href="{{ url_for('home2') }}" class="back-button">Go Back to Home</a>
+    </div>
 </body>
 </html>

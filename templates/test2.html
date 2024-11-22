@@ -11,7 +11,7 @@
         /* General styles */
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0052D4, #65C7F7, #9CECFB);
+            background-color: #021530; /* Dark blue background */
             margin: 0;
             padding: 0;
             display: flex;
@@ -20,78 +20,126 @@
             height: 100vh;
             flex-direction: column;
         }
-
+    
         /* App Container */
         .app-container {
             width: 100%;
-            max-width: 1200px;
-            padding: 20px;
+            max-width: 1300px;
+            padding: 40px;
             text-align: center;
-            background-color: #fff;
+            background-color: rgb(212, 208, 208);
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-
-        .welcome-message h1 {
-            font-size: 2em;
-            color: #003C8F;
-            font-weight: 700;
+    
+        /* General styling for the action icons */
+        .action-icons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            overflow: hidden;
         }
-
+    
+        .welcome-message h1 {
+            font-size: 2.5em;
+            color: #003C8F;
+            font-weight: 900;
+        }
+    
         .welcome-message p {
-            font-size: 1em;
+            font-size: 1.5em;
             color: purple;
             font-style: italic;
         }
-
+    
         .icon-card {
-            display: inline-block;
-            margin: 15px;
-            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
             border-radius: 10px;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-            width: 150px;
-            text-align: center;
-            background-color: #f9fafc;
-            transition: background-color 0.3s ease;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            animation: slideIn 1s forwards;
         }
-
+    
+        /* Slide-in animation for carousel effect */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    
+        .icon-card:nth-child(1) {
+            animation-delay: 0s;
+        }
+        .icon-card:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+        .icon-card:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+        .icon-card:nth-child(4) {
+            animation-delay: 0.9s;
+        }
+    
         .icon-card:hover {
-            background-color: #e0e0e0;
+            background-color: rgb(0, 0, 15);
+            transform: scale(1.2); /* Slight zoom effect on hover */
         }
-
+    
         .icon-card i {
-            font-size: 30px;
-            margin-bottom: 10px;
+            font-size: 20px;
+            margin-bottom: 20px;
         }
-
+    
         .icon-card span {
             display: block;
-            font-size: 14px;
+            font-size: 20px;
+            color: #333;
             font-weight: bold;
         }
-
+    
         .nav-link {
             text-decoration: none;
-            color: black;
+            color: blue;
         }
-
+    
         /* Responsive Design */
         @media (max-width: 768px) {
+            .action-icons {
+                flex-direction: column;
+                align-items: center;
+            }
+    
             .app-container {
                 width: 100%;
                 padding: 10px;
             }
-
+    
             .icon-card {
                 width: 120px;
             }
-
+    
             .welcome-message h1 {
                 font-size: 1.5em;
             }
         }
+    
+        /* Donation Box */
+        #amount-entry {
+            display: none; /* Initially hidden */
+        }
     </style>
+    
 </head>
 <body>
 
@@ -103,63 +151,49 @@
             <p>"God loves a cheerful giver" - 2 Corinthians 9:7</p>
         </div>
 
-        <h2>Welcome {{ user.name }}</h2>
+        
 
-        <h3>
-            {% if user.medal == 'Diamond Partner' %}
-                <span class="medal medal-diamond">
-                    <img src="/static/images/diamond.png" alt="Diamond Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
-                    Diamond Partner
-                </span>
-            {% elif user.medal == 'Platinum Partner' %}
-                <span class="medal medal-platinum">
-                    <img src="/static/images/platinum.png" alt="Platinum Icon" style="height: 80px; width: 80px; vertical-align: middle;"> 
-                    Platinum Partner
-                </span>
-            {% elif user.medal == 'Gold Partner' %}
-                <span class="medal medal-gold">
-                    <img src="/static/images/gold.PNG" alt="Gold Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
-                    Gold Partner
-                </span>
-            {% elif user.medal == 'Silver Partner' %}
-                <span class="medal medal-silver">
-                    <img src="/static/images/silver.png" alt="Silver Icon" style="height: 70px; width: 70px; vertical-align: middle;"> 
-                    Silver Partner
-                </span>
-            {% endif %}
-        </h3>
+        
 
-        <p>Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }} </p>
+        <p style="font-size: 1.5em; font-weight: bold; color: #333;">
+            Amount Pledged: {{ user.pledged_amount }} {{ user.pledge_currency }}
+        </p>
+        
 
-
-            <!-- Donation Form -->
-        <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();">
-            <label style="margin-top: 30px; display: block; font-size: 0.9em; font-weight: bold;">
+                <!-- Donation Form -->
+        <form action="{{ url_for('donate') }}" method="POST" onsubmit="return checkForm();" style="width: 100%; max-width: 500px; margin: 0 auto;">
+            <!-- Checkbox to Toggle Payment Form -->
+            <label style="margin-top: 70px; display: flex; align-items: center; font-size: 1.3em; font-weight: bold;">
                 <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()" 
-                    style="width: 30px; height: 30px; accent-color: blue; margin-right: 10px;">
+                    style="width: 20px; height: 20px; margin-right: 10px;">
                 Select your payment type
             </label>
 
-            <div id="amount-entry" style="margin-top: 10px; padding: 10px;">
-                <label for="amount" style="font-size: 0.9em; font-weight: bold;">Enter the amount you want to pay:</label><br>
+            <!-- Payment Form Fields -->
+            <div id="amount-entry" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; display: none;">
+                <!-- Amount Input -->
+                <label for="amount" style="font-size: 1.5em; font-weight: bold; display: block; margin-bottom: 10px;">Enter the amount you want to pay:</label>
                 <input type="number" id="amountRaw" name="amount" step="0.01" required 
-                    style="width: 30%; padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;" 
+                    style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;" 
                     oninput="formatAmount(this)" />
                 <input type="text" id="formattedAmount" readonly 
-                    style="width: 30%; padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid #ccc; background-color: #f7f7f7;"/>
+                    style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; background-color: #f7f7f7; margin-bottom: 15px;" />
 
-                <label for="payment_type" style="font-size: 0.9em; font-weight: bold; margin-top: 8px;">Payment Type:</label><br>
+                <!-- Payment Type -->
+                <label for="payment_type" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">Payment Type:</label>
                 <select id="payment_type" name="payment_type" required 
-                    style="width: 30%; padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
+                    style="width: 100%; padding: 12px; font-size: 1.2em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
                     <option value="" disabled selected>Select Payment Type</option>
                     <option value="part_payment">Part</option>
                     <option value="full_payment">Full</option>
                 </select>
 
-                <label for="currency" style="font-size: 0.9em; font-weight: bold; margin-top: 8px;">Currency:</label><br>
+                <!-- Currency -->
+                <label for="currency" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">Currency:</label>
                 <select id="currency" name="currency" required 
-                    style="width: 30%; padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
+                    style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
                     <!-- Currency Options -->
+                    
                     <option value="USD">&#36; USD - United States Dollar</option>
                     <option value="EUR">&#8364; EUR - Euro</option>
                     <option value="GBP">&#163; GBP - British Pound</option>
@@ -204,20 +238,21 @@
                     <option value="VND">&#8363; VND - Vietnamese Dong</option>
                     <option value="KHR">&#6163; KHR - Cambodian Riel</option>
                     <option value="MMK">&#77;&#77;&#75; MMK - Myanmar Kyat</option>
-
-                    <!-- Additional currencies as needed -->
+                    <!-- Add other currencies as needed -->
                 </select>
 
-                <label class="calendar-label" for="date_donated" style="font-size: 0.9em; font-weight: bold; margin-top: 8px;">Payment Date:</label><br>
+                <!-- Payment Date -->
+                <label class="calendar-label" for="date_donated" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">Payment Date:</label>
                 <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required 
-                    style="width: 30%; padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;"/>
+                    style="width: 100%; padding: 12px; font-size: 1.2em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px;" />
 
-                <button type="submit" style="margin-top: 20px; padding: 12px 20px; background-color: green; color: white; font-size: 1.1em; font-weight: 500; border: none; border-radius: 8px; cursor: pointer; width: 10%; transition: background-color 0.3s ease;">
+                <!-- Submit Button -->
+                <button type="submit" 
+                    style="margin-top: 20px; padding: 12px 20px; background-color: green; color: white; font-size: 1.1em; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; width: 40%; transition: background-color 0.3s ease;">
                     Submit Donation
                 </button>
             </div>
         </form>
-
         <script>
             // Show or hide account details
             function toggleFields() {
@@ -225,66 +260,59 @@
                 const offlineDonation = document.getElementById("offline_donation");
                 amountEntry.style.display = offlineDonation.checked ? "block" : "none";
             }
-
+        
             // Format the amount input field with commas and display it in the second input
             function formatAmount(input) {
                 let value = input.value.replace(/,/g, ''); // Remove commas for calculation
                 if (!isNaN(value) && value !== '') {
                     document.getElementById("formattedAmount").value = Number(value).toLocaleString();
                 } else {
-                    document.getElementById("formattedAmount").value = '';
+                    document.getElementById("formattedAmount").value = ''; // Reset if invalid
                 }
             }
-
-            // Validate form before submitting
+        
+            // Check if the form is correctly filled before submission
             function checkForm() {
-                const rawAmount = document.getElementById("amountRaw").value;
-                const paymentType = document.getElementById("payment_type").value;
-                const currency = document.getElementById("currency").value;
-                const date = document.getElementById("date_donated").value;
-
-                if (!rawAmount || isNaN(rawAmount) || rawAmount <= 0) {
-                    alert("Please enter a valid amount before submitting.");
+                const amount = document.getElementById('amountRaw').value;
+                if (amount <= 0 || isNaN(amount)) {
+                    alert("Please enter a valid amount to donate.");
                     return false;
                 }
-
-                if (!paymentType || !currency || !date) {
-                    alert("Please complete all fields.");
-                    return false;
-                }
-
                 return true;
             }
         </script>
+        
     </div>
 
-        <!-- Action Icons -->
-        <div class="action-icons">
-            <div class="icon-card">
-                <a href="{{ url_for('view_my_donations') }}" class="nav-link">
-                    <i class="fas fa-hand-holding-heart" style="color: #28a745;"></i>
-                    <span>My Donations</span>
-                </a>
-            </div>
-            <div class="icon-card">
-                <a href="https://www.dominioncity.cc/" class="nav-link">
-                    <i class="fas fa-calendar-alt" style="color: #007bff;"></i>
-                    <span>Events</span>
-                </a>
-            </div>
-            <div class="icon-card">
-                <a href="{{ url_for('update_user_details', user_id=current_user.id) }}" class="nav-link">
-                    <i class="fas fa-user-edit" style="color: #ffc107;"></i>
-                    <span>Update Details</span>
-                </a>
-            </div>
-            <div class="icon-card">
-                <a href="{{ url_for('logout') }}" class="nav-link">
-                    <i class="fas fa-sign-out-alt" style="color: #dc3545;"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </div>
+<!-- Action Icons -->
+<div class="action-icons" style="margin-top: 50px;">
+    <div class="icon-card">
+        <a href="{{ url_for('view_my_donations') }}" class="nav-link">
+            <i class="fas fa-hand-holding-heart" style="color: #28a745;"></i>
+            <span>My Donations</span>
+        </a>
+    </div>
+    <div class="icon-card">
+        <a href="https://www.dominioncity.cc/" class="nav-link">
+            <i class="fas fa-calendar-alt" style="color: #007bff;"></i>
+            <span>Events</span>
+        </a>
+    </div>
+    <div class="icon-card">
+        <a href="{{ url_for('update_user_details', user_id=current_user.id) }}" class="nav-link">
+            <i class="fas fa-user-edit" style="color: #ffc107;"></i>
+            <span>Update Details</span>
+        </a>
+    </div>
+    <div class="icon-card">
+        <a href="{{ url_for('logout') }}" class="nav-link">
+            <i class="fas fa-sign-out-alt" style="color: #dc3545;"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
+
+
 
 </body>
 </html>

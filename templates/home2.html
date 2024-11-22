@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dominion City Partnership Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Reset Styles */
         * {
@@ -120,7 +122,36 @@
     <div class="container">
         <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover;">
         <h1 id="greeting">Welcome!</h1>
-        <h2>Partner Since: {{ user.partner_since if user.partner_since else 'N/A' }}</h2>
+        <h2>
+            Partner Since: {{ user.partner_since if user.partner_since else 'N/A' }}
+            <br>
+            {% if user.medal %}
+            <span>
+                {% if user.medal == 'Diamond Partner' %}
+                <span style="color: #b9f2ff; font-weight: bold;">
+                    <img src="/static/images/diamond.png" alt="Diamond Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 50%;"> 
+                    Diamond Partner
+                </span>
+                {% elif user.medal == 'Platinum Partner' %}
+                <span style="color: #dac08d; font-weight: bold;">
+                    <img src="/static/images/platinum.png" alt="Platinum Icon" style="height: 80px; width: 80px; vertical-align: middle; border-radius: 50%;"> 
+                    Platinum Partner
+                </span>
+                {% elif user.medal == 'Gold Partner' %}
+                <span style="color: #ffd700; font-weight: bold;">
+                    <img src="/static/images/gold.PNG" alt="Gold Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 50%;"> 
+                    Gold Partner
+                </span>
+                {% elif user.medal == 'Blue Partner' %}
+                <span style="color: #5e5e5e; font-weight: bold;">
+                    <img src="/static/images/silver.png" alt="Silver Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 15%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);"> 
+                    Silver Partner
+                </span>
+                {% endif %}
+            </span>
+            {% endif %}
+        </h2>
+        
 
         <p id="realtime-date"></p>
 
@@ -151,17 +182,32 @@
                     {% endif %}
                 </span>
             </div>
+            
+
+            <div class="option">
+                <i class="fas fa-hand-holding-heart" style="color: #28a745;"></i>
+
+                <a href="{{ url_for('view_my_donations') }}">My Recent Donations</a>
+            </div>
+
             <div class="option">
                 <i class="option-icon">&#128222;</i> <!-- Phone Icon -->
                 <span>Phone: {{ user.phone[:5] }}xxxxxxx</span>
             </div>
+
             <div class="option">
-                <i class="option-icon">&#128196;</i> <!-- Document Icon -->
-                <a href="{{ url_for('change_password') }}">Forgot Password</a>
-            </div>
-            <div class="option">
-                <i class="option-icon">&#128172;</i> <!-- Logout Icon -->
+                <i class="fas fa-sign-out-alt" style="color: rgb(165, 142, 13); font-size: 2em; transition: color 0.3s ease;" onmouseover="this.style.color='#1c7c32'" onmouseout="this.style.color='#28a745'"></i> <!-- Logout Icon -->
                 <a href="{{ url_for('logout') }}">Not you? Logout</a>
+            </div>
+
+            <div class="icon-card">
+                <a href="{{ url_for('update_partner_details') }}">
+                    <i class="fas fa-user-edit" style="color: #FFD700; font-size: 2em; transition: color 0.3s ease;" 
+                       onmouseover="this.style.color='#C5A100'" onmouseout="this.style.color='#FFD700'"></i>
+                    <span style="color: greenyellow">Update Details</span>
+                </a>
+                
+                
             </div>
         </div>
     </div>
