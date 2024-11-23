@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donation Success</title>
+    <title>Profile Update Success</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,29 +35,17 @@
 </head>
 <body>
     <div class="container">
-        <h1>Thank You!</h1>
-        <p>Your donation details have been submitted to admin.</p>
+        <h1>Success!</h1>
+        <p>Your profile has been updated successfully.</p>
         <p>
-            <a href="{{ url_for('home2') }}" 
+            <a href="{{ url_for('login') }}" 
                style="font-weight: bold; font-size: 18px; text-decoration: none; 
                       padding: 10px 20px; background-color: rgb(9, 9, 110); color: white; 
                       border-radius: 5px; display: inline-block; text-align: center; 
                       transition: background-color 0.3s ease, transform 0.3s ease;">
-                Return Home.
+                Login Again
             </a>
         </p>
-        
-        <!-- Hover effect to make it more clickable -->
-        <style>
-            a:hover {
-                background-color: #021c38;
-                transform: scale(1.1);
-            }
-        </style>
-        
-        
-
-
     </div>
 </body>
 </html>

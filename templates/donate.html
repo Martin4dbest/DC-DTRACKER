@@ -26,12 +26,12 @@
         h1 {
             font-size: 3em;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 60px;
         }
         p {
             font-size: 1.2em;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         a {
             text-decoration: none;
@@ -45,7 +45,7 @@
             background-color: #061350;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            padding: 50px;
+            padding: 80px;
             text-align: center;
             margin-bottom: 40px;
         }
@@ -55,7 +55,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            gap: 20px;
+            gap: 30px;
             margin-bottom: 40px;
         }
         .account-item {
@@ -68,7 +68,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         .account-item h4 {
-            margin-bottom: 15px;
+            margin-bottom: 25px;
             font-size: 1.4em;
         }
         .account-item p {
@@ -203,6 +203,21 @@
             </div>
         </div>
 
+
+        <div class="option" style="display: flex; align-items: center; gap: 0.5em;">
+            <!-- Logout Icon as Link -->
+            <a href="{{ url_for('home2') }}" style="text-decoration: none;">
+                <i class="fas fa-sign-out-alt" 
+                   style="color: rgb(165, 142, 13); font-size: 2em; transition: color 0.3s ease;" 
+                   onmouseover="this.style.color='#1c7c32'" 
+                   onmouseout="this.style.color='rgb(165, 142, 13)'"></i>
+            </a>
+            <!-- Logout Text -->
+            <a href="{{ url_for('home2') }}" style="text-decoration: none; color: greenyellow;">Back</a>
+        </div>
+        
+        
+
         
     
         <!-- Donation Form -->
@@ -217,7 +232,7 @@
             <div id="amount-entry" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; display: none;">
                 <!-- Amount Input -->
                 <label for="amount" style="font-size: 1.5em; font-weight: bold; display: block; margin-bottom: 10px;">
-                    Enter the amount you paid:
+                    Enter the Amount paid:
                 </label>
                 <input type="number" id="amountRaw" name="amount" step="0.01" required style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;" oninput="formatAmount(this)" />
                 <input type="text" id="formattedAmount" readonly style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; background-color: #f7f7f7; margin-bottom: 15px;" />
@@ -292,7 +307,7 @@
 
                 <!-- Receipt Upload Section (beside checkbox) -->
             <div id="receipt-upload" style="display: flex; align-items: center; margin-top: 20px;">
-                <label for="receipt-file" class="upload-button" style="margin-right: 10px; font-size: 1.2em;">Write or upload your receipt (optional)</label>
+                <label for="receipt-file" class="upload-button" style="margin-right: 10px; font-size: 1.2em;">Upload your receipt (optional)</label>
                 <input type="file" id="receipt-file" name="receipt" accept="image/*, .pdf" style="font-size: 1.1em;">
             </div>
 

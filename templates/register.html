@@ -155,17 +155,19 @@
 
             <div class="form-group">
                 <label for="partner_since">Partner Since (Year):</label>
-                <input 
-                    type="number" 
+                <select 
                     id="partner_since" 
                     name="partner_since" 
-                    class="form-control"
-                    min="1900" 
-                    max="{{ current_year }}" 
-                    placeholder="e.g., 2020" 
+                    class="form-control" 
                     required
                 >
+                    <option value="" disabled selected>Select a year</option>
+                    {% for year in range(1990, current_year + 1) %}
+                    <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
             </div>
+            
 
             <div class="form-group">
                 <label for="birthday">Birthday:</label>

@@ -29,13 +29,13 @@
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
+            font-size: 1.5rem;
+            margin-bottom: 50px;
             color: #00c6ff; /* Bright blue */
         }
 
         h2, p {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             font-size: 1.2rem;
         }
 
@@ -178,7 +178,7 @@
                            style="color: #00c6ff; text-decoration: underline;">Make a Pledge</a>.
                     {% else %}
                         Ready to redeem your pledge? 
-                        <a href="{{ url_for('donate') }}" style="color: #00c6ff; text-decoration: underline;">Proceed to Donate</a>.
+                        <a href="{{ url_for('donate') }}" style="color: #00c6ff; text-decoration: underline;">Proceed to Payment</a>.
                     {% endif %}
                 </span>
             </div>
@@ -201,14 +201,13 @@
             </div>
 
             <div class="icon-card">
-                <a href="{{ url_for('update_partner_details') }}">
+                <a href="{{ url_for('edit_profile') }}">
                     <i class="fas fa-user-edit" style="color: #FFD700; font-size: 2em; transition: color 0.3s ease;" 
                        onmouseover="this.style.color='#C5A100'" onmouseout="this.style.color='#FFD700'"></i>
                     <span style="color: greenyellow">Update Details</span>
                 </a>
-                
-                
             </div>
+            
         </div>
     </div>
 
