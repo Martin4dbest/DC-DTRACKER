@@ -37,10 +37,10 @@
     
         .container {
             background-color: #003366; /* Slightly lighter blue for the container */
-            padding: 70px 40px;
+            padding: 100px 120px;
             border-radius: 15px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
         }
     
@@ -150,7 +150,7 @@
                target="_blank" aria-label="Instagram" style="color: #C13584;"><i class="fab fa-instagram"></i></a>
             <a href="https://api.whatsapp.com/send?phone=2348103526864" target="_blank" aria-label="WhatsApp" 
                style="color: #25D366;"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://www.dominioncity.cc/contact" aria-label="Email" 
+            <a href="{{ url_for('contact') }}" aria-label="Email" 
                style="color: #EA4335;"><i class="fas fa-envelope"></i></a>
         </div>
     </footer>

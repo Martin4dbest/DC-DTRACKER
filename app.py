@@ -12,8 +12,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from twilio.rest import Client
 from functools import wraps
 import os
+from werkzeug.utils import secure_filename
 
-
+from PIL import Image
 from flask_login import LoginManager
 
 from googleapiclient.discovery import build
@@ -144,6 +145,7 @@ class Donation(db.Model):
     currency = db.Column(db.String(50), default='USD')
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
     payment_type = db.Column(db.String(20), nullable=False, default="full")  # New field for payment type
+    receipt_filename = db.Column(db.String(255), nullable=True)  # New field for receipt file name
     
     
 
@@ -358,12 +360,40 @@ def home2():
         user=user
     )
 
+
+
+
+
+
+
+#Donation and upload files
+
+
+
+# Add your allowed file extensions and upload folder
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = os.environ.get('SECRET_KEY', 'default_fallback_key')
+
+# Initialize mail instance (configure this with your actual email settings)
+mail = Mail(app)
+
+# Utility to check file extensions
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Optional: Function to compress images
+def compress_image(filepath):
+    with Image.open(filepath) as img:
+        img.save(filepath, optimize=True, quality=85)
+
 @app.route("/donate", methods=["GET", "POST"])
 def donate():
     user = None
     if "user_id" in session:
         user = get_current_user()  # Retrieve the current logged-in user if available
-        app.logger.debug(f"User object: {user}")  # Log the user object to see its attributes
+        app.logger.debug(f"User object: {user}")
         if user:
             db.session.refresh(user)  # Refresh the user to ensure the latest data from the database
 
@@ -372,58 +402,138 @@ def donate():
         payment_type = request.form.get("payment_type")  # Get the selected payment type
 
         # Handle offline donation
-        if request.form.get("offline_donation"):
-            amount = request.form.get("amount")
-            currency = request.form.get("currency")
-            donation_date = request.form.get("date_donated")  # Get date from form, if provided
+        amount = request.form.get("amount")
+        currency = request.form.get("currency")
+        donation_date = request.form.get("date_donated")
+        receipt = request.files.get("receipt")
 
-            # Validate the amount
-            try:
-                amount = float(amount)
-                if amount <= 0:
-                    flash("Donation amount must be greater than zero.", "danger")
-                    return redirect(url_for("donate"))
-            except (ValueError, TypeError):
-                flash("Invalid amount format.", "danger")
+        # Validate required fields
+        if not all([amount, payment_type, currency, donation_date]):
+            flash("Please fill in all required fields.", "danger")
+            return redirect(url_for("donate"))
+
+        # Validate amount
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                flash("Donation amount must be greater than zero.", "danger")
                 return redirect(url_for("donate"))
+        except (ValueError, TypeError):
+            flash("Invalid amount format.", "danger")
+            return redirect(url_for("donate"))
 
-            # Validate or set the donation date
-            if donation_date:
-                try:
-                    donation_date = datetime.strptime(donation_date, '%Y-%m-%d').date()
-                except ValueError:
-                    flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
-                    return redirect(url_for("donate"))
-            else:
-                donation_date = date.today()  # Default to today's date if not provided
+        # Validate or set the donation date
+        try:
+            donation_date = datetime.strptime(donation_date, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
+            return redirect(url_for("donate"))
 
-            # Create a new donation, with or without user association
-            donation = Donation(
-                user_id=user_id,  # Associate with logged-in user if available
-                amount=amount,
-                currency=currency,
-                donation_date=donation_date,
-                payment_type=payment_type  # Save the selected payment type
-            )
+        # Handle the uploaded file (receipt)
+        receipt_filename = None
+        if receipt and allowed_file(receipt.filename):
+            receipt_filename = secure_filename(receipt.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], receipt_filename)
+            receipt.save(filepath)
 
-            try:
-                db.session.add(donation)
-                db.session.commit()
-                flash(f"Thank you for your {payment_type} donation!", "success")
-                app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
-                return redirect(url_for("donation_success"))
-            except Exception as e:
-                db.session.rollback()
-                app.logger.error(f"Error saving donation: {e}")
-                flash("There was an error processing your donation. Please try again.", "danger")
-                return redirect(url_for("donate"))
+            # Compress image files if it's an image format
+            if receipt_filename.lower().endswith(('png', 'jpg', 'jpeg')):
+                compress_image(filepath)
+        elif receipt:
+            flash("Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, PDF.", "danger")
+            return redirect(url_for("donate"))
 
+        # Create a new donation
+        donation = Donation(
+            user_id=user_id,
+            amount=amount,
+            currency=currency,
+            donation_date=donation_date,
+            payment_type=payment_type,
+            receipt_filename=receipt_filename  # Optional field in the database for file name
+        )
+
+        try:
+            db.session.add(donation)
+            db.session.commit()
+
+            # Send email to admin with donation details
+            send_admin_notification(donation, receipt)
+
+            flash(f"Thank you for your {payment_type} donation!", "success")
+            app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
+            return redirect(url_for("donation_success"))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error saving donation: {e}")
+            flash("There was an error processing your donation. Please try again.", "danger")
+            return redirect(url_for("donate"))
 
     # Retrieve pledges made by all users
     pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
 
-    # Render the form again, passing back the donation_date so it can be displayed in the input
     return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
+
+
+def send_admin_notification(donation, receipt):
+    """Send a notification email to the admin with the donation details"""
+    admin_email = 'admin@example.com'  # Replace with actual admin email
+    subject = f"New Donation Received - {donation.amount} {donation.currency}"
+    body = f"""
+    A new donation has been made:
+
+    User ID: {donation.user_id}
+    Amount: {donation.amount} {donation.currency}
+    Payment Type: {donation.payment_type}
+    Donation Date: {donation.donation_date}
+    Receipt Filename: {donation.receipt_filename if donation.receipt_filename else 'No receipt provided'}
+
+    Thank you for supporting the cause.
+    """
+
+    msg = Message(subject, recipients=[admin_email])
+    msg.body = body
+
+    if donation.receipt_filename:
+        receipt_path = os.path.join(app.config['UPLOAD_FOLDER'], donation.receipt_filename)
+        with open(receipt_path, 'rb') as receipt_file:
+            msg.attach(donation.receipt_filename, 'application/octet-stream', receipt_file.read())
+
+    try:
+        mail.send(msg)
+    except Exception as e:
+        app.logger.error(f"Error sending email: {e}")
+
+
+@app.route('/admin/receipts')
+def view_receipts():
+    # Fetch all donations (receipts) from the database
+    receipts = Donation.query.all()  # Adjust based on your actual DB structure
+    
+    # Pass the receipts to the template for rendering
+    return render_template('admin_dashboard.html', receipts=receipts)
+
+@app.route('/receipts_overview')
+def receipts_overview():
+    # Fetch all donations (receipts) from the database
+    receipts = Donation.query.all()  # Adjust based on your actual DB structure
+    
+    # Pass the receipts to the template for rendering
+    return render_template('receipts_overview.html', receipts=receipts)
+
+@app.route('/view_receipt/<int:receipt_id>')
+def view_receipt(receipt_id):
+    # Fetch a single receipt by its ID
+    receipt = Donation.query.get_or_404(receipt_id)
+    
+    # Render the receipt details page
+    return render_template('view_receipt.html', receipt=receipt)
+
+
+
+
+
+
 
 
 @app.route('/recent_donations', methods=['GET', 'POST'])
@@ -1144,6 +1254,9 @@ def edit_profile():
 
     # Render the edit profile page for GET requests
     return render_template('edit_profile.html', user=user)  # Pass user data to the template
+
+
+
 
 
 

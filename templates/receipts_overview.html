@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipts Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #051d35;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            background: linear-gradient(45deg, #08294b, #006699);
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.6);
+            margin-top: 20px;
+        }
+        .back-link {
+            text-align: right;
+            margin: 20px 0;
+        }
+        .back-link a {
+            font-size: 18px;
+            text-decoration: none;
+            color: #006699;
+            font-weight: bold;
+        }
+        .back-link img {
+            vertical-align: middle;
+            padding-right: 8px;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            background-color: #f0f8ff;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #003366;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e2e2e2;
+        }
+        .button {
+            padding: 6px 12px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h3>Receipts Overview</h3>
+
+        <!-- Back to Dashboard Link with Icon -->
+        <div class="option">
+            <i class="fas fa-sign-out-alt" style="color: rgb(165, 142, 13); font-size: 2em; transition: color 0.3s ease;" onmouseover="this.style.color='#1c7c32'" onmouseout="this.style.color='#28a745'"></i> <!-- Logout Icon -->
+            <a href="{{ url_for('admin_dashboard') }}">Back</a>
+        </div>
+
+        <!-- Table Displaying Receipts -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Receipt ID</th>
+                        <th>Partner Name</th>
+                        <th>Donation Amount</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for receipt in receipts %}
+                        <tr>
+                            <td>{{ receipt.id }}</td>
+                            <td>{{ receipt.user.name }}</td>
+                            <td>${{ receipt.amount }}</td>
+                            <td>{{ receipt.donation_date }}</td>
+                            <td style="text-align: center;">
+                                <a href="{{ url_for('view_receipt', receipt_id=receipt.id) }}" class="button">View Receipt</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>
