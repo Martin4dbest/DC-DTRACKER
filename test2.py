@@ -16,13 +16,12 @@ import os
 
 from flask_login import LoginManager
 
+
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
-
-
 
 
 
@@ -41,12 +40,13 @@ sns_client = boto3.client("sns", region_name="us-west-2")
 
 
 
+
+
+
 # Load environment variables from .env file
 load_dotenv()
-
-# Access the SECRET_KEY
-SECRET_KEY = os.getenv('SECRET_KEY')
-
+  # Load environment variables from .env file
+#print("dotenv loaded successfully!")
 
 # App and database setup
 app = Flask(__name__)
@@ -84,11 +84,6 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'your_twilio_phone_n
 
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-
-
-
-
 
 
 
@@ -967,6 +962,8 @@ def select_payment_options():
     return render_template("select_payment_options.html")
 
 
+    #http://127.0.0.1:5000/update_user_details?user_id=47
+
 
 # Load environment variables
 SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
@@ -977,109 +974,149 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 @app.route('/sync_with_google_sheets', methods=['POST'])
 def sync_with_google_sheets():
+    # Authenticate using Google service account
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=creds)
+
     try:
-        # Debug: Check if the environment variables are set
-        print(f"Service Account File Path: {SERVICE_ACCOUNT_FILE}")
-        print(f"Spreadsheet ID: {SPREADSHEET_ID}")
-
-        if not SERVICE_ACCOUNT_FILE or not SPREADSHEET_ID:
-            flash('Environment variables for Google Sheets are not set.', 'error')
-            return redirect(url_for('view_partners_pledges'))
-
-        # Authenticate using Google service account
-        creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-        service = build('sheets', 'v4', credentials=creds)
-        print(f"Google Sheets API Credentials Loaded Successfully")
-
         # === Step 1: Import Data from Google Sheets ===
-        sheet_range = 'Registration!A1:J'  # Adjust range to include all columns
-        print(f"Fetching data from range: {sheet_range}")
         result = service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
-            range=sheet_range
+            range=f'Sheet1!A2:K'  # Assuming data starts at row 2, columns A to K
         ).execute()
         rows = result.get('values', [])
-        print(f"Fetched rows: {rows}")
 
-        if not rows or len(rows) <= 1:  # First row is header
-            flash('No data found in the Google Sheet or only header row present.', 'error')
-            return redirect(url_for('view_partners_pledges'))
+        # Log data from the Google Sheet
+        print(f"Synchronizing with Google Sheets: {rows}")  # Log the rows fetched from Google Sheets
 
-        # Process rows (skipping the header)
-        for i, row in enumerate(rows[1:], start=2):  # Start from row 2 for better debugging
-            print(f"Processing row {i}: {row}")
+        if not rows:
+            flash('No data found in the Google Sheet.', 'error')
+        else:
+            for row in rows:
+                # Extract data from the row
+                name = row[0] if len(row) > 0 else None
+                phone = row[1] if len(row) > 1 else None
+                email = row[2] if len(row) > 2 else None
+                address = row[3] if len(row) > 3 else None
+                country = row[4] if len(row) > 4 else None
+                state = row[5] if len(row) > 5 else None
+                church_branch = row[6] if len(row) > 6 else None
+                birthday_str = row[7] if len(row) > 7 else None
+                pledged_amount = row[8] if len(row) > 8 else None
+                pledge_currency = row[9] if len(row) > 9 else None
 
-            # Extract data with safe indexing
-            name = row[0] if len(row) > 0 else None
-            phone = row[1] if len(row) > 1 else None
-            email = row[2] if len(row) > 2 else None
-            address = row[3] if len(row) > 3 else None
-            country = row[4] if len(row) > 4 else None
-            state = row[5] if len(row) > 5 else None
-            church_branch = row[6] if len(row) > 6 else None
-            birthday_str = row[7] if len(row) > 7 else None
-            pledged_amount = row[8] if len(row) > 8 else None
-            pledge_currency = row[9] if len(row) > 9 else None
+                # Parse birthday if provided
+                birthday = None
+                if birthday_str:
+                    try:
+                        birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+                    except ValueError:
+                        birthday = None  # Skip invalid dates
 
-            # Parse birthday
-            birthday = None
-            if birthday_str:
-                try:
-                    birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
-                except ValueError:
-                    print(f"Invalid birthday format on row {i}: {birthday_str}")
-                    birthday = None
+                # Use phone number or email as the password
+                if phone:
+                    password = phone
+                elif email:
+                    password = email
+                else:
+                    flash(f"No phone or email available to set as a password for {name}. Skipping user.", "error")
+                    continue
 
-            # Determine password
-            password = phone or email
-            if not password:
-                print(f"Row {i}: Missing phone and email. Skipping row.")
-                continue
+                # Check if the user already exists by email
+                existing_user = User.query.filter_by(email=email).first()
+                if existing_user:
+                    flash(f"User with email {email} already exists. Skipping import for {name}.", "warning")
+                    continue
 
-            # Check if user already exists
-            existing_user = User.query.filter_by(email=email).first()
-            if existing_user:
-                print(f"Row {i}: User with email {email} already exists. Skipping.")
-                continue
+                # Create the new user
+                new_user = User(
+                    name=name,
+                    phone=phone,
+                    email=email,
+                    address=address,
+                    country=country,
+                    state=state,
+                    church_branch=church_branch,
+                    birthday=birthday,
+                    pledged_amount=pledged_amount,
+                    pledge_currency=pledge_currency,
+                    is_admin=False,
+                    is_super_admin=False
+                )
+                new_user.set_password(password)  # Hash and set the password
 
-            # Create new user
-            new_user = User(
-                name=name,
-                phone=phone,
-                email=email,
-                address=address,
-                country=country,
-                state=state,
-                church_branch=church_branch,
-                birthday=birthday,
-                pledged_amount=pledged_amount,
-                pledge_currency=pledge_currency,
-                is_admin=False,
-                is_super_admin=False
-            )
-            new_user.set_password(password)  # Hash the password
-            db.session.add(new_user)
-            print(f"Row {i}: User {name} added successfully.")
+                # Save the user to the database
+                db.session.add(new_user)
+                db.session.commit()
 
-        db.session.commit()  # Commit all changes at once for efficiency
-        print(f"All users imported successfully.")
+                # Log user import success
+                print(f"User {name} imported successfully.")  # Log each user import
+
+                flash(f"User {name} imported successfully.", "success")
 
         # === Step 2: Export Data to Google Sheets ===
-        # (Export code remains unchanged, as it was already functioning)
+
+        # Export partners' pledges data
+        users = User.query.filter_by(is_admin=False).all()  # Only select non-admin users
+        partners_values = [
+            ['Partner Name', 'Role', 'Phone Number', 'Email', 'Country', 'State', 'Local Church', 'Address', 'Birthday', 'Pledged Amount', 'Pledged Currency']
+        ]
+
+        for user in users:
+            partners_values.append([
+                user.name,
+                'Admin' if user.is_admin else 'Partner',
+                user.phone,
+                user.email,
+                user.country,
+                user.state,
+                user.church_branch,
+                user.address,
+                user.birthday.strftime('%m/%d/%Y') if user.birthday else 'N/A',
+                user.pledged_amount,
+                user.pledge_currency,
+            ])
+
+        partners_body = {'values': partners_values}
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'Sheet2!A1',
+            valueInputOption='RAW',
+            body=partners_body
+        ).execute()
+
+        # Export donations data
+        donations = Donation.query.all()
+        donations_values = [
+            ['Partner', 'Country', 'State', 'Local Church', 'Amount', 'Currency', 'Payment Type', 'Donation Date']
+        ]
+
+        for donation in donations:
+            donations_values.append([
+                donation.user.name,
+                donation.user.country,
+                donation.user.state,
+                donation.user.church_branch,
+                donation.amount,
+                donation.currency,
+                donation.payment_type,
+                donation.donation_date.strftime('%m/%d/%Y') if donation.donation_date else 'N/A',
+            ])
+
+        donations_body = {'values': donations_values}
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'Sheet3!A1',
+            valueInputOption='RAW',
+            body=donations_body
+        ).execute()
 
         flash('Data synchronization with Google Sheets completed successfully.', 'success')
         return redirect(url_for('view_partners_pledges'))
 
     except Exception as e:
-        print(f"Error: {str(e)}")
         flash(f"Error during Google Sheets synchronization: {str(e)}", 'error')
         return redirect(url_for('view_partners_pledges'))
-
-
-
-
-
-
 
 
 
@@ -1163,21 +1200,4 @@ application = app
 
 if __name__ == "__main__":
     application.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    

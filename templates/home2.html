@@ -143,14 +143,15 @@
                     Gold Partner
                 </span>
                 {% elif user.medal == 'Blue Partner' %}
-                <span style="color: #5e5e5e; font-weight: bold;">
-                    <img src="/static/images/silver.png" alt="Silver Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 15%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);"> 
-                    Silver Partner
+                <span style="color: blue; font-weight: bold;">
+                    <img src="/static/images/blue.png" alt="Blue Icon" style="height: 70px; width: 70px; vertical-align: middle; border-radius: 50%;"> 
+                    Blue Partner
                 </span>
                 {% endif %}
             </span>
             {% endif %}
         </h2>
+        
         
 
         <p id="realtime-date"></p>
@@ -161,7 +162,7 @@
         
 
         
-        <a href="{{ url_for('add_pledge', user_id=user.id) }}" style="color: #27d0ff; text-decoration: none; text-shadow: 0 0 15px rgba(0, 198, 255, 1), 0 0 25px rgba(0, 198, 255, 1), 0 0 35px rgba(0, 198, 255, 1);font-size: 1.1rem;">Haven't pledged yet? Make your pledge HERE.</a>
+        <a href="{{ url_for('add_pledge', user_id=user.id) }}" style="color: #27d0ff; text-decoration: none; text-shadow: 0 0 15px rgba(0, 198, 255, 1), 0 0 25px rgba(0, 198, 255, 1), 0 0 35px rgba(0, 198, 255, 1);font-size: 1.1rem;">Confirm displayed amount HERE to unlock medal.</a>
 
 
         
@@ -232,7 +233,7 @@
         const realtimeDate = document.getElementById('realtime-date');
         const now = new Date();
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        realtimeDate.textContent = `Today is: ${now.toLocaleDateString('en-US', options)}`;
+        realtimeDate.textContent = ` ${now.toLocaleDateString('en-US', options)}`;
     </script>
 </body>
 </html>
