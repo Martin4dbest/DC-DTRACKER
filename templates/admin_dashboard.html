@@ -293,6 +293,16 @@
                 </span>
         </a>
 
+            <!-- Link to Uploaded Receipts -->
+        <a href="{{ url_for('admin_uploaded_receipts') }}" class="nav-link" 
+        style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
+            <i class="fas fa-file-upload" style="font-size: 24px; color: #ff6347;"></i> <!-- Tomato color for icon -->
+            <span class="nav-text" 
+                style="display: none; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                Uploaded Receipts
+            </span>
+        </a>
+
         <a href="{{ url_for('logout') }}" 
         style="position: relative; margin: 15px 0; display: inline-block; text-align: center; text-decoration: none; color: white; font-size: 18px; transition: all 0.3s ease;">
             <i class="fas fa-sign-out-alt" style="font-size: 24px; color: #dc143c;"></i> <!-- Crimson for icon -->

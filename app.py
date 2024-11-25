@@ -13,7 +13,6 @@ from twilio.rest import Client
 from functools import wraps
 import os
 from werkzeug.utils import secure_filename
-
 from PIL import Image
 from flask_login import LoginManager
 
@@ -22,6 +21,10 @@ from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+from flask_wtf.csrf import CSRFProtect
+
+app = Flask(__name__)
+csrf = CSRFProtect(app)
 
 
 
@@ -85,10 +88,6 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'your_twilio_phone_n
 
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-
-
-
 
 
 
@@ -373,6 +372,9 @@ def home2():
 # Add your allowed file extensions and upload folder
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+#app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.environ.get('SECRET_KEY', 'default_fallback_key')
 
@@ -382,6 +384,35 @@ mail = Mail(app)
 # Utility to check file extensions
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+""""
+# Route for handling file upload
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return 'No file part'
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return redirect(url_for('admin_dashboard'))
+    return 'Invalid file type'
+"""
+# Route for handling file upload
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return 'No file part'
+    
+    file = request.files['file']
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        # Save the file to the static/uploads directory
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return redirect(url_for('admin_dashboard'))  # Redirect to the dashboard after uploading
+    return 'Invalid file type'
+
 
 # Optional: Function to compress images
 def compress_image(filepath):
@@ -504,7 +535,7 @@ def send_admin_notification(donation, receipt):
     except Exception as e:
         app.logger.error(f"Error sending email: {e}")
 
-
+"""
 @app.route('/admin/receipts')
 def view_receipts():
     # Fetch all donations (receipts) from the database
@@ -521,6 +552,7 @@ def receipts_overview():
     # Pass the receipts to the template for rendering
     return render_template('receipts_overview.html', receipts=receipts)
 
+
 @app.route('/view_receipt/<int:receipt_id>')
 def view_receipt(receipt_id):
     # Fetch a single receipt by its ID
@@ -529,7 +561,72 @@ def view_receipt(receipt_id):
     # Render the receipt details page
     return render_template('view_receipt.html', receipt=receipt)
 
+"""
 
+# Route to handle the display of all donations (receipts)
+@app.route('/receipts_overview', methods=['GET'])
+def receipts_overview():
+    # Get the search query from the request
+    name_filter = request.args.get('name', '')
+    
+    # Adjust this query to return tuples of (Donation, User)
+    if name_filter:
+        receipts = db.session.query(Donation, User).join(User).filter(User.name.ilike(f'%{name_filter}%')).all()  # Search by user name
+    else:
+        receipts = db.session.query(Donation, User).join(User).all()  # Fetch all donations with associated users
+    
+    return render_template('receipts_overview.html', receipts=receipts)
+
+# Route to delete a specific donation (receipt)
+@app.route('/delete_receipt/<int:receipt_id>', methods=['POST'])
+def delete_receipt(receipt_id):
+    receipt = Donation.query.get_or_404(receipt_id)
+    db.session.delete(receipt)
+    db.session.commit()
+
+     # Flash success message
+    flash('Receipt successfully deleted!', 'success')  # You can customize the message
+    return redirect(url_for('receipts_overview'))
+    
+
+# Function to delete a file from the server
+def delete_file_from_server(filename):
+    file_path = os.path.join('static', 'uploads', filename)  # Adjust this path as needed
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)  # Remove the file from the server
+        else:
+            raise FileNotFoundError(f"File {filename} not found on the server.")
+    except Exception as e:
+        print(f"Error deleting file {filename}: {e}")
+        raise
+
+# Route to delete a receipt by filename
+@app.route('/delete_receipt_by_filename/<filename>', methods=['POST'])
+def delete_receipt_by_filename(filename):
+    try:
+        # Call the function to delete the file from the server
+        delete_file_from_server(filename)
+        flash(f'File "{filename}" successfully deleted!', 'success')
+    except Exception as e:
+        flash(f'Error occurred while deleting file "{filename}": {e}', 'danger')
+    return redirect(url_for('admin_uploaded_receipts'))
+
+@app.route('/view_receipt/<int:receipt_id>')
+def view_receipt(receipt_id):
+    # Fetch a single receipt by its ID
+    receipt = Donation.query.get_or_404(receipt_id)
+    
+    # Render the receipt details page
+    return render_template('view_receipt.html', receipt=receipt)
+
+@app.route("/admin_uploaded_receipts")
+@admin_required
+def admin_uploaded_receipts():
+    # List files in the upload folder
+    uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
+    
+    return render_template('admin_uploaded_receipts.html', files=uploaded_files)
 
 
 
@@ -652,9 +749,13 @@ def admin_login():
 
 
 
+# Make sure you have this set up for static uploads
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Donation and User models are assumed to be already imported
 
-
+# Admin dashboard route to display donations and uploaded files
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 @admin_required
 def admin_dashboard():
@@ -694,12 +795,17 @@ def admin_dashboard():
     users = User.query.all()
     total_donations = sum(donation.amount for donation in recent_donations)
 
+    # List files in the upload folder
+    uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
+    
     return render_template("admin_dashboard.html", 
                            users=users, 
                            recent_donations=recent_donations, 
                            total_donations=total_donations, 
                            search_date=search_date, 
-                           search_country=search_country)
+                           search_country=search_country,
+                           files=uploaded_files)
+
 
 
 
