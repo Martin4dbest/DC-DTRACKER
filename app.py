@@ -940,7 +940,7 @@ def delete_donation(donation_id):
 
 
 
-#Add Pledges to new Partners and also already-onboarded partners
+#Add Pledge by both Admin
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
     if request.method == 'POST':
@@ -951,12 +951,22 @@ def add_pledge():
             pledge_currency = request.form['currency']
             medal = request.form.get('medal')  # Get the selected medal from the form
 
+            # Remove commas from pledged amount before converting to float
+            pledged_amount = pledged_amount.replace(',', '')
+
+            try:
+                # Convert pledged amount to float
+                pledged_amount = float(pledged_amount)
+            except ValueError:
+                flash('Invalid pledged amount. Please enter a valid number.', 'danger')
+                return redirect(url_for('admin_dashboard'))  # Redirect to error page or the same form
+
             # Fetch the user from the User table
             user = User.query.get(user_id)
 
             if user:
                 # Update the pledged amount and currency in the User table
-                user.pledged_amount = float(pledged_amount)  # Ensure this is a float
+                user.pledged_amount = pledged_amount
                 user.pledge_currency = pledge_currency
                 user.medal = medal  # Save the selected medal type
 
@@ -977,13 +987,21 @@ def add_pledge():
             pledge_currency = data.get('currency', 'USD')  # Default to 'USD' if currency not provided
             medal = data.get('medal')  # Medal type provided in JSON data
 
+            # Remove commas from pledged amount before converting to float
+            pledged_amount = pledged_amount.replace(',', '')
+
+            try:
+                # Convert pledged amount to float
+                pledged_amount = float(pledged_amount)
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid pledged amount.'}), 400
 
             # Fetch the user from the User table
             user = User.query.get(user_id)
 
             if user:
                 # Update the pledged amount and currency in the User table
-                user.pledged_amount = float(pledged_amount)
+                user.pledged_amount = pledged_amount
                 user.pledge_currency = pledge_currency
                 user.medal = medal  # Save the selected medal type
 
@@ -994,8 +1012,7 @@ def add_pledge():
             else:
                 return jsonify({'success': False, 'message': 'User not found.'}), 404
 
-    return render_template('add_pledge.html') 
-
+    return render_template('add_pledge.html')
 
 
 

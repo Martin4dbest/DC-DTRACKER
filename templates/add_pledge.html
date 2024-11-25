@@ -115,9 +115,22 @@
     <input type="text" id="user_id" name="user_id" required 
            placeholder="Check the URL above to find your User ID">
     
-    <label for="pledged_amount">Pledged Amount:</label>
-    <input type="text" id="pledged_amount" name="pledged_amount" required 
-           oninput="formatPledgedAmount(this)">
+           <label for="pledged_amount">Pledged Amount:</label>
+           <input type="text" id="pledged_amount" name="pledged_amount" required 
+                  oninput="formatPledgedAmount(this)" placeholder="Enter amount">
+           
+           <script>
+               function formatPledgedAmount(input) {
+                   // Remove any non-numeric characters (except commas)
+                   let value = input.value.replace(/[^0-9.]/g, '');
+           
+                   // Add commas as thousands separator
+                   value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+           
+                   // Update the input field with formatted value
+                   input.value = value;
+               }
+           </script>
     
     <label for="currency">Currency:</label>
     <select id="currency" name="currency" required>
