@@ -156,7 +156,7 @@
         <!-- Search Form -->
         <div class="search-form">
             <form method="POST" action="{{ url_for('recent_donations') }}">
-                <label for="search_term">Search:</label>
+                <label for="search_term"></label>
                 <input type="text" id="search_term" name="search_term" value="{{ search_term }}" placeholder="Search by Name, Country, State, Church Branch, or Payment Type">
                 <button type="submit">Search</button>
             </form>

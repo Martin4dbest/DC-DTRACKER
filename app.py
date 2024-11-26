@@ -640,15 +640,11 @@ def view_receipt(receipt_id):
     return render_template('view_receipt.html', receipt=receipt)
 
 
-from flask import request
-
 @app.route("/admin_uploaded_receipts", methods=["GET", "POST"])
 @admin_required
 def admin_uploaded_receipts():
-    # Get search filter parameters from the request (if provided)
-    search_name = request.args.get("name", "").lower()
-    search_country = request.args.get("country", "").lower()
-    search_state = request.args.get("state", "").lower()
+    # Get the search term from the request (if provided)
+    search_term = request.args.get("search_term", "").lower()
 
     # Query donations with receipts and join user data
     receipts = (
@@ -662,13 +658,15 @@ def admin_uploaded_receipts():
         .filter(Donation.receipt_filename.isnot(None))  # Only include donations with receipt filenames
     )
 
-    # Apply filters if any search parameters are provided
-    if search_name:
-        receipts = receipts.filter(User.name.ilike(f"%{search_name}%"))
-    if search_country:
-        receipts = receipts.filter(User.country.ilike(f"%{search_country}%"))
-    if search_state:
-        receipts = receipts.filter(User.state.ilike(f"%{search_state}%"))
+    # Apply the filter if a search term is provided
+    if search_term:
+        receipts = receipts.filter(
+            db.or_(
+                User.name.ilike(f"%{search_term}%"),
+                User.country.ilike(f"%{search_term}%"),
+                User.state.ilike(f"%{search_term}%")
+            )
+        )
 
     # Execute the query
     receipts = receipts.all()
@@ -684,7 +682,9 @@ def admin_uploaded_receipts():
         for receipt in receipts
     ]
 
-    return render_template('admin_uploaded_receipts.html', files=uploaded_receipts, search_name=search_name, search_country=search_country, search_state=search_state)
+    return render_template('admin_uploaded_receipts.html', files=uploaded_receipts, search_term=search_term)
+
+
 
 
 @app.route("/delete_receipt/<filename>", methods=["POST"])

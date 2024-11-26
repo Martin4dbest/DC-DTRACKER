@@ -137,15 +137,15 @@
     <div class="content">
         <h1>Uploaded Receipts</h1>
 
+
         <!-- Search Filter Form -->
         <div class="search-container">
             <form method="GET" action="{{ url_for('admin_uploaded_receipts') }}">
-                <input type="text" name="name" placeholder="Search by Name" value="{{ request.args.get('name', '') }}">
-                <input type="text" name="country" placeholder="Search by Country" value="{{ request.args.get('country', '') }}">
-                <input type="text" name="state" placeholder="Search by State" value="{{ request.args.get('state', '') }}">
+                <input type="text" name="search_term" placeholder="Search by Name, Country, or State" value="{{ request.args.get('search_term', '') }}">
                 <button type="submit">Search</button>
             </form>
         </div>
+
 
         {% if files %}
             <table>
