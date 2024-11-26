@@ -7,7 +7,7 @@
     <!-- Font Awesome CDN for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Sharp Glowing Effect for Title */
+        /* Title Styling */
         h1 {
             font-size: 2.5rem;
             color: #4CAF50;
@@ -15,11 +15,11 @@
             margin-bottom: 20px;
             text-shadow: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.6), 0 0 30px rgba(0, 255, 255, 0.5);
         }
-        
-        /* Monochrome Blue Background (Simplified) */
+
+        /* Background Styling */
         body {
             font-family: Arial, sans-serif;
-            background-color: #0a1b3d; /* A deep, solid blue background */
+            background-color: #0a1b3d;
             margin: 0;
             padding: 0;
         }
@@ -44,7 +44,7 @@
             font-weight: bold;
         }
 
-        /* Content Styling */
+        /* Content Box */
         .content {
             max-width: 1200px;
             margin: 80px auto 20px;
@@ -54,43 +54,64 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* List Item Styling (Subtle Background and No Shadow) */
-        li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f9f9f9; /* Lighter gray for list items */
-            margin: 10px 0;
-            padding: 12px;
-            border-radius: 6px;
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        /* Delete Button Styling */
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Message Styling */
+        .no-files {
+            text-align: center;
+            color: red;
+            font-size: 1.2rem;
+        }
+
+        /* Link Styling */
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Button Styling */
         button {
             background-color: #ff4d4d;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 8px 16px;
             font-size: 1rem;
             cursor: pointer;
             border-radius: 6px;
             transition: background-color 0.3s ease;
         }
 
-        /* Link Styling for File Names */
-        a {
-            font-size: 1.2rem;
-            color: #007bff;
-            text-decoration: none;
-            word-wrap: break-word;
-            flex-grow: 1;
-            max-width: 80%;
+        button:hover {
+            background-color: #cc0000;
         }
     </style>
 </head>
 <body>
 
-    <!-- Option (Back Button) -->
+    <!-- Back Button -->
     <div class="option">
         <i class="fas fa-sign-out-alt"></i>
         <a href="{{ url_for('admin_dashboard') }}">Back</a>
@@ -99,18 +120,38 @@
     <div class="content">
         <h1>Uploaded Receipts</h1>
 
-        <ul style="list-style-type: none; padding: 0;">
-            {% for file in files %}
-                <li>
-                    <a href="{{ url_for('static', filename='uploads/' + file) }}" target="_blank">{{ file }}</a>
-
-                    <!-- Delete Button -->
-                    <form action="{{ url_for('delete_receipt_by_filename', filename=file) }}" method="POST" style="margin-left: 20px;" onsubmit="return confirmDelete()">
-                        <button type="submit">Delete</button>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
+        {% if files %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>User</th>
+                        <th>Country</th>
+                        <th>State</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('static', filename='uploads/' + file.filename) }}" target="_blank">{{ file.filename }}</a>
+                            </td>
+                            <td>{{ file.user }}</td>
+                            <td>{{ file.country }}</td>
+                            <td>{{ file.state }}</td>
+                            <td>
+                                <form action="{{ url_for('delete_receipt_by_filename', filename=file.filename) }}" method="POST" onsubmit="return confirmDelete()">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="no-files">No receipts uploaded yet.</p>
+        {% endif %}
     </div>
 
     <script>

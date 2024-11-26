@@ -590,33 +590,6 @@ def send_admin_notification(donation, receipt):
     except Exception as e:
         app.logger.error(f"Error sending email: {e}")
 
-"""
-@app.route('/admin/receipts')
-def view_receipts():
-    # Fetch all donations (receipts) from the database
-    receipts = Donation.query.all()  # Adjust based on your actual DB structure
-    
-    # Pass the receipts to the template for rendering
-    return render_template('admin_dashboard.html', receipts=receipts)
-
-@app.route('/receipts_overview')
-def receipts_overview():
-    # Fetch all donations (receipts) from the database
-    receipts = Donation.query.all()  # Adjust based on your actual DB structure
-    
-    # Pass the receipts to the template for rendering
-    return render_template('receipts_overview.html', receipts=receipts)
-
-
-@app.route('/view_receipt/<int:receipt_id>')
-def view_receipt(receipt_id):
-    # Fetch a single receipt by its ID
-    receipt = Donation.query.get_or_404(receipt_id)
-    
-    # Render the receipt details page
-    return render_template('view_receipt.html', receipt=receipt)
-
-"""
 
 # Route to handle the display of all donations (receipts)
 @app.route('/receipts_overview', methods=['GET'])
@@ -658,17 +631,6 @@ def delete_file_from_server(filename):
         print(f"Error deleting file {filename}: {e}")
         raise
 
-# Route to delete a receipt by filename
-@app.route('/delete_receipt_by_filename/<filename>', methods=['POST'])
-def delete_receipt_by_filename(filename):
-    try:
-        # Call the function to delete the file from the server
-        delete_file_from_server(filename)
-        flash(f'File "{filename}" successfully deleted!', 'success')
-    except Exception as e:
-        flash(f'Error occurred while deleting file "{filename}": {e}', 'danger')
-    return redirect(url_for('admin_uploaded_receipts'))
-
 @app.route('/view_receipt/<int:receipt_id>')
 def view_receipt(receipt_id):
     # Fetch a single receipt by its ID
@@ -677,16 +639,54 @@ def view_receipt(receipt_id):
     # Render the receipt details page
     return render_template('view_receipt.html', receipt=receipt)
 
+
+
 @app.route("/admin_uploaded_receipts")
 @admin_required
 def admin_uploaded_receipts():
-    # List files in the upload folder
-    uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
+    # Query donations with receipts and join user data
+    receipts = (
+        db.session.query(
+            Donation.receipt_filename,
+            User.name,
+            User.country,
+            User.state
+        )
+        .join(User, Donation.user_id == User.id)
+        .filter(Donation.receipt_filename.isnot(None))  # Only include donations with receipt filenames
+        .all()
+    )
+
+    # Format data for the template
+    uploaded_receipts = [
+        {
+            "filename": receipt.receipt_filename,
+            "user": receipt.name,
+            "country": receipt.country,
+            "state": receipt.state,
+        }
+        for receipt in receipts
+    ]
+
+    return render_template('admin_uploaded_receipts.html', files=uploaded_receipts)
+
+
+@app.route("/delete_receipt/<filename>", methods=["POST"])
+@admin_required
+def delete_receipt_by_filename(filename):
+    # Find donation by filename
+    donation = Donation.query.filter_by(receipt_filename=filename).first()
+    if donation:
+        # Delete the file from the upload folder
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # Remove the filename from the database
+        donation.receipt_filename = None
+        db.session.commit()
     
-    return render_template('admin_uploaded_receipts.html', files=uploaded_files)
-
-
-
+    return redirect(url_for('admin_uploaded_receipts'))
 
 
 

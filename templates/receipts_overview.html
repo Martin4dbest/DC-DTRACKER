@@ -182,7 +182,7 @@
                 {% for donation, user in receipts %}
                 <tr>
                     <td>{{ user.name }}</td>  <!-- Display user's name -->
-                    <td>{{ donation.amount }}</td>  <!-- Display donation amount -->
+                    <td>{{ donation.amount|commas }}</td>  <!-- Display donation amount -->
                     <td>{{ donation.donation_date }}</td>  <!-- Display donation date -->
                     <td>
                         <!-- View Receipt -->
