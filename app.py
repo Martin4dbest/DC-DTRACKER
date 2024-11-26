@@ -640,10 +640,16 @@ def view_receipt(receipt_id):
     return render_template('view_receipt.html', receipt=receipt)
 
 
+from flask import request
 
-@app.route("/admin_uploaded_receipts")
+@app.route("/admin_uploaded_receipts", methods=["GET", "POST"])
 @admin_required
 def admin_uploaded_receipts():
+    # Get search filter parameters from the request (if provided)
+    search_name = request.args.get("name", "").lower()
+    search_country = request.args.get("country", "").lower()
+    search_state = request.args.get("state", "").lower()
+
     # Query donations with receipts and join user data
     receipts = (
         db.session.query(
@@ -654,8 +660,18 @@ def admin_uploaded_receipts():
         )
         .join(User, Donation.user_id == User.id)
         .filter(Donation.receipt_filename.isnot(None))  # Only include donations with receipt filenames
-        .all()
     )
+
+    # Apply filters if any search parameters are provided
+    if search_name:
+        receipts = receipts.filter(User.name.ilike(f"%{search_name}%"))
+    if search_country:
+        receipts = receipts.filter(User.country.ilike(f"%{search_country}%"))
+    if search_state:
+        receipts = receipts.filter(User.state.ilike(f"%{search_state}%"))
+
+    # Execute the query
+    receipts = receipts.all()
 
     # Format data for the template
     uploaded_receipts = [
@@ -668,7 +684,7 @@ def admin_uploaded_receipts():
         for receipt in receipts
     ]
 
-    return render_template('admin_uploaded_receipts.html', files=uploaded_receipts)
+    return render_template('admin_uploaded_receipts.html', files=uploaded_receipts, search_name=search_name, search_country=search_country, search_state=search_state)
 
 
 @app.route("/delete_receipt/<filename>", methods=["POST"])
@@ -692,24 +708,27 @@ def delete_receipt_by_filename(filename):
 
 @app.route('/recent_donations', methods=['GET', 'POST'])
 def recent_donations():
-    search_country = request.form.get('search_country', '').strip()  # Get search country from form, with trimming
-    search_payment_type = request.form.get('search_payment_type', '').strip()  # Get payment type filter from form
+    search_term = request.form.get('search_term', '').strip()  # Get search term from form, with trimming
 
-    # Build the query for donations
+    # Build the base query for donations
     query = Donation.query
 
-    # Filter by country if provided
-    if search_country:
-        query = query.filter(Donation.user.has(country=search_country.lower()))
-
-    # Filter by payment type if provided
-    if search_payment_type:
-        query = query.filter(Donation.payment_type == search_payment_type.lower())
+    if search_term:
+        # Search by User fields (name, country, state, church_branch)
+        query = query.join(User, User.id == Donation.user_id).filter(
+            (User.name.ilike(f"%{search_term}%")) |
+            (User.country.ilike(f"%{search_term}%")) |
+            (User.state.ilike(f"%{search_term}%")) |
+            (User.church_branch.ilike(f"%{search_term}%")) |
+            (Donation.payment_type.ilike(f"%{search_term}%"))
+        )
 
     # Fetch donations, ordered by donation date
     recent_donations = query.order_by(Donation.donation_date.desc()).all()
 
-    return render_template('recent_donations.html', recent_donations=recent_donations, search_country=search_country, search_payment_type=search_payment_type)
+    return render_template('recent_donations.html', 
+                           recent_donations=recent_donations, 
+                           search_term=search_term)
 
 
 
@@ -810,59 +829,47 @@ def admin_login():
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Donation and User models are assumed to be already imported
 
-# Admin dashboard route to display donations and uploaded files
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 @admin_required
 def admin_dashboard():
-    # Initialize search filters as empty
-    search_date = None
-    search_country = None
-    recent_donations = Donation.query.order_by(Donation.donation_date.desc()).all()  # Default query
-    
+    # Initialize search filter as empty
+    search_term = None
+    filtered_users = User.query.order_by(User.name).all()  # Default query to fetch all users
+
     if request.method == "POST":
         try:
-            # Retrieve search parameters
-            search_date = request.form.get('search_date')
-            search_country = request.form.get('search_country')
-            
-            # Start with the base query and apply filters
-            query = Donation.query.join(User, User.id == Donation.user_id).order_by(Donation.donation_date.desc())
-            
-            # Apply date filter if provided
-            if search_date:
-                query = query.filter(Donation.donation_date == datetime.strptime(search_date, '%Y-%m-%d').date())
-            
-            # Apply country filter if provided
-            if search_country:
-                query = query.filter(User.country.ilike(f"%{search_country}%"))
-            
-            # Fetch the filtered donations
-            recent_donations = query.all()
-        
-        except ValueError as e:
-            flash("Invalid date format. Please use YYYY-MM-DD.", "error")
-    
-    else:
-        # Default query for GET request
-        recent_donations = Donation.query.order_by(Donation.donation_date.desc()).all()
+            # Retrieve search parameter
+            search_term = request.form.get('search_term')
 
-    # Fetch all users and calculate total donations
-    users = User.query.all()
-    total_donations = sum(donation.amount for donation in recent_donations)
+            # Start with the base query on the User model
+            query = User.query.order_by(User.name)
+
+            # Apply search filter if provided (filtering User fields)
+            if search_term:
+                query = query.filter(
+                    (User.country.ilike(f"%{search_term}%")) |
+                    (User.state.ilike(f"%{search_term}%")) |
+                    (User.church_branch.ilike(f"%{search_term}%")) |
+                    (User.name.ilike(f"%{search_term}%"))
+                )
+            
+            # Fetch the filtered users
+            filtered_users = query.all()
+
+        except ValueError as e:
+            flash("Invalid search input.", "error")
+    
+    # Fetch all users (already filtered based on search, if any)
+    users = filtered_users
 
     # List files in the upload folder
     uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
-    
+
     return render_template("admin_dashboard.html", 
                            users=users, 
-                           recent_donations=recent_donations, 
-                           total_donations=total_donations, 
-                           search_date=search_date, 
-                           search_country=search_country,
+                           search_term=search_term,
                            files=uploaded_files)
-
 
 
 

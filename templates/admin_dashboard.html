@@ -333,28 +333,22 @@
 
     <!-- Main Content -->
     <div class="content">
-        
-
         <!-- Search Form -->
         <div class="search-form">
             <form method="POST" action="{{ url_for('admin_dashboard') }}">
                 <div>
-                    <label for="search_date">Search by Date:</label>
-                    <input type="date" id="search_date" name="search_date" value="{{ search_date }}">
-                </div>
-                <div>
-                    <label for="search_country">Search by Country:</label>
-                    <input type="text" id="search_country" name="search_country" value="{{ search_country }}" placeholder="Enter Country">
-                </div>
+                    <label for="search_term">Search by Country, State, Local Church, or Name:</label>
+                    <input type="text" id="search_term" name="search_term" value="{{ search_term or '' }}" placeholder="Search by Name, Country, State, Local Church, or Name">
 
-              
-                
+                </div>
                 <button type="submit">Search</button>
             </form>
         </div>
         
 
-        <!-- Recent Donations -->
+        
+
+        <!-- Recent Donations 
         <h3>Recent Donations</h3>
         <div class="table-container">
             <table>
@@ -409,15 +403,20 @@
                 </tbody>
             </table>
         </div>
-
+    -->
+    
         <!-- Users -->
-<h3>Users</h3>
+
 <div class="table-container">
     <table style="width: 100%; border-collapse: collapse;">
         <thead style="background-color: blue; color: white;">
             <tr>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Country</th>
+                <th>State</th>
+                <th>Local Church</th>
+
                 <th>Role</th>
                 <th>Partner Since</th> 
                 <th>Actions</th>
@@ -430,6 +429,9 @@
             <tr style="background-color: #f4f4f4;">
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
+                <td>{{ user.country }}</td>
+                <td>{{ user.state }}</td>
+                <td>{{ user.church_branch }}</td>
                 <td>
                     {% if user.is_admin %}
                     <span style="color: rgb(255, 171, 15);">(Admin)</span>

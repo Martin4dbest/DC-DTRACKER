@@ -75,21 +75,38 @@
             background-color: #f1f1f1;
         }
 
+        /* Search Box Styling */
+        .search-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-container input {
+            padding: 8px;
+            font-size: 1rem;
+            margin: 5px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .search-container button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .search-container button:hover {
+            background-color: #45a049;
+        }
+
         /* Message Styling */
         .no-files {
             text-align: center;
             color: red;
             font-size: 1.2rem;
-        }
-
-        /* Link Styling */
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
         }
 
         /* Button Styling */
@@ -119,6 +136,16 @@
 
     <div class="content">
         <h1>Uploaded Receipts</h1>
+
+        <!-- Search Filter Form -->
+        <div class="search-container">
+            <form method="GET" action="{{ url_for('admin_uploaded_receipts') }}">
+                <input type="text" name="name" placeholder="Search by Name" value="{{ request.args.get('name', '') }}">
+                <input type="text" name="country" placeholder="Search by Country" value="{{ request.args.get('country', '') }}">
+                <input type="text" name="state" placeholder="Search by State" value="{{ request.args.get('state', '') }}">
+                <button type="submit">Search</button>
+            </form>
+        </div>
 
         {% if files %}
             <table>

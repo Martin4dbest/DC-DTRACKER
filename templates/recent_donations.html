@@ -7,80 +7,108 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
             margin: 0;
             padding: 0;
         }
+
         h2 {
             text-align: center;
-            margin-top: 20px;
             color: #333;
+            margin-top: 20px;
         }
+
         .container {
             width: 90%;
             max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
             background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+
         .search-form {
-            margin-bottom: 20px;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
         }
+
+        .search-form label {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
         .search-form input[type="text"], .search-form select {
-            padding: 8px;
+            padding: 10px;
             font-size: 16px;
             margin-right: 10px;
-            border-radius: 4px;
+            width: 300px;
+            border-radius: 6px;
             border: 1px solid #ddd;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
         }
+
         .search-form button {
-            padding: 8px 16px;
+            padding: 10px 20px;
             font-size: 16px;
-            border: none;
-            border-radius: 4px;
             background-color: #007bff;
             color: white;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            width: 320px;
+            transition: background-color 0.3s ease;
         }
+
         .search-form button:hover {
             background-color: #0056b3;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 30px;
         }
+
         table, th, td {
             border: 1px solid #ddd;
             text-align: left;
         }
+
         th, td {
-            padding: 12px;
+            padding: 15px;
         }
+
         th {
-            background-color: #007bff;
+            background-color: #4CAF50;
             color: white;
         }
+
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+
         tr:hover {
             background-color: #f1f1f1;
         }
+
         .status-settled {
             color: #28a745;
             font-weight: bold;
         }
+
         .status-pending {
             color: #ee0018;
             font-weight: bold;
         }
+
         .back-link {
-            font-size: 40px;
+            font-size: 24px;
             color: #007bff;
             text-decoration: none;
             display: inline-block;
@@ -89,23 +117,34 @@
             border-radius: 25px;
             transition: color 0.3s ease, transform 0.3s ease;
         }
+
         .back-link:hover {
             color: #0056b3;
-            transform: scale(1.2);
+            transform: scale(1.1);
         }
+
         .export-button {
-            padding: 10px 20px;
-            background-color: green;
+            padding: 12px 25px;
+            background-color: #28a745;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s ease;
             margin-top: 20px;
+            width: 100%;
+            transition: background-color 0.3s ease;
         }
+
         .export-button:hover {
-            background-color: #0056b3;
+            background-color: #218838;
+        }
+
+        .table-header {
+            font-weight: bold;
+            text-align: left;
+            background-color: #007bff;
+            color: white;
         }
     </style>
 </head>
@@ -113,33 +152,19 @@
 
     <div class="container">
         <h2>Recent Donations</h2>
-
+    
         <!-- Search Form -->
         <div class="search-form">
             <form method="POST" action="{{ url_for('recent_donations') }}">
-                <label for="search_country">Search by Country:</label>
-                <input type="text" id="search_country" name="search_country" value="{{ search_country }}" placeholder="Enter Country">
-                <label for="search_payment_type">Search by Payment Type:</label>
-                <select name="search_payment_type">
-                    <option value="">All Payment Types</option>
-                    <option value="full_payment" {% if search_payment_type == 'part_payment' %}selected{% endif %}>Full Payment</option>
-                    <option value="part_payment" {% if search_payment_type == 'full_payment' %}selected{% endif %}>Part Payment</option>
-                </select>
+                <label for="search_term">Search:</label>
+                <input type="text" id="search_term" name="search_term" value="{{ search_term }}" placeholder="Search by Name, Country, State, Church Branch, or Payment Type">
                 <button type="submit">Search</button>
             </form>
         </div>
-
-        <!-- Export to Google Sheets Button -->
-        <form action="{{ url_for('sync_with_google_sheets') }}" method="POST">
-
-            <button type="submit" class="export-button">
-                Export to Google Sheets
-            </button>
-        </form>
-
+    
         <table>
             <thead>
-                <tr>
+                <tr class="table-header">
                     <th>Partner</th>
                     <th>Country</th>
                     <th>State</th>
@@ -149,7 +174,6 @@
                     <th>Currency</th>
                     <th>Payment Type</th>
                     <th>Donation Date</th>
-                    
                 </tr>
             </thead>
             <tbody>
@@ -167,15 +191,13 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="8">No donations found.</td>
+                        <td colspan="9">No donations found.</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <a href="{{ url_for('admin_dashboard') }}" class="back-link">
-            🔙
-        </a>
+        <a href="{{ url_for('admin_dashboard') }}" class="back-link">🔙</a>
     </div>
 
 </body>
