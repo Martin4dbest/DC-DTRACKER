@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Donations</title>
     <style>
-        /* Basic styling for the page and table */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
             color: #333;
             padding: 20px;
-            position: relative; /* Ensure content doesn't interfere with the fixed button */
+            position: relative; /* Ensures content doesn't interfere with the fixed button */
         }
 
         h1 {
@@ -19,14 +18,9 @@
             color: #4a90e2;
         }
 
-        p {
-            text-align: center;
-            color: #666;
-        }
-
         table {
             width: 90%;
-            max-width: 800px;
+            margin: 20px auto;
             border-collapse: collapse;
             background-color: #fff;
             border-radius: 8px;
@@ -44,7 +38,11 @@
             color: #fff;
         }
 
-        /* Styling for the emoji carousel */
+        td {
+            color: #555;
+        }
+
+        /* Carousel styling */
         .carousel-container {
             display: flex;
             justify-content: center;
@@ -68,21 +66,20 @@
             transform: scale(1.3);
         }
 
-        /* Animation for the emoji carousel */
         @keyframes carouselAnimation {
             0% { transform: translateX(0); }
             100% { transform: translateX(-100%); }
         }
 
-        /* Green button fixed at the bottom-left */
+        /* Fixed button styling */
         .return-to-donate {
             position: fixed;
-            bottom: 20px; /* Distance from the bottom */
-            left: 20px;   /* Distance from the left */
+            bottom: 20px;
+            left: 20px;
             padding: 10px 20px;
-            background-color: #28a745; /* Green color */
+            background-color: #28a745;
             color: white;
-            font-size: 1.5rem;  /* Increase font size */
+            font-size: 1.5rem;
             font-weight: bold;
             text-align: center;
             border-radius: 8px;
@@ -92,48 +89,56 @@
         }
 
         .return-to-donate:hover {
-            background-color: #218838; /* Darker green on hover */
+            background-color: #218838;
             transform: scale(1.1);
         }
     </style>
 </head>
 <body>
-
     <h1>My Donations</h1>
-    <p>Recent Paid Donations</p>
 
-    <div style="display: flex; justify-content: center; margin-top: 20px;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Donation Date</th>
-                    <th>Amount</th>
-                    <th>Currency</th>
-                    <th>Payment Type</th> <!-- Added Payment Type column -->
-                </tr>
-            </thead>
-            <tbody>
-                {% if donations %}
-                    {% for donation in donations %}
-                        <tr style="text-align: center; color: #555;">
-                            <td>{{ donation.donation_date.strftime('%Y-%m-%d') }}</td>
-                            <td>{{ donation.amount }}</td>
-                            <td>{{ donation.currency }}</td>
-                            <td>{{ donation.payment_type }}</td> <!-- Display the payment type -->
-                        </tr>
-                    {% endfor %}
-                {% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>Donation Date</th>
+                <th>Pledged Amount</th>
+                <th>Amount Paid</th>
+                <th>Balance</th>
+                <th>Currency</th>
+                <th>Payment Type</th>
+                <th>Update Payment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if donation_details %}
+                {% for donation_detail in donation_details %}
                     <tr>
-                        <td colspan="5" style="padding: 20px; text-align: center; color: #999;">
-                            You have no recorded paid donations.
+                        <td>{{ donation_detail.donation.donation_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ donation_detail.donation.user.pledged_amount|commas }}</td>  <!-- Comma-separated pledged amount -->
+                        <td>{{ donation_detail.donation.amount|commas }}</td> <!-- Comma-separated amount -->
+                        <td>{{ donation_detail.balance|commas }}</td> <!-- Comma-separated balance -->
+                        <td>{{ donation_detail.donation.currency }}</td>
+                        <td>{{ donation_detail.donation.payment_type }}</td>
+                        <td>
+                            <form action="{{ url_for('update_payment') }}" method="POST">
+                                <input type="hidden" name="donation_id" value="{{ donation_detail.donation.id }}">
+                                <input type="text" name="new_payment" placeholder="New Payment" required>
+                                <button type="submit">Update Payment</button>
+                            </form>
                         </td>
                     </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                        You have no recorded donations.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
 
-    <!-- Emoji carousel for redirecting to donate page -->
+    <!-- Emoji carousel -->
     <div class="carousel-container">
         <div class="emoji-carousel">
             <a href="{{ url_for('donate') }}" class="emoji">💸</a>
@@ -144,10 +149,7 @@
         </div>
     </div>
 
-    <!-- Green "Return to Donate" button at the bottom-left -->
-    <a href="{{ url_for('home2') }}" class="return-to-donate">
-         ⬅️
-    </a>
-
+    <!-- Fixed return button -->
+    <a href="{{ url_for('home2') }}" class="return-to-donate">⬅️</a>
 </body>
 </html>

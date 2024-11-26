@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pay with Paystack</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -81,6 +83,19 @@
     
 </head>
 <body>
+    <!-- Top Left Section with Logout Icon and Link -->
+    <div class="top-left" style="position: fixed; top: 10px; left: 10px; display: flex; align-items: center; gap: 0.5em;">
+        <!-- Logout Icon as Link -->
+        <a href="{{ url_for('donate') }}" style="text-decoration: none;">
+            <i class="fas fa-sign-out-alt" 
+               style="color: rgb(165, 142, 13); font-size: 2em; transition: color 0.3s ease;" 
+               onmouseover="this.style.color='#1c7c32'" 
+               onmouseout="this.style.color='rgb(165, 142, 13)'"></i>
+        </a>
+        <!-- Logout Text -->
+        <a href="{{ url_for('donate') }}" style="text-decoration: none; color: greenyellow;">Back</a>
+    </div>
+    
     <div class="form-container">
         <p>Administrative charge applies</p>
         

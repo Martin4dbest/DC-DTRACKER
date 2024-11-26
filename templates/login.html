@@ -42,7 +42,7 @@
             margin-bottom: 5px;
         }
 
-        input[type="email"],
+        input[type="text"],
         input[type="password"] {
             width: 100%;
             padding: 10px;
@@ -54,7 +54,7 @@
             transition: border-color 0.3s;
         }
 
-        input[type="email"]:focus,
+        input[type="text"]:focus,
         input[type="password"]:focus {
             border-color: #0052D4;
             outline: none;
@@ -105,12 +105,12 @@
     <div class="container">
         <h1>Login</h1>
         <p style="text-align: center; margin-bottom: 20px; color: black;">
-            Please log in using the registered credentials you received via email or SMS.
+            Please log in using the registered credentials (Email or Phone Number).
         </p>
         <form method="POST" action="{{ url_for('login') }}">
             <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" name="email" required>
+                <label for="login_input">Email or Phone Number:</label>
+                <input type="text" name="email" id="login_input" placeholder="Enter your email or phone number" required>
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
@@ -135,4 +135,3 @@
     </div>
 </body>
 </html>
-

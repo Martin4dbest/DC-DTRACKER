@@ -7,7 +7,8 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="name" class="font-weight-bold text-dark">Name</label>
-                    <input type="text" class="form-control" id="name" value="{{ user.name }}" readonly style="background-color: #f1f1f1;">
+                    <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}" style="background-color: #f1f1f1;">
+
                 </div>
             </div>
 
@@ -57,7 +58,7 @@
 
         <!-- Church Branch Field -->
         <div class="form-group mb-4">
-            <label for="church_branch" class="font-weight-bold text-dark">Church Branch</label>
+            <label for="church_branch" class="font-weight-bold text-dark">Local Church</label>
             <input type="text" class="form-control" id="church_branch" name="church_branch" value="{{ user.church_branch }}">
         </div>
 

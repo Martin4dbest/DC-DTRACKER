@@ -45,7 +45,7 @@
             background-color: #061350;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            padding: 80px;
+            padding: 30px;
             text-align: center;
             margin-bottom: 40px;
         }
@@ -189,18 +189,29 @@
     
         <!-- Payment Options Section -->
         <div class="options-container">
-            <div class="option-button option-paypal">
-                <i class="fab fa-paypal"></i>
-                <span>PayPal</span>
+            <a href="https://www.paypal.com/paypalme/dominioncityglobal" target="_blank" rel="noopener noreferrer">
+                <div class="option-button option-paypal">
+                    <i class="fab fa-paypal"></i>
+                    <span>PayPal</span>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('paystack') }}" target="_self">
+                <div class="option-button option-paystack">
+                    <i class="fab fa-paystack"></i>
+                    <span>Paystack</span>
+                </div>
+            </a>
+            
+            
+            <div class="option-button option-zelle" style="display: flex; align-items: center; padding: 10px;">
+                <i class="fab fa-cc-mastercard" style="font-size: 24px; margin-right: 15px; border-radius: 50%; background-color: #6c63ff; color: #fff; padding: 10px;"></i>
+                <div>
+                    <span style="font-weight: bold; font-size: 16px; display: block;">Zelle to Dominion City Global</span>
+                    <span style="font-size: 14px; color: black;">Email: <a href="mailto:give@dominioncityglobal.org" style="color: white; text-decoration: none;">give@dominioncityglobal.org</a></span>
+                </div>
             </div>
-            <div class="option-button option-paystack">
-                <i class="fab fa-paystack"></i>
-                <span>Paystack</span>
-            </div>
-            <div class="option-button option-zelle">
-                <i class="fab fa-cc-mastercard"></i>
-                <span>Zelle</span>
-            </div>
+            
         </div>
 
 

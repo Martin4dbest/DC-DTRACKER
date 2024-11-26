@@ -15,6 +15,7 @@ import os
 from werkzeug.utils import secure_filename
 from PIL import Image
 from flask_login import LoginManager
+import re
 
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
@@ -145,14 +146,16 @@ class Donation(db.Model):
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
     payment_type = db.Column(db.String(20), nullable=False, default="full")  # New field for payment type
     receipt_filename = db.Column(db.String(255), nullable=True)  # New field for receipt file name
-    
-    
+    amount_paid = db.Column(db.Float, nullable=False, default=0)  # Amount paid so far
 
-    
-
+    #user = db.relationship('User', backref='pledges')
     user = db.relationship("User", backref="donations")
     medal = db.Column(db.String(50))  # field to store medal type
-    #user = db.relationship('User', backref='pledges')
+    
+    
+    @property
+    def balance(self):
+        return self.user.pledged_amount - self.amount  # Balance is calculated based on 'amount' only
     
 
 
@@ -316,30 +319,34 @@ def index():
 
 
 
-# User login
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        login_input = request.form['email']  # We'll use 'email' form field for both email and phone number input
 
-        # Retrieve the user record
-        user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
+        # Check if the input is an email or phone number
+        if re.match(r"[^@]+@[^@]+\.[^@]+", login_input):  # Email pattern check
+            user = User.query.filter_by(email=login_input).first()
+        else:  # Assume input is a phone number
+            user = User.query.filter_by(phone=login_input).first()  # Assuming you have a phone_number column in the User model
+
+        if user and user.check_password(request.form['password']):
             session['user_id'] = user.id
             session['is_admin'] = user.is_admin
             session['is_super_admin'] = user.is_super_admin
 
             flash(f'Welcome, {user.name}!', 'success')
-            
+
             # Redirect admins to the admin dashboard
             if user.is_admin or user.is_super_admin:
                 return redirect(url_for('admin_dashboard'))
-            
+
             # Redirect regular users to home2.html
             return redirect(url_for('home2'))
         else:
-            flash('Invalid email or password.', 'danger')
+            flash('Invalid email/phone number or password.', 'danger')
 
     return render_template('login.html')
 
@@ -505,6 +512,54 @@ def donate():
 
     return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
 
+@app.route('/view_my_donations')
+def view_my_donations():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    donations = Donation.query.filter_by(user_id=user_id).all()
+    user = User.query.get(user_id)
+
+    if not user:
+        return "User not found", 404
+
+    donation_details = []
+    for donation in donations:
+        pledged_amount = user.pledged_amount
+        balance = pledged_amount - donation.amount  # Balance based on 'amount' field
+        donation_details.append({
+            'donation': donation,
+            'balance': balance,
+            'amount': donation.amount
+        })
+
+    return render_template('view_my_donations.html', donation_details=donation_details)
+
+
+@app.route('/update_payment', methods=['POST'])
+def update_payment():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    donation_id = request.form.get('donation_id')
+    donation = Donation.query.get(donation_id)
+
+    if not donation:
+        return "Donation not found", 404
+
+    # Get the new payment amount (this will update the 'amount' field)
+    new_payment = float(request.form.get('new_payment', 0))
+
+    # Update the donation's amount (not amount_paid)
+    donation.amount += new_payment  # Add to the 'amount' field instead of subtracting
+
+    db.session.commit()
+
+    return redirect(url_for('view_my_donations'))
+
+
+
 
 def send_admin_notification(donation, receipt):
     """Send a notification email to the admin with the donation details"""
@@ -576,6 +631,8 @@ def receipts_overview():
         receipts = db.session.query(Donation, User).join(User).all()  # Fetch all donations with associated users
     
     return render_template('receipts_overview.html', receipts=receipts)
+
+
 
 # Route to delete a specific donation (receipt)
 @app.route('/delete_receipt/<int:receipt_id>', methods=['POST'])
@@ -1128,7 +1185,7 @@ def view_admin_details():
     return render_template('view_admin_details.html', admins=admins, search_country=search_country)
 
 
-
+"""
 # View donations made by the logged-in partner
 @app.route('/view_my_donations')
 def view_my_donations():
@@ -1143,7 +1200,7 @@ def view_my_donations():
 
     return render_template('view_my_donations.html', donations=donations)
 
-
+"""
 
 
 @app.errorhandler(403)
@@ -1153,7 +1210,7 @@ def forbidden_error(error):
 
 
 
-
+#Route to change password
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
     if request.method == 'POST':
@@ -1334,6 +1391,13 @@ def edit_profile_success():
 
 
 
+# Define a custom filter
+@app.template_filter('commas')
+def format_commas(value):
+    """Format number with commas."""
+    return "{:,}".format(value)
+
+
 
 
 @app.route('/success')
@@ -1349,6 +1413,7 @@ def edit_profile():
 
     if request.method == 'POST':
         # Get form data
+        name = request.form.get('name')
         email = request.form.get('email')
         phone = request.form.get('phone')
         address = request.form.get('address')
@@ -1358,6 +1423,7 @@ def edit_profile():
         partner_since = request.form.get('partner_since')
 
         # Update the user profile
+        user.name = name
         user.email = email
         user.phone = phone
         user.address = address
