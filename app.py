@@ -16,10 +16,20 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 from flask_login import LoginManager
 import re
+import requests
+from flask_cors import CORS
+
+
+
+
+
 
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from flask_wtf.csrf import CSRFProtect
@@ -55,6 +65,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # App and database setup
 app = Flask(__name__)
+
+CORS(app)
 
 # Initialize LoginManager
 login_manager = LoginManager()
@@ -116,7 +128,8 @@ class User(db.Model):
     paid_status = db.Column(db.Boolean, default=False)
     medal = db.Column(db.String(100), nullable=True)  # In your User model
     partner_since = db.Column(db.Integer, nullable=True)  # Year as an integer
-
+    donation_date = db.Column(db.Date, nullable=False, default=date.today)
+    has_received_onboarding_email = db.Column(db.Boolean, default=False)
 
 
 
@@ -147,16 +160,22 @@ class Donation(db.Model):
     payment_type = db.Column(db.String(20), nullable=False, default="full")  # New field for payment type
     receipt_filename = db.Column(db.String(255), nullable=True)  # New field for receipt file name
     amount_paid = db.Column(db.Float, nullable=False, default=0)  # Amount paid so far
+    pledged_amount = db.Column(db.Float, nullable=False, default=0)  # Added to store pledged amount
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) 
+    paid_status = db.Column(db.Boolean, default=False)
 
     #user = db.relationship('User', backref='pledges')
     user = db.relationship("User", backref="donations")
     medal = db.Column(db.String(50))  # field to store medal type
+
     
     
+    """
     @property
     def balance(self):
-        return self.user.pledged_amount - self.amount  # Balance is calculated based on 'amount' only
-    
+        pledged_amount = self.user.pledged_amount
+        return max(0, pledged_amount - self.amount)  # Ensure balance is never below 0
+    """
 
 
 
@@ -173,7 +192,38 @@ class Pledge(db.Model):
     #user = db.relationship('User', backref='pledges')
     donor = db.relationship('User', back_populates='pledges')  # This should reference 'pledges' in User
     
+
+
+
+# Retrieve Paystack secret key from environment
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY')
+
+@app.route('/verify-payment', methods=['POST'])
+def verify_payment():
+    data = request.get_json()
+    reference = data.get('reference')
+
+    if not reference:
+        return jsonify({'status': 'error', 'message': 'No reference provided'}), 400
+
+    # Verify transaction
+    url = f"https://api.paystack.co/transaction/verify/{reference}"
+    headers = {
+        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+        "Content-Type": "application/json"
+    }
+    response = requests.get(url, headers=headers)
+    result = response.json()
+
+    if result['status']:
+        # Payment was successful
+        return jsonify({'status': 'success', 'message': 'Payment verified successfully'})
+    else:
+        # Payment verification failed
+        return jsonify({'status': 'error', 'message': 'Payment verification failed'}), 400
     
+
+
 
 # Schedule for sending birthday emails
 def send_birthday_emails():
@@ -368,10 +418,6 @@ def home2():
 
 
 
-
-
-
-
 #Donation and upload files
 
 
@@ -426,6 +472,8 @@ def compress_image(filepath):
     with Image.open(filepath) as img:
         img.save(filepath, optimize=True, quality=85)
 
+
+"""
 @app.route("/donate", methods=["GET", "POST"])
 def donate():
     user = None
@@ -511,7 +559,87 @@ def donate():
     pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
 
     return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
+"""
+@app.route('/view_my_donations')
+def view_my_donations():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
 
+    user_id = session['user_id']
+    
+    # Get the user object
+    user = User.query.get(user_id)  # Fetch user by user_id
+
+    if not user:
+        return "User not found", 404
+    
+    # Get all donations made by this user, sorted by timestamp
+    donations = Donation.query.filter_by(user_id=user_id).order_by(Donation.timestamp.asc()).all()
+
+    if not donations:
+        return render_template('view_my_donations.html', donation_details=[], message="No donations found.")
+
+    donation_details = []
+    pledged_amount = user.pledged_amount if user.pledged_amount is not None else 0
+
+    for donation in donations:
+        # Amount paid for this particular donation
+        amount = donation.amount
+
+        # Check if the donation's payment_type is "full_payment"
+        if (isinstance(donation.payment_type, str) and donation.payment_type.lower() == "full_payment"):
+            balance = 0  # Automatically set balance to zero if payment_type is "full_payment"
+        else:
+            # Calculate the balance for this donation
+            balance = max(pledged_amount - amount, 0)  # Ensure balance is not negative
+
+        # Debugging output for checking values
+        print(f"Donation ID: {donation.id} | Payment Type: {donation.payment_type} | Pledged Amount: {pledged_amount} | Amount Paid: {amount} | Calculated Balance: {balance} | Timestamp: {donation.timestamp}")
+
+        # Timestamp for this donation
+        timestamp = donation.timestamp  
+
+        donation_details.append({
+            'donation': donation,
+            'balance': balance,
+            'amount': amount,
+            'timestamp': timestamp
+        })
+
+    return render_template('view_my_donations.html', donation_details=donation_details, message=None)
+
+
+
+#Partner delete donation
+
+@app.route("/delete_user_donation/<int:donation_id>", methods=["POST"])
+def delete_user_donation(donation_id):
+    if 'user_id' not in session:
+        flash("You need to log in to perform this action.", "danger")
+        return redirect(url_for("login"))
+    
+    user_id = session['user_id']
+    donation = Donation.query.filter_by(id=donation_id, user_id=user_id).first()
+    
+    if not donation:
+        flash("Donation not found or you do not have permission to delete it.", "danger")
+        return redirect(url_for("view_my_donations"))
+
+    try:
+        db.session.delete(donation)
+        db.session.commit()
+        flash("Donation deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting donation: {e}")
+        flash("An error occurred while deleting the donation.", "danger")
+    
+    return redirect(url_for("view_my_donations"))
+
+
+
+
+"""
 @app.route('/view_my_donations')
 def view_my_donations():
     if 'user_id' not in session:
@@ -527,7 +655,7 @@ def view_my_donations():
     donation_details = []
     for donation in donations:
         pledged_amount = user.pledged_amount
-        balance = pledged_amount - donation.amount  # Balance based on 'amount' field
+        balance = max(0, pledged_amount - donation.amount)  # Ensure balance is never below 0
         donation_details.append({
             'donation': donation,
             'balance': balance,
@@ -535,6 +663,100 @@ def view_my_donations():
         })
 
     return render_template('view_my_donations.html', donation_details=donation_details)
+"""
+@app.route("/donate", methods=["GET", "POST"])
+def donate():
+    user = None
+    if "user_id" in session:
+        user = get_current_user()  # Retrieve the current logged-in user if available
+        app.logger.debug(f"User object: {user}")
+        if user:
+            db.session.refresh(user)  # Refresh the user to ensure the latest data from the database
+
+    if request.method == "POST":
+        user_id = session.get("user_id")  # Check if a user is logged in
+        payment_type = request.form.get("payment_type")  # Get the selected payment type
+
+        # Handle offline donation
+        amount = request.form.get("amount")
+        currency = request.form.get("currency")
+        donation_date = request.form.get("date_donated")
+        receipt = request.files.get("receipt")
+
+        # Validate required fields
+        if not all([amount, payment_type, currency, donation_date]):
+            flash("Please fill in all required fields.", "danger")
+            return redirect(url_for("donate"))
+
+        # Validate amount
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                flash("Donation amount must be greater than zero.", "danger")
+                return redirect(url_for("donate"))
+        except (ValueError, TypeError):
+            flash("Invalid amount format.", "danger")
+            return redirect(url_for("donate"))
+
+        # Validate or set the donation date
+        try:
+            donation_date = datetime.strptime(donation_date, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
+            return redirect(url_for("donate"))
+
+        # Handle the uploaded file (receipt)
+        receipt_filename = None
+        if receipt and allowed_file(receipt.filename):
+            receipt_filename = secure_filename(receipt.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], receipt_filename)
+            receipt.save(filepath)
+
+            # Compress image files if it's an image format
+            if receipt_filename.lower().endswith(('png', 'jpg', 'jpeg')):
+                compress_image(filepath)
+        elif receipt:
+            flash("Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, PDF.", "danger")
+            return redirect(url_for("donate"))
+
+        # Create a new donation
+        donation = Donation(
+            user_id=user_id,
+            amount=amount,
+            currency=currency,
+            donation_date=donation_date,
+            payment_type=payment_type,
+            receipt_filename=receipt_filename  # Optional field in the database for file name
+        )
+
+        try:
+            # Add donation to the database
+            db.session.add(donation)
+            db.session.commit()
+
+            # Check if a pledge exists for the user and update pledged amount if necessary
+            pledge = Pledge.query.filter_by(user_id=user_id).first()
+            if pledge:
+                pledged_amount = pledge.amount  # Retrieve current pledged amount
+                pledge.balance = max(0, pledged_amount - amount)  # Update pledge balance dynamically
+
+            # Email notification removed
+
+            flash(f"Thank you for your {payment_type} donation!", "success")
+            app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
+            return redirect(url_for("donation_success"))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error saving donation: {e}")
+            flash("There was an error processing your donation. Please try again.", "danger")
+            return redirect(url_for("donate"))
+
+    # Retrieve pledges made by all users
+    pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
+
+    return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
+
+
 
 
 @app.route('/update_payment', methods=['POST'])
@@ -559,36 +781,6 @@ def update_payment():
     return redirect(url_for('view_my_donations'))
 
 
-
-
-def send_admin_notification(donation, receipt):
-    """Send a notification email to the admin with the donation details"""
-    admin_email = 'admin@example.com'  # Replace with actual admin email
-    subject = f"New Donation Received - {donation.amount} {donation.currency}"
-    body = f"""
-    A new donation has been made:
-
-    User ID: {donation.user_id}
-    Amount: {donation.amount} {donation.currency}
-    Payment Type: {donation.payment_type}
-    Donation Date: {donation.donation_date}
-    Receipt Filename: {donation.receipt_filename if donation.receipt_filename else 'No receipt provided'}
-
-    Thank you for supporting the cause.
-    """
-
-    msg = Message(subject, recipients=[admin_email])
-    msg.body = body
-
-    if donation.receipt_filename:
-        receipt_path = os.path.join(app.config['UPLOAD_FOLDER'], donation.receipt_filename)
-        with open(receipt_path, 'rb') as receipt_file:
-            msg.attach(donation.receipt_filename, 'application/octet-stream', receipt_file.read())
-
-    try:
-        mail.send(msg)
-    except Exception as e:
-        app.logger.error(f"Error sending email: {e}")
 
 
 # Route to handle the display of all donations (receipts)
@@ -872,7 +1064,7 @@ def admin_dashboard():
                            files=uploaded_files)
 
 
-
+"""
 #SENDING NOTIFICATIONS(MAIL AND SMS USING AWS)
 @app.route("/mail_sms", methods=["GET", "POST"])
 def mail_sms():
@@ -932,6 +1124,205 @@ def send_bulk_sms(message, phone_numbers):
     except (BotoCoreError, ClientError) as error:
         print(f"An error occurred with SNS: {error}")
 
+"""
+
+#SENDING EMAIL VIA SENDGRID AND SMS VIA TWILLO
+
+
+SENDGRID_API_KEY = "your_sendgrid_api_key"
+FROM_EMAIL = "your_email@example.com"  # Replace with your verified sender email
+
+def send_personalized_emails(subject, email_template):
+    """
+    Sends personalized welcome emails to users with a custom message template.
+
+    Args:
+        subject (str): The subject of the email.
+        email_template (str): The email message template with placeholders (e.g., {name}, {email}, {phone}).
+            Example: "Hello {name}, welcome to DC Global Partnership! Your account details are Email: {email}, Phone: {phone}."
+    """
+    try:
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+
+        # Get users who haven't received the onboarding email
+        users_to_email = User.objects.filter(has_received_onboarding_email=False)
+
+        for user in users_to_email:
+            # Personalize the email content by replacing placeholders with actual user data
+            personalized_email_body = email_template.format(
+                name=user.name,
+                email=user.email,
+                phone=user.phone
+            )
+
+            # Create the email message
+            message = Mail(
+                from_email=FROM_EMAIL,
+                to_emails=user.email,
+                subject=subject,
+                plain_text_content=personalized_email_body,
+                html_content=f"<p>{personalized_email_body.replace('\n', '<br>')}</p>"
+            )
+
+            # Send the email using SendGrid
+            response = sg.send(message)
+
+            # Log the response or print success
+            print(f"Email sent to {user.email}: {response.status_code}")
+
+            # Update the user to mark the email as sent
+            user.has_received_onboarding_email = True  # Mark the user as having received the email
+            user.save()
+
+        print("Personalized emails sent successfully!")
+    except Exception as e:
+        print(f"Error sending emails: {str(e)}")
+        raise e
+
+
+
+
+
+def send_personalized_sms(message_template):
+    """
+    Sends personalized SMS messages to users who have not yet received onboarding SMS.
+
+    Args:
+        message_template (str): The SMS message template with placeholders.
+            Example: "Welcome to DC Global Partnership! Your login credentials are Email: {email}, Phone: {phone}."
+    """
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+        # Get users who haven't received the onboarding SMS
+        users_to_sms = User.objects.filter(has_received_onboarding_email=False)
+
+        for user in users_to_sms:
+            # Personalize the message by replacing placeholders with actual user data
+            personalized_message = message_template.format(
+                name=user.name,
+                email=user.email,
+                phone=user.phone
+            )
+
+            # Send the SMS with the personalized message
+            message = client.messages.create(
+                body=personalized_message,
+                from_=TWILIO_PHONE_NUMBER,
+                to=user.phone
+            )
+
+            print(f"SMS sent to {user.phone}: {message.sid}")
+
+            # Update the user to mark the SMS as sent
+            user.has_received_onboarding_email = True  # Assuming the same field tracks SMS/email
+            user.save()
+
+        print("Personalized SMS sent successfully!")
+    except Exception as e:
+        print(f"Error sending SMS: {str(e)}")
+        raise e
+
+
+
+#THE EMAIL AND SMS ROUTE FUNCTION
+@app.route("/mail_sms", methods=["GET", "POST"])
+def mail_sms():
+    if request.method == "POST":
+        try:
+            # Email logic
+            if "send_bulk_email" in request.form:
+                subject = request.form["email_subject"]
+                email_template = request.form["email_body"]  # Customizable email body
+
+                # Check that placeholders exist in the email template
+                if '{name}' not in email_template or '{email}' not in email_template or '{phone}' not in email_template:
+                    flash("The email template must contain placeholders {name}, {email}, and {phone} for personalization.", "danger")
+                    return redirect(url_for("mail_sms"))
+
+                # Retrieve users who haven't received onboarding emails
+                users_to_email = User.query.filter_by(has_received_onboarding_email=False).all()
+
+                # Prepare recipients' personalized data
+                recipients_data = {
+                    user.email: {
+                        "name": user.name,
+                        "email": user.email,
+                        "phone": user.phone
+                    } for user in users_to_email
+                }
+
+                # Send personalized emails
+                for user_email, user_data in recipients_data.items():
+                    # Replace placeholders with actual user data
+                    personalized_email_body = email_template.format(
+                        name=user_data["name"],
+                        email=user_data["email"],
+                        phone=user_data["phone"]
+                    )
+                    send_personalized_emails(subject, personalized_email_body, user_email)
+
+                # Mark users as having received the email
+                for user in users_to_email:
+                    user.has_received_onboarding_email = True
+                    db.session.commit()
+
+                flash("Personalized emails sent successfully!", "success")
+
+            # SMS logic
+            elif "send_bulk_sms" in request.form:
+                sms_template = request.form["sms_message"]
+
+                # Check that placeholders exist in the SMS template
+                if '{email}' not in sms_template or '{phone}' not in sms_template:
+                    flash("The SMS template must contain placeholders {email} and {phone} for personalization.", "danger")
+                    return redirect(url_for("mail_sms"))
+
+                # Retrieve users who haven't received onboarding SMS
+                users_to_sms = User.query.filter_by(has_received_onboarding_sms=False).all()
+
+                # Prepare recipients' personalized data
+                recipients_data = {
+                    user.phone: {
+                        "name": user.name,
+                        "email": user.email,
+                        "phone": user.phone
+                    } for user in users_to_sms
+                }
+
+                # Send personalized SMS
+                for user_phone, user_data in recipients_data.items():
+                    # Replace placeholders with actual user data
+                    personalized_sms_message = sms_template.format(
+                        email=user_data["email"],
+                        phone=user_data["phone"]
+                    )
+                    send_personalized_sms(personalized_sms_message, user_phone)
+
+                # Mark users as having received the SMS
+                for user in users_to_sms:
+                    user.has_received_onboarding_sms = True
+                    db.session.commit()
+
+                flash("Personalized SMS sent successfully!", "success")
+
+            return redirect(url_for("mail_sms"))
+
+        except Exception as e:
+            flash(f"An error occurred: {e}", "danger")
+    
+    return render_template("mail_sms.html")
+
+
+def validate_phone_number(phone_number):
+    # Regex pattern for validating E.164 phone numbers
+    pattern = r'^\+[1-9]{1}[0-9]{1,14}$'
+    if re.match(pattern, phone_number):
+        return True
+    else:
+        return False
+
+
 
 
 # API endpoint to fetch user details by ID
@@ -987,24 +1378,26 @@ def delete_user(user_id):
 
 
 
-# Route to delete a donation
 @app.route("/delete_donation/<int:donation_id>", methods=["POST"])
 @admin_required
 def delete_donation(donation_id):
-    donation = Donation.query.get_or_404(donation_id)
+    donation = Donation.query.get_or_404(donation_id)  # Fetch the donation or 404 if not found
     try:
+        # Attempt to delete the donation from the database
         db.session.delete(donation)
         db.session.commit()
-        flash("Donation deleted successfully.", "success")
+        flash("Donation deleted successfully.", "success")  # Success flash message
     except Exception as e:
+        # Handle any errors and log them
         db.session.rollback()
         app.logger.error(f"Error deleting donation: {e}")
-        flash("An error occurred while deleting the donation.", "danger")
-    return redirect(url_for("admin_dashboard"))
+        flash("An error occurred while deleting the donation.", "danger")  # Error flash message
+
+    # Redirect to the admin dashboard after action is completed
+    return redirect(url_for("recent_donations"))
 
 
 
-#Add Pledge by both Admin
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
     if request.method == 'POST':
@@ -1014,6 +1407,14 @@ def add_pledge():
             pledged_amount = request.form['pledged_amount']
             pledge_currency = request.form['currency']
             medal = request.form.get('medal')  # Get the selected medal from the form
+            donation_date_str = request.form['donation_date']  # Get the donation date from the form
+
+            # Convert the donation_date to a datetime object
+            try:
+                donation_date = datetime.strptime(donation_date_str, '%Y-%m-%d')
+            except ValueError:
+                flash('Invalid donation date. Please provide a valid date.', 'danger')
+                return redirect(url_for('admin_dashboard'))  # Redirect to error page or the same form
 
             # Remove commas from pledged amount before converting to float
             pledged_amount = pledged_amount.replace(',', '')
@@ -1029,10 +1430,11 @@ def add_pledge():
             user = User.query.get(user_id)
 
             if user:
-                # Update the pledged amount and currency in the User table
+                # Update the pledged amount, currency, medal, and donation date in the User table
                 user.pledged_amount = pledged_amount
                 user.pledge_currency = pledge_currency
                 user.medal = medal  # Save the selected medal type
+                user.donation_date = donation_date  # Save the donation date
 
                 # Commit the changes to the database
                 db.session.commit()
@@ -1050,6 +1452,13 @@ def add_pledge():
             pledged_amount = data.get('pledged_amount')
             pledge_currency = data.get('currency', 'USD')  # Default to 'USD' if currency not provided
             medal = data.get('medal')  # Medal type provided in JSON data
+            donation_date_str = data.get('donation_date')
+
+            try:
+                # Convert the donation date string to a datetime object
+                donation_date = datetime.strptime(donation_date_str, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid donation date.'}), 400
 
             # Remove commas from pledged amount before converting to float
             pledged_amount = pledged_amount.replace(',', '')
@@ -1064,10 +1473,11 @@ def add_pledge():
             user = User.query.get(user_id)
 
             if user:
-                # Update the pledged amount and currency in the User table
+                # Update the pledged amount, currency, medal, and donation date in the User table
                 user.pledged_amount = pledged_amount
                 user.pledge_currency = pledge_currency
                 user.medal = medal  # Save the selected medal type
+                user.donation_date = donation_date  # Save the donation date
 
                 # Commit the changes to the database
                 db.session.commit()
@@ -1450,9 +1860,6 @@ def edit_profile():
 
     # Render the edit profile page for GET requests
     return render_template('edit_profile.html', user=user)  # Pass user data to the template
-
-
-
 
 
 
