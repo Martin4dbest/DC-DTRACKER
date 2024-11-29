@@ -1816,7 +1816,6 @@ def format_commas(value):
 
 
 
-
 @app.route('/success')
 def success():
     return "Pledge added successfully!", 200
