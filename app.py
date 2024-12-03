@@ -163,6 +163,7 @@ class Donation(db.Model):
     pledged_amount = db.Column(db.Float, nullable=False, default=0)  # Added to store pledged amount
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) 
     paid_status = db.Column(db.Boolean, default=False)
+    
 
     #user = db.relationship('User', backref='pledges')
     user = db.relationship("User", backref="donations")
@@ -823,13 +824,18 @@ def delete_file_from_server(filename):
         print(f"Error deleting file {filename}: {e}")
         raise
 
+
 @app.route('/view_receipt/<int:receipt_id>')
 def view_receipt(receipt_id):
     # Fetch a single receipt by its ID
-    receipt = Donation.query.get_or_404(receipt_id)
+    receipt = Donation.query.get_or_404(receipt_id)  # Assuming Donation has all receipt data
+    
+    # Ensure the `currency` is part of the receipt object
+    currency = receipt.currency if hasattr(receipt, 'currency') else 'USD'  # Default to USD if currency is missing
     
     # Render the receipt details page
-    return render_template('view_receipt.html', receipt=receipt)
+    return render_template('view_receipt.html', receipt=receipt, currency=currency)
+
 
 
 @app.route("/admin_uploaded_receipts", methods=["GET", "POST"])
@@ -844,7 +850,8 @@ def admin_uploaded_receipts():
             Donation.receipt_filename,
             User.name,
             User.country,
-            User.state
+            User.state,
+            User.church_branch
         )
         .join(User, Donation.user_id == User.id)
         .filter(Donation.receipt_filename.isnot(None))  # Only include donations with receipt filenames
@@ -856,7 +863,8 @@ def admin_uploaded_receipts():
             db.or_(
                 User.name.ilike(f"%{search_term}%"),
                 User.country.ilike(f"%{search_term}%"),
-                User.state.ilike(f"%{search_term}%")
+                User.state.ilike(f"%{search_term}%"),
+                User.church_branch.ilike(f"%{search_term}%")
             )
         )
 
@@ -870,6 +878,7 @@ def admin_uploaded_receipts():
             "user": receipt.name,
             "country": receipt.country,
             "state": receipt.state,
+            "church_branch": receipt.church_branch,
         }
         for receipt in receipts
     ]
@@ -1225,93 +1234,84 @@ def send_personalized_sms(message_template):
 
 
 
-#THE EMAIL AND SMS ROUTE FUNCTION
+#THE EMAIL AND SMS ROUTE FUNCTION@app.route("/mail_sms", methods=["GET", "POST"])
 @app.route("/mail_sms", methods=["GET", "POST"])
 def mail_sms():
     if request.method == "POST":
         try:
-            # Email logic
             if "send_bulk_email" in request.form:
-                subject = request.form["email_subject"]
-                email_template = request.form["email_body"]  # Customizable email body
+                # Handle Email logic
+                subject = request.form.get("email_subject", "")
+                email_template = request.form.get("email_body", "")
 
-                # Check that placeholders exist in the email template
-                if '{name}' not in email_template or '{email}' not in email_template or '{phone}' not in email_template:
-                    flash("The email template must contain placeholders {name}, {email}, and {phone} for personalization.", "danger")
+                # Validate placeholders
+                if not all(x in email_template for x in ['{name}', '{email}', '{phone}']):
+                    flash("The email template must contain {name}, {email}, and {phone}.", "danger")
                     return redirect(url_for("mail_sms"))
 
-                # Retrieve users who haven't received onboarding emails
+                # Query users to send emails
                 users_to_email = User.query.filter_by(has_received_onboarding_email=False).all()
-
-                # Prepare recipients' personalized data
-                recipients_data = {
-                    user.email: {
-                        "name": user.name,
-                        "email": user.email,
-                        "phone": user.phone
-                    } for user in users_to_email
-                }
-
-                # Send personalized emails
-                for user_email, user_data in recipients_data.items():
-                    # Replace placeholders with actual user data
-                    personalized_email_body = email_template.format(
-                        name=user_data["name"],
-                        email=user_data["email"],
-                        phone=user_data["phone"]
-                    )
-                    send_personalized_emails(subject, personalized_email_body, user_email)
-
-                # Mark users as having received the email
-                for user in users_to_email:
-                    user.has_received_onboarding_email = True
-                    db.session.commit()
-
-                flash("Personalized emails sent successfully!", "success")
-
-            # SMS logic
-            elif "send_bulk_sms" in request.form:
-                sms_template = request.form["sms_message"]
-
-                # Check that placeholders exist in the SMS template
-                if '{email}' not in sms_template or '{phone}' not in sms_template:
-                    flash("The SMS template must contain placeholders {email} and {phone} for personalization.", "danger")
+                if not users_to_email:
+                    flash("No users available to send emails.", "warning")
                     return redirect(url_for("mail_sms"))
 
-                # Retrieve users who haven't received onboarding SMS
-                users_to_sms = User.query.filter_by(has_received_onboarding_sms=False).all()
-
-                # Prepare recipients' personalized data
-                recipients_data = {
-                    user.phone: {
-                        "name": user.name,
-                        "email": user.email,
-                        "phone": user.phone
-                    } for user in users_to_sms
-                }
-
-                # Send personalized SMS
-                for user_phone, user_data in recipients_data.items():
-                    # Replace placeholders with actual user data
-                    personalized_sms_message = sms_template.format(
-                        email=user_data["email"],
-                        phone=user_data["phone"]
+                # Send emails
+                for user in users_to_email:
+                    personalized_email = email_template.format(
+                        name=user.name, email=user.email, phone=user.phone
                     )
-                    send_personalized_sms(personalized_sms_message, user_phone)
+                    send_personalized_emails(subject, personalized_email, user.email)
+                    user.has_received_onboarding_email = True
 
-                # Mark users as having received the SMS
+                db.session.commit()
+                flash("Emails sent successfully.", "success")
+                return redirect(url_for("delivery_success", delivery_type="Email"))
+
+            if "send_bulk_sms" in request.form:
+                # Handle SMS logic
+                sms_template = request.form.get("sms_message", "")
+
+                # Validate placeholders
+                if not all(x in sms_template for x in ['{email}', '{phone}']):
+                    flash("The SMS template must contain {email} and {phone}.", "danger")
+                    return redirect(url_for("mail_sms"))
+
+                # Query users to send SMS
+                users_to_sms = User.query.filter_by(has_received_onboarding_sms=False).all()
+                if not users_to_sms:
+                    flash("No users available to send SMS.", "warning")
+                    return redirect(url_for("mail_sms"))
+
+                # Send SMS
                 for user in users_to_sms:
+                    personalized_sms = sms_template.format(
+                        email=user.email, phone=user.phone
+                    )
+                    send_personalized_sms(personalized_sms, user.phone)
                     user.has_received_onboarding_sms = True
-                    db.session.commit()
 
-                flash("Personalized SMS sent successfully!", "success")
-
-            return redirect(url_for("mail_sms"))
+                db.session.commit()
+                flash("SMS sent successfully.", "success")
+                return redirect(url_for("delivery_success", delivery_type="SMS"))
 
         except Exception as e:
             flash(f"An error occurred: {e}", "danger")
-    
+            return redirect(url_for("mail_sms"))
+
     return render_template("mail_sms.html")
+
+
+
+@app.route("/delivery_success/<delivery_type>")
+def delivery_success(delivery_type):
+    return render_template('delivery_success.html', delivery_type=delivery_type)
+
+
+
+
+
+
+
 
 
 def validate_phone_number(phone_number):

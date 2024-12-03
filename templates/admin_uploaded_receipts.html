@@ -141,7 +141,7 @@
         <!-- Search Filter Form -->
         <div class="search-container">
             <form method="GET" action="{{ url_for('admin_uploaded_receipts') }}">
-                <input type="text" name="search_term" placeholder="Search by Name, Country, or State" value="{{ request.args.get('search_term', '') }}">
+                <input type="text" name="search_term" placeholder="Search by Name, Country, State or Local Church" value="{{ request.args.get('search_term', '') }}">
                 <button type="submit">Search</button>
             </form>
         </div>
@@ -152,9 +152,10 @@
                 <thead>
                     <tr>
                         <th>Filename</th>
-                        <th>User</th>
+                        <th>Partners</th>
                         <th>Country</th>
                         <th>State</th>
+                        <th>Local Church</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -167,6 +168,7 @@
                             <td>{{ file.user }}</td>
                             <td>{{ file.country }}</td>
                             <td>{{ file.state }}</td>
+                            <td>{{ file.church_branch }}</td>
                             <td>
                                 <form action="{{ url_for('delete_receipt_by_filename', filename=file.filename) }}" method="POST" onsubmit="return confirmDelete()">
                                     <button type="submit">Delete</button>
