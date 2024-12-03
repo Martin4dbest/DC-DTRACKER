@@ -25,12 +25,6 @@
             <p><strong>Date:</strong> <span style="color: #e05f03;">{{ receipt.donation_date }}</span></p>
         </div>
 
-        <!-- Additional Information -->
-        <div class="receipt-extra-info" style="font-size: 16px; margin-bottom: 30px; color: #555;">
-            <p><strong>Additional Details:</strong></p>
-            <p>{{ receipt.details or 'No additional details provided' }}</p>
-        </div>
-
         <!-- Action Buttons -->
         <a href="{{ url_for('receipts_overview') }}" class="button" style="display: inline-block; padding: 10px 20px; background-color: rgb(23, 23, 163); color: white; font-size: 16px; text-decoration: none; border-radius: 5px; transition: background-color 0.3s ease;">
             Back to Overview
