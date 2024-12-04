@@ -20,16 +20,14 @@ import requests
 from flask_cors import CORS
 
 
-
-
-
+from dotenv import load_dotenv
+from twilio.rest import Client
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from flask_wtf.csrf import CSRFProtect
@@ -130,6 +128,7 @@ class User(db.Model):
     partner_since = db.Column(db.Integer, nullable=True)  # Year as an integer
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
     has_received_onboarding_email = db.Column(db.Boolean, default=False)
+    has_received_onboarding_sms = db.Column(db.Boolean, default=False)
 
 
 
@@ -193,6 +192,130 @@ class Pledge(db.Model):
     #user = db.relationship('User', backref='pledges')
     donor = db.relationship('User', back_populates='pledges')  # This should reference 'pledges' in User
     
+
+
+
+
+# Load sensitive credentials
+load_dotenv()
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
+FROM_EMAIL = os.getenv("FROM_EMAIL")
+
+
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Fetch API key and email from environment variables
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+FROM_EMAIL = os.getenv('FROM_EMAIL')
+
+# Twilio credentials from .env
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
+
+@app.route("/mail_sms", methods=["GET", "POST"])
+def mail_sms():
+    if request.method == "POST":
+        try:
+            # Check for email form submission
+            if "send_bulk_email" in request.form:
+                subject = request.form.get("email_subject", "").strip()
+                email_template = request.form.get("email_body", "").strip()
+
+                if not all(x in email_template for x in ['{name}', '{email}', '{phone}']):
+                    flash("The email template must contain {name}, {email}, and {phone}.", "danger")
+                    return redirect(url_for("mail_sms"))
+
+                send_personalized_emails(subject, email_template)
+                flash("Emails sent successfully.", "success")
+                return redirect(url_for("delivery_success", delivery_type="Email"))
+
+            # Check for SMS form submission
+            if "send_bulk_sms" in request.form:
+                sms_template = request.form.get("sms_message", "").strip()
+
+                if not all(x in sms_template for x in ['{name}', '{email}', '{phone}']):
+                    flash("The SMS template must contain {name}, {email}, and {phone}.", "danger")
+                    return redirect(url_for("mail_sms"))
+                
+                send_personalized_sms(sms_template)
+                flash("SMS sent successfully.", "success")
+                return redirect(url_for("delivery_success", delivery_type="SMS"))
+
+            flash("No valid action was selected.", "danger")
+            return redirect(url_for("mail_sms"))
+        except Exception as e:
+            flash(f"An error occurred: {e}", "danger")
+            return redirect(url_for("mail_sms"))
+
+    return render_template("mail_sms.html")
+
+def send_personalized_emails(subject, email_template):
+    try:
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        users_to_email = User.query.filter_by(has_received_onboarding_email=False).all()
+
+        for user in users_to_email:
+            personalized_email_body = email_template.format(
+                name=user.name, phone=user.phone, email=user.email
+            )
+            
+            message = Mail(
+                from_email=FROM_EMAIL,
+                to_emails=user.email,
+                subject=subject,
+                plain_text_content=personalized_email_body,
+                html_content=f"<p>{personalized_email_body.replace('\n', '<br>')}</p>"
+            )
+            response = sg.send(message)
+            
+            print(f"Email sent to {user.email}: {response.status_code}")
+            print(f"Response body: {response.body}")
+
+            if response.status_code == 202:
+                user.has_received_onboarding_email = True
+                db.session.commit()
+            else:
+                print(f"Failed to send email to {user.email}: {response.body}")
+    except Exception as e:
+        print(f"Error sending emails: {str(e)}")
+        raise e
+
+def send_personalized_sms(sms_template):
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        users_to_sms = User.query.filter_by(has_received_onboarding_sms=False).all()
+
+        for user in users_to_sms:
+            personalized_sms_body = sms_template.format(
+                name=user.name, phone=user.phone, email=user.email
+            )
+            
+            message = client.messages.create(
+                body=personalized_sms_body,
+                from_=TWILIO_PHONE_NUMBER,
+                to=user.phone
+            )
+            print(f"SMS sent to {user.phone}: {message.status}")
+            
+            if message.status == 'queued':
+                user.has_received_onboarding_sms = True
+                db.session.commit()
+    except Exception as e:
+        print(f"Error sending SMS: {str(e)}")
+        raise e
+    
+
+# Success page
+@app.route("/delivery_success/<delivery_type>")
+def delivery_success(delivery_type):
+    return render_template('delivery_success.html', delivery_type=delivery_type)
+
 
 
 
@@ -1134,184 +1257,6 @@ def send_bulk_sms(message, phone_numbers):
         print(f"An error occurred with SNS: {error}")
 
 """
-
-#SENDING EMAIL VIA SENDGRID AND SMS VIA TWILLO
-
-
-SENDGRID_API_KEY = "your_sendgrid_api_key"
-FROM_EMAIL = "your_email@example.com"  # Replace with your verified sender email
-
-def send_personalized_emails(subject, email_template):
-    """
-    Sends personalized welcome emails to users with a custom message template.
-
-    Args:
-        subject (str): The subject of the email.
-        email_template (str): The email message template with placeholders (e.g., {name}, {email}, {phone}).
-            Example: "Hello {name}, welcome to DC Global Partnership! Your account details are Email: {email}, Phone: {phone}."
-    """
-    try:
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-
-        # Get users who haven't received the onboarding email
-        users_to_email = User.objects.filter(has_received_onboarding_email=False)
-
-        for user in users_to_email:
-            # Personalize the email content by replacing placeholders with actual user data
-            personalized_email_body = email_template.format(
-                name=user.name,
-                email=user.email,
-                phone=user.phone
-            )
-
-            # Create the email message
-            message = Mail(
-                from_email=FROM_EMAIL,
-                to_emails=user.email,
-                subject=subject,
-                plain_text_content=personalized_email_body,
-                html_content=f"<p>{personalized_email_body.replace('\n', '<br>')}</p>"
-            )
-
-            # Send the email using SendGrid
-            response = sg.send(message)
-
-            # Log the response or print success
-            print(f"Email sent to {user.email}: {response.status_code}")
-
-            # Update the user to mark the email as sent
-            user.has_received_onboarding_email = True  # Mark the user as having received the email
-            user.save()
-
-        print("Personalized emails sent successfully!")
-    except Exception as e:
-        print(f"Error sending emails: {str(e)}")
-        raise e
-
-
-
-
-
-def send_personalized_sms(message_template):
-    """
-    Sends personalized SMS messages to users who have not yet received onboarding SMS.
-
-    Args:
-        message_template (str): The SMS message template with placeholders.
-            Example: "Welcome to DC Global Partnership! Your login credentials are Email: {email}, Phone: {phone}."
-    """
-    try:
-        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-        # Get users who haven't received the onboarding SMS
-        users_to_sms = User.objects.filter(has_received_onboarding_email=False)
-
-        for user in users_to_sms:
-            # Personalize the message by replacing placeholders with actual user data
-            personalized_message = message_template.format(
-                name=user.name,
-                email=user.email,
-                phone=user.phone
-            )
-
-            # Send the SMS with the personalized message
-            message = client.messages.create(
-                body=personalized_message,
-                from_=TWILIO_PHONE_NUMBER,
-                to=user.phone
-            )
-
-            print(f"SMS sent to {user.phone}: {message.sid}")
-
-            # Update the user to mark the SMS as sent
-            user.has_received_onboarding_email = True  # Assuming the same field tracks SMS/email
-            user.save()
-
-        print("Personalized SMS sent successfully!")
-    except Exception as e:
-        print(f"Error sending SMS: {str(e)}")
-        raise e
-
-
-
-#THE EMAIL AND SMS ROUTE FUNCTION@app.route("/mail_sms", methods=["GET", "POST"])
-@app.route("/mail_sms", methods=["GET", "POST"])
-def mail_sms():
-    if request.method == "POST":
-        try:
-            if "send_bulk_email" in request.form:
-                # Handle Email logic
-                subject = request.form.get("email_subject", "")
-                email_template = request.form.get("email_body", "")
-
-                # Validate placeholders
-                if not all(x in email_template for x in ['{name}', '{email}', '{phone}']):
-                    flash("The email template must contain {name}, {email}, and {phone}.", "danger")
-                    return redirect(url_for("mail_sms"))
-
-                # Query users to send emails
-                users_to_email = User.query.filter_by(has_received_onboarding_email=False).all()
-                if not users_to_email:
-                    flash("No users available to send emails.", "warning")
-                    return redirect(url_for("mail_sms"))
-
-                # Send emails
-                for user in users_to_email:
-                    personalized_email = email_template.format(
-                        name=user.name, email=user.email, phone=user.phone
-                    )
-                    send_personalized_emails(subject, personalized_email, user.email)
-                    user.has_received_onboarding_email = True
-
-                db.session.commit()
-                flash("Emails sent successfully.", "success")
-                return redirect(url_for("delivery_success", delivery_type="Email"))
-
-            if "send_bulk_sms" in request.form:
-                # Handle SMS logic
-                sms_template = request.form.get("sms_message", "")
-
-                # Validate placeholders
-                if not all(x in sms_template for x in ['{email}', '{phone}']):
-                    flash("The SMS template must contain {email} and {phone}.", "danger")
-                    return redirect(url_for("mail_sms"))
-
-                # Query users to send SMS
-                users_to_sms = User.query.filter_by(has_received_onboarding_sms=False).all()
-                if not users_to_sms:
-                    flash("No users available to send SMS.", "warning")
-                    return redirect(url_for("mail_sms"))
-
-                # Send SMS
-                for user in users_to_sms:
-                    personalized_sms = sms_template.format(
-                        email=user.email, phone=user.phone
-                    )
-                    send_personalized_sms(personalized_sms, user.phone)
-                    user.has_received_onboarding_sms = True
-
-                db.session.commit()
-                flash("SMS sent successfully.", "success")
-                return redirect(url_for("delivery_success", delivery_type="SMS"))
-
-        except Exception as e:
-            flash(f"An error occurred: {e}", "danger")
-            return redirect(url_for("mail_sms"))
-
-    return render_template("mail_sms.html")
-
-
-
-@app.route("/delivery_success/<delivery_type>")
-def delivery_success(delivery_type):
-    return render_template('delivery_success.html', delivery_type=delivery_type)
-
-
-
-
-
-
-
 
 
 def validate_phone_number(phone_number):

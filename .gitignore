@@ -26,3 +26,4 @@ venv/
 # IDE files
 .vscode/
 .idea/
+sendgrid.env

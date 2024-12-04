@@ -4,25 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Send Notifications</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Poppins, Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
         }
-
         .option {
             position: absolute;
             top: 20px;
             left: 20px;
             font-size: 1.2rem;
         }
-
         .option a {
             text-decoration: none;
             color: #28a745;
@@ -30,21 +26,24 @@
             padding-left: 10px;
             transition: color 0.3s ease;
         }
-
         .option a:hover {
             color: #1c7c32;
         }
-
-        .option i {
-            color: rgb(165, 142, 13);
-            font-size: 2em;
-            transition: color 0.3s ease;
+        .flash {
+            max-width: 600px;
+            margin: 10px auto;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1rem;
         }
-
-        .option i:hover {
-            color: #1c7c32;
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
         }
-
+        .flash.danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
         form {
             max-width: 600px;
             margin: 50px auto;
@@ -53,13 +52,16 @@
             border-radius: 8px;
             background-color: #fff;
         }
-
         h3 {
             font-size: 1.5rem;
             margin-bottom: 15px;
             color: #333;
         }
-
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
         textarea, input {
             width: 100%;
             padding: 10px;
@@ -68,7 +70,6 @@
             border-radius: 5px;
             margin-bottom: 15px;
         }
-
         button {
             width: 100%;
             padding: 12px;
@@ -78,46 +79,52 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
         button[name="send_bulk_sms"] {
             background-color: #4CAF50;
             color: white;
         }
-
         button[name="send_bulk_email"] {
             background-color: #007BFF;
             color: white;
         }
-
         button:hover {
             opacity: 0.9;
         }
     </style>
 </head>
 <body>
-
-    <!-- Logout Option -->
     <div class="option">
-        <i class="fas fa-sign-out-alt" style="color: rgb(165, 142, 13); font-size: 2em; transition: color 0.3s ease;" onmouseover="this.style.color='#1c7c32'" onmouseout="this.style.color='#28a745'"></i>
-        <!-- Logout Link -->
+        <i class="fas fa-sign-out-alt"></i>
         <a href="{{ url_for('admin_dashboard') }}">Back</a>
     </div>
 
-    <!-- Form to send Bulk SMS and Email -->
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div>
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Notification Form -->
     <form method="POST" action="{{ url_for('mail_sms') }}">
-        <!-- SMS Section -->
+        <!-- Bulk SMS Section -->
         <h3>Send Bulk SMS</h3>
-        <textarea name="sms_message" placeholder="Enter SMS message template with placeholders (e.g., 'Hello {name}, your login credentials are: Email: {email}, Phone: {phone}.')"></textarea>
-        <input type="tel" id="phone_number" name="phone_number" pattern="^\+[1-9]{1}[0-9]{1,14}$" placeholder="+2347034567890">
+        <label for="sms_message">SMS Template</label>
+        <textarea id="sms_message" name="sms_message" placeholder="e.g., 'Hello {name}, your details are: {email}, {phone}'"></textarea>
         <button type="submit" name="send_bulk_sms">Send SMS</button>
-    
-        <!-- Email Section -->
+
+        <!-- Bulk Email Section -->
         <h3>Send Bulk Email</h3>
-        <input type="text" name="email_subject" placeholder="Enter email subject">
-        <textarea name="email_body" placeholder="Enter email body template with placeholders (e.g., 'Hello {name}, your login credentials are: Email: {email}, Phone: {phone}.')"></textarea>
-        <input type="text" name="recipients" placeholder="Enter email addresses separated by commas (e.g., 'email1@example.com, email2@example.com')">
+        <label for="email_subject">Email Subject</label>
+        <input id="email_subject" type="text" name="email_subject" placeholder="Enter email subject">
+        
+        <label for="email_body">Email Template</label>
+        <textarea id="email_body" name="email_body" placeholder="e.g., 'Hello {name}, your details are: {email}, {phone}'"></textarea>
         <button type="submit" name="send_bulk_email">Send Email</button>
     </form>
-    
 </body>
 </html>
