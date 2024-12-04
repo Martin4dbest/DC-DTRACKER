@@ -329,7 +329,6 @@ def delivery_success(delivery_type):
     return render_template('delivery_success.html', delivery_type=delivery_type)
 
 
-print(f"SENDGRID_API_KEY: {SENDGRID_API_KEY}")
 
 
 
