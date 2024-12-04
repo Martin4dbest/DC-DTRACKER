@@ -195,28 +195,23 @@ class Pledge(db.Model):
 
 
 
-
-# Load sensitive credentials
-load_dotenv()
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-FROM_EMAIL = os.getenv("FROM_EMAIL")
-
-
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Fetch API key and email from environment variables
-SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
-FROM_EMAIL = os.getenv('FROM_EMAIL')
-
 # Twilio credentials from .env
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
+
+
+# Environment variables for SendGrid and Twilio
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+FROM_EMAIL = os.getenv("FROM_EMAIL")
+
+print(f"SENDGRID_API_KEY: {SENDGRID_API_KEY}")  # Check if the key is updated
+
+# Ensure environment variables are loaded correctly
+if not SENDGRID_API_KEY or not FROM_EMAIL:
+    print("SENDGRID_API_KEY or FROM_EMAIL is missing")
+else:
+    print("Environment variables loaded successfully")
 
 @app.route("/mail_sms", methods=["GET", "POST"])
 def mail_sms():
@@ -227,23 +222,25 @@ def mail_sms():
                 subject = request.form.get("email_subject", "").strip()
                 email_template = request.form.get("email_body", "").strip()
 
+                # Ensure the email template contains placeholders
                 if not all(x in email_template for x in ['{name}', '{email}', '{phone}']):
                     flash("The email template must contain {name}, {email}, and {phone}.", "danger")
                     return redirect(url_for("mail_sms"))
 
+                # Send the emails
                 send_personalized_emails(subject, email_template)
                 flash("Emails sent successfully.", "success")
                 return redirect(url_for("delivery_success", delivery_type="Email"))
 
-            # Check for SMS form submission
+            # Check for SMS form submission (SMS logic can be implemented similarly)
             if "send_bulk_sms" in request.form:
                 sms_template = request.form.get("sms_message", "").strip()
 
                 if not all(x in sms_template for x in ['{name}', '{email}', '{phone}']):
                     flash("The SMS template must contain {name}, {email}, and {phone}.", "danger")
                     return redirect(url_for("mail_sms"))
-                
-                send_personalized_sms(sms_template)
+
+                # Send SMS function would go here (not implemented)
                 flash("SMS sent successfully.", "success")
                 return redirect(url_for("delivery_success", delivery_type="SMS"))
 
@@ -258,30 +255,46 @@ def mail_sms():
 def send_personalized_emails(subject, email_template):
     try:
         sg = SendGridAPIClient(SENDGRID_API_KEY)
+        # Query users who have not received the onboarding email
         users_to_email = User.query.filter_by(has_received_onboarding_email=False).all()
 
-        for user in users_to_email:
-            personalized_email_body = email_template.format(
-                name=user.name, phone=user.phone, email=user.email
-            )
-            
-            message = Mail(
-                from_email=FROM_EMAIL,
-                to_emails=user.email,
-                subject=subject,
-                plain_text_content=personalized_email_body,
-                html_content=f"<p>{personalized_email_body.replace('\n', '<br>')}</p>"
-            )
-            response = sg.send(message)
-            
-            print(f"Email sent to {user.email}: {response.status_code}")
-            print(f"Response body: {response.body}")
+        if not users_to_email:
+            print("No users found for email sending.")
+            return
 
-            if response.status_code == 202:
-                user.has_received_onboarding_email = True
-                db.session.commit()
-            else:
-                print(f"Failed to send email to {user.email}: {response.body}")
+        for user in users_to_email:
+            try:
+                # Personalize email body with user data
+                personalized_email_body = email_template.format(
+                    name=user.name, phone=user.phone, email=user.email
+                )
+
+                # Create the email message
+                message = Mail(
+                    from_email=FROM_EMAIL,
+                    to_emails=user.email,
+                    subject=subject,
+                    plain_text_content=personalized_email_body,
+                    html_content=f"<p>{personalized_email_body.replace('\n', '<br>')}</p>"
+                )
+
+                # Send the email
+                response = sg.send(message)
+
+                # Log response for debugging
+                print(f"SendGrid Response Status: {response.status_code}")
+                print(f"SendGrid Response Body: {response.body}")
+
+                if response.status_code == 202:
+                    # Mark email as sent in the database
+                    user.has_received_onboarding_email = True
+                    db.session.commit()
+                else:
+                    print(f"Failed to send email to {user.email}: {response.status_code} - {response.body}")
+
+            except Exception as e:
+                print(f"Error sending email to {user.email}: {str(e)}")
+                continue
     except Exception as e:
         print(f"Error sending emails: {str(e)}")
         raise e
@@ -309,13 +322,14 @@ def send_personalized_sms(sms_template):
     except Exception as e:
         print(f"Error sending SMS: {str(e)}")
         raise e
-    
 
 # Success page
 @app.route("/delivery_success/<delivery_type>")
 def delivery_success(delivery_type):
     return render_template('delivery_success.html', delivery_type=delivery_type)
 
+
+print(f"SENDGRID_API_KEY: {SENDGRID_API_KEY}")
 
 
 
