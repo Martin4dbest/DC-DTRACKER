@@ -206,7 +206,7 @@ SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 FROM_EMAIL = os.getenv("FROM_EMAIL")
 RECIPIENT_EMAIL = os.getenv('RECIPIENT_EMAIL')  # Add your recipient email to .env
 
-print(f"SENDGRID_API_KEY: {SENDGRID_API_KEY}")  # Check if the key is updated
+#print(f"SENDGRID_API_KEY: {SENDGRID_API_KEY}")  # Check if the key is updated
 
 # Ensure environment variables are loaded correctly
 if not SENDGRID_API_KEY or not FROM_EMAIL:
@@ -1849,6 +1849,19 @@ def edit_profile():
     # Render the edit profile page for GET requests
     return render_template('edit_profile.html', user=user)  # Pass user data to the template
 
+
+
+API_KEY = os.getenv("EXCHANGE_RATE_API_KEY")
+API_URL = f"https://v6.exchangerate-api.com/v6/{API_KEY}/latest/USD"
+
+@app.route('/api/rates', methods=['GET'])
+def get_exchange_rates():
+    try:
+        response = requests.get(API_URL)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
 
 
 
