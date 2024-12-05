@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Form</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #101f2e; /* Dark blue */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column; /* To align items vertically */
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff; /* White */
+        }
+
+        /* Form Container */
+        form {
+            background-color: #ffffff; /* White background for the form */
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px; /* Add margin to create space between the form and the button */
+        }
+
+        label {
+            font-weight: bold;
+            color: #003366; /* Dark blue */
+        }
+
+        input, textarea, button {
+            width: calc(100% - 10px); /* Adjust for padding */
+            margin: 8px 0;
+            padding: 10px;
+            border: 1px solid #b0c4de; /* Light steel blue */
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #4682b4; /* Steel blue */
+            outline: none;
+        }
+
+        button {
+            background-color: #4682b4; /* Steel blue */
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #003366; /* Dark blue */
+        }
+
+        /* Flash Message Styles */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Back Button */
+        .back-button {
+            display: inline-block;
+            background-color: #157a2d; /* Green */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .back-button:hover {
+            background-color: #0e5c21; /* Darker Green */
+        }
+    </style>
+</head>
+<body>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Feedback Form -->
+    <form action="/send-feedback" method="POST">
+        <h1>Feedback Form</h1>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+        
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" rows="4" placeholder="Write your feedback" required></textarea>
+        
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- Back to Home Button -->
+    <a href="{{ url_for('contact') }}" class="back-button">
+        Back
+    </a>
+</body>
+</html>

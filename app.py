@@ -204,6 +204,7 @@ TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 # Environment variables for SendGrid and Twilio
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 FROM_EMAIL = os.getenv("FROM_EMAIL")
+RECIPIENT_EMAIL = os.getenv('RECIPIENT_EMAIL')  # Add your recipient email to .env
 
 print(f"SENDGRID_API_KEY: {SENDGRID_API_KEY}")  # Check if the key is updated
 
@@ -328,7 +329,37 @@ def send_personalized_sms(sms_template):
 def delivery_success(delivery_type):
     return render_template('delivery_success.html', delivery_type=delivery_type)
 
+@app.route('/feedback')
+def feedback():
+    return render_template('feedback.html')
 
+@app.route('/send-feedback', methods=['POST'])
+def send_feedback():
+    # Your email handling logic
+    name = request.form['name']
+    email = request.form['email']
+    message = request.form['message']
+
+    # Prepare the email content
+    email_message = Mail(
+        from_email=email,
+        to_emails=RECIPIENT_EMAIL,
+        subject=f"Feedback from {name}",
+        plain_text_content=f"Name: {name}\nEmail: {email}\nMessage: {message}"
+    )
+
+    try:
+        # Send email via SendGrid
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(email_message)
+        print(f"Response Status Code: {response.status_code}")
+        print(f"Response Body: {response.body}")
+        flash("Thank you for your feedback! Your message has been sent.", "success")
+    except Exception as e:
+        print(f"Error: {e}")
+        flash(f"An error occurred while sending your feedback: {e}", "danger")
+
+    return redirect(url_for('feedback'))
 
 
 
