@@ -4,123 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Help Center</title>
-    
-    <style>
-        /* Reset Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        /* Body Styling */
-        body {
-            background-color: #001f3f; /* Dark blue background */
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-        }
-
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 400px;
-            width: 100%;
-        }
-
-        .option {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            background-color: #003366; /* Slightly lighter blue for the cards */
-            border-radius: 10px;
-            transition: transform 0.3s, background-color 0.3s;
-        }
-
-        .option:hover {
-            background-color: #00509E; /* Brighter blue on hover */
-            transform: scale(1.05);
-        }
-
-        .option a {
-            text-decoration: none;
-            color: #fff;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .option-icon {
-            font-size: 2rem;
-            margin-right: 20px;
-            color: #00c6ff; /* Bright blue for icons */
-        }
-
-        .back-button {
-            margin-top: 30px;
-            padding: 12px 20px;
-            background-color: #3498db;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            text-decoration: none;
-        }
-
-        .back-button:hover {
-            background-color: #2980b9;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .option {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .option-icon {
-                margin-bottom: 10px;
-            }
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>What can we do for you today?</h1>
-    <div class="options-container">
-        <div class="option">
-            <i class="option-icon">&#128222;</i> <!-- Phone Icon -->
-            <a href="tel:+2348037584519">Call Us</a>
+<body class="bg-[#001f3f] text-white flex flex-col items-center justify-center min-h-screen p-5 text-center">
+
+    <h1 class="text-4xl font-semibold mb-8">What can we do for you today?</h1>
+
+    <div class="flex flex-col gap-6 max-w-md w-full">
+        <div class="flex items-center justify-between p-5 bg-[#003366] rounded-lg hover:bg-[#00509E] transition-transform transform hover:scale-105">
+            <i class="text-[#00c6ff] text-3xl mr-5">&#128222;</i> <!-- Phone Icon -->
+            <a href="tel:+2348037584519" class="text-lg font-semibold">Call Us</a>
         </div>
-        <div class="option">
-            <i class="option-icon">&#128196;</i> <!-- Document Icon -->
-            <a href="/find-your-answer">Find Your Answer</a>
+        <div class="flex items-center justify-between p-5 bg-[#003366] rounded-lg hover:bg-[#00509E] transition-transform transform hover:scale-105">
+            <i class="text-[#00c6ff] text-3xl mr-5">&#128196;</i> <!-- Document Icon -->
+            <a href="/find-your-answer" class="text-lg font-semibold">Find Your Answer</a>
         </div>
-        <div class="option">
-            <i class="option-icon">&#128172;</i> <!-- Feedback Icon -->
-            <a href="{{ url_for('feedback') }}">Feedback</a>
+        <div class="flex items-center justify-between p-5 bg-[#003366] rounded-lg hover:bg-[#00509E] transition-transform transform hover:scale-105">
+            <i class="text-[#00c6ff] text-3xl mr-5">&#128172;</i> <!-- Feedback Icon -->
+            <a href="{{ url_for('feedback') }}" class="text-lg font-semibold">Feedback</a>
         </div>
     </div>
 
     <!-- Back to Index Button -->
     <a href="{{ url_for('index') }}" 
-        class="back-button" 
-        style="display: inline-block; background-color: #157a2d; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; font-size: 1em; text-align: center;">
+        class="inline-block mt-8 py-3 px-6 bg-[#157a2d] text-white font-semibold rounded-lg hover:bg-[#1e8e3e] text-lg">
         Back to Home
     </a>
-
 
 </body>
 </html>

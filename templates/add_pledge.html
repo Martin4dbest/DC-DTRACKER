@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,81 +6,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pledge Form</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
+            background: url('https://source.unsplash.com/1600x900/?nature,green') no-repeat center center/cover;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
             padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
             max-width: 600px;
-            margin: auto;
-            background-color: rgb(248, 245, 245); 
-            color: #00796b; 
-        }
-
-        form {
-            margin-top: 20px;
-        }
-
-        label {
-            display: block;
-            margin: 10px 0 5px;
-            color: #020b11; /* Blue label text */
-        }
-
-        input, select, button {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #001018; /* Blue border */
-            border-radius: 5px;
-            background-color: #b3e5fc; /* Light blue input fields */
-            color: #000c13; /* Blue text inside inputs */
+            position: relative;
         }
 
-        button {
-            background-color: #010c13; /* Blue button background */
-            color: white;
-            border: none;
-            cursor: pointer;
+        /* Title and Back Arrow */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+            top: 0;
         }
 
-        button:hover {
-            background-color: #01080e; /* Darker blue on hover */
+        .header h3 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin: 0;
         }
 
         .option {
-            margin: 10px 0;
+            display: flex;
+            align-items: center;
         }
 
-        .option a {
-            color: #01080c; /* Blue links */
+        .back-arrow {
             text-decoration: none;
-            font-weight: bold;
+            font-size: 18px;
+            color: #27ae60;
+            transition: color 0.3s ease;
         }
 
-        .option a:hover {
-            text-decoration: underline;
+        .back-arrow i {
+            margin-right: 8px;
+        }
+
+        .back-arrow:hover {
+            color: #1c7c32;
+        }
+
+        /* Form Elements */
+        label {
+            display: block;
+            margin: 12px 0 6px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
     </style>
-
 </head>
 <body>
-    <!-- Add Pledge to User -->
-    <h3>Partner Pledge</h3>
+    <!-- Container to hold the entire form -->
+    <div class="container">
+        <!-- Partner Pledge Section -->
+        <div class="header">
+            <h3>Partner Pledge</h3>
+            <div class="option">
+                <i class="fas fa-sign-out-alt" 
+                   onmouseover="this.style.color='#1c7c32'" 
+                   onmouseout="this.style.color='#28a745'"
+                   style="cursor: pointer; color: #28a745; font-size: 20px;">
+                </i>
+                <a href="{{ url_for('home2') }}" 
+                   style="text-decoration: none; color: #28a745; font-weight: bold; margin-left: 8px;">
+                    Back
+                </a>
+            </div>
+        </div>
 
-    <div class="option">
-        <i class="fas fa-sign-out-alt" onmouseover="this.style.color='#1c7c32'" onmouseout="this.style.color='#28a745'"></i> <!-- Logout Icon -->
-        <a href="{{ url_for('home2') }}">Back</a>
-    </div>
+        <!-- Form -->
+        <form id="pledgeForm" action="{{ url_for('add_pledge') }}" method="POST">
+            <label for="user_id">Partner ID:</label>
+            <input type="text" id="user_id" name="user_id" required 
+                   placeholder="Check the URL above to find your User ID">
 
-    <form id="pledgeForm" action="{{ url_for('add_pledge') }}" method="POST">
-        <label for="user_id">User ID:</label>
-        <input type="text" id="user_id" name="user_id" required 
-               placeholder="Check the URL above to find your User ID">
-
-        <label for="pledged_amount">Pledged Amount:</label>
-        <input type="text" id="pledged_amount" name="pledged_amount" required 
-               oninput="formatPledgedAmount(this)" placeholder="Enter amount">
+            <label for="pledged_amount">Pledged Amount:</label>
+            <input type="text" id="pledged_amount" name="pledged_amount" required 
+                   oninput="formatPledgedAmount(this)" placeholder="Enter amount">
 
 
         <label for="currency">Currency:</label>
@@ -196,3 +252,25 @@
     
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

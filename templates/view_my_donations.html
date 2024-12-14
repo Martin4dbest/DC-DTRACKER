@@ -6,11 +6,12 @@
     <title>My Donations</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script> <!-- Tailwind CSS CDN -->
     <style>
-        /* Styling for the page, table, and carousel */
+        /* Custom styles */
         body {
             font-family: Arial, sans-serif;
-            background-color: #031427;
+            background-color: #1b5868;
             color: #333;
             padding: 20px;
         }
@@ -108,41 +109,39 @@
 </head>
 <body>
     <!-- Logout Option -->
-    <div class="option">
-        <i class="fas fa-sign-out-alt" style="color: rgb(165, 142, 13); font-size: 2em; transition: color 0.3s ease;" 
-           onmouseover="this.style.color='#1c7c32'" 
-           onmouseout="this.style.color='#28a745'"></i> <!-- Logout Icon -->
-        <a href="{{ url_for('home2') }}">Back</a>
+    <div class="option absolute top-2 left-5 text-lg">
+        <i class="fas fa-sign-out-alt text-yellow-500 text-2xl transition-colors duration-300 ease-in-out hover:text-green-600"></i> <!-- Logout Icon -->
+        <a href="{{ url_for('home2') }}" class="text-green-500 font-bold ml-2">Back</a>
     </div>
 
-    <h1>My Donations</h1>
+    <h1 class="text-center text-blue-500">My Donations</h1>
 
     {% if donation_details %}
-        <table>
+        <table class="w-11/12 mx-auto mt-5 bg-white rounded-lg shadow-md">
             <thead>
                 <tr>
-                    <th>Donation Date</th>
-                    <th>Amount Paid</th>
-                    <th>Balance</th>
-                    <th>Currency</th>
-                    <th>Payment Type</th>
-                    <th>Timestamp</th>
-                    <th>Actions</th>
+                    <th class="py-3 px-5 text-white bg-blue-900">Donation Date</th>
+                    <th class="py-3 px-5 text-white bg-blue-900">Amount Paid</th>
+                    <th class="py-3 px-5 text-white bg-blue-900">Balance</th>
+                    <th class="py-3 px-5 text-white bg-blue-900">Currency</th>
+                    <th class="py-3 px-5 text-white bg-blue-900">Payment Type</th>
+                    <th class="py-3 px-5 text-white bg-blue-900">Timestamp</th>
+                    <th class="py-3 px-5 text-white bg-blue-900">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for donation_detail in donation_details %}
                     <tr>
-                        <td>{{ donation_detail.donation.donation_date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ donation_detail.amount|commas  }}</td>
-                        <td>{{ donation_detail.balance|commas  }}</td>
-                        <td>{{ donation_detail.donation.currency }}</td>
-                        <td>{{ donation_detail.donation.payment_type }}</td>
-                        <td>{{ donation_detail.timestamp }}</td>
-                        <td>
+                        <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.donation_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.amount|commas  }}</td>
+                        <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.balance|commas  }}</td>
+                        <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.currency }}</td>
+                        <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.payment_type }}</td>
+                        <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.timestamp }}</td>
+                        <td class="py-3 px-5 border-b border-gray-300 text-gray-700">
                             <!-- Delete Button -->
                             <form action="{{ url_for('delete_user_donation', donation_id=donation_detail.donation.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDeletion()">
-                                <button type="submit" class="delete-button">Delete</button>
+                                <button type="submit" class="delete-button py-2 px-4 rounded-lg text-white font-semibold">Delete</button>
                             </form>
                             <script>
                                 function confirmDeletion() {
@@ -155,17 +154,17 @@
             </tbody>
         </table>
     {% else %}
-        <p>No donations found.</p>
+    <p class="text-red-600">No donations found.</p>
     {% endif %}
 
     <!-- Carousel Section -->
-    <div class="carousel-container">
-        <div class="emoji-carousel">
-            <a href="{{ url_for('donate') }}" class="emoji">💸</a>
-            <a href="{{ url_for('donate') }}" class="emoji">❤️</a>
-            <a href="{{ url_for('donate') }}" class="emoji">🙌</a>
-            <a href="{{ url_for('donate') }}" class="emoji">🌟</a>
-            <a href="{{ url_for('donate') }}" class="emoji">🤲</a>
+    <div class="carousel-container mt-8">
+        <div class="emoji-carousel flex gap-2 animate-marquee">
+            <a href="{{ url_for('donate') }}" class="emoji text-2xl text-blue-500 transition-transform duration-300 ease-in-out hover:scale-125">💸</a>
+            <a href="{{ url_for('donate') }}" class="emoji text-2xl text-blue-500 transition-transform duration-300 ease-in-out hover:scale-125">❤️</a>
+            <a href="{{ url_for('donate') }}" class="emoji text-2xl text-blue-500 transition-transform duration-300 ease-in-out hover:scale-125">🙌</a>
+            <a href="{{ url_for('donate') }}" class="emoji text-2xl text-blue-500 transition-transform duration-300 ease-in-out hover:scale-125">🌟</a>
+            <a href="{{ url_for('donate') }}" class="emoji text-2xl text-blue-500 transition-transform duration-300 ease-in-out hover:scale-125">🤲</a>
         </div>
     </div>
 </body>

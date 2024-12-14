@@ -8,9 +8,11 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color:#01011d;
+            background-color: #01011d;
             margin: 0;
             padding: 0;
+            display: flex;
+            flex-direction: row; /* Default landscape */
         }
         h2 {
             text-align: center;
@@ -108,7 +110,66 @@
         .export-button:hover {
             background-color: #0056b3;
         }
+
+        /* Portrait Mode */
+        @media (orientation: portrait) {
+            body {
+                flex-direction: column;
+            }
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+            table th, table td {
+                font-size: 14px;
+                padding: 8px;
+            }
+            .search-form input[type="text"] {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .export-button {
+                width: 100%;
+            }
+        }
+
+        /* Landscape Mode */
+        @media (orientation: landscape) {
+            body {
+                flex-direction: row;
+            }
+            .container {
+                max-width: 1200px;
+            }
+            .search-form input[type="text"] {
+                width: 200px;
+            }
+            .export-button {
+                width: auto;
+            }
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            .container {
+                width: 100%;
+                padding: 10px;
+            }
+            table th, table td {
+                font-size: 12px;
+                padding: 6px;
+            }
+            .search-form input[type="text"], .search-form button {
+                font-size: 14px;
+                padding: 6px;
+            }
+            .export-button {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
     </style>
+    
 </head>
 <body>
 

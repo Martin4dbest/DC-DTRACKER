@@ -4,259 +4,118 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* General styles */
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0A3D62, #3C6382, #F5F6FA);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 40px 30px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            width: 450px;
-            display: grid;
-            grid-template-columns: 1fr;
-            grid-gap: 15px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2em;
-            color: #0052D4;
-        }
-
-        .form-group {
-            text-align: left;
-        }
-
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="date"],
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            background: #f7f7f7;
-            color: #333;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        input[type="password"]:focus,
-        select:focus {
-            border-color: #0052D4;
-            outline: none;
-        }
-
-        button {
-            background-color: #0052D4;
-            color: #fff;
-            border: none;
-            padding: 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-        }
-
-        button:hover {
-            background-color: #0041a3;
-            transform: translateY(-2px);
-        }
-
-        p {
-            margin-top: 20px;
-            font-size: 1em;
-            text-align: center;
-        }
-
-        a {
-            color: #0052D4;
-            text-decoration: none;
-            transition: text-decoration 0.3s;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .flashes {
-            list-style-type: none;
-            padding: 0;
-            margin-top: 10px;
-            color: black;
-            grid-column: span 2;
-        }
-
-        .checkbox-group {
-            grid-column: span 2;
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .checkbox-group input {
-            margin-right: 10px;
-        }
-
-        .pin-field {
-            grid-column: span 2;
-            display: none;
-        }
-
-        .pin-field input {
-            width: 100%;
-        }
-    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Partner Registration</h1>
+<body class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 min-h-screen flex justify-center items-center">
+    <div class="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg w-full max-w-lg">
+        <h1 class="text-center text-3xl font-semibold text-blue-600 mb-6">Partner Registration</h1>
         <form method="POST" action="{{ url_for('register') }}" id="registrationForm">
-            <div class="form-group">
-                <label for="name">Full Name:</label>
-                <input type="text" id="name" name="name" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Phone:</label>
-                <input type="text" id="phone" name="phone" class="form-control" required>
-            </div>
-
-            <!-- Password Field -->
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <div style="position: relative;">
-                    <input type="password" id="password" name="password" class="form-control" required 
-                        style="padding-right: 10px;">
-                    <i class="fas fa-eye" id="togglePassword" 
-                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
+            <div class="space-y-4">
+                <div class="form-group">
+                    <label for="name" class="text-lg font-medium">Full Name:</label>
+                    <input type="text" id="name" name="name" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
+
+                <div class="form-group">
+                    <label for="phone" class="text-lg font-medium">Phone:</label>
+                    <input type="text" id="phone" name="phone" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+
+                <div class="form-group relative">
+                    <label for="password" class="text-lg font-medium">Password:</label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12" required>
+                        <i class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer" id="togglePassword"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="text-lg font-medium">Email:</label>
+                    <input type="email" id="email" name="email" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="partner_since" class="text-lg font-medium">Partner Since (Year):</label>
+                    <select id="partner_since" name="partner_since" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="" disabled selected>Select a year</option>
+                        {% for year in range(1990, current_year + 1) %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="birthday" class="text-lg font-medium">Birthday:</label>
+                    <input type="date" id="birthday" name="birthday" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="address" class="text-lg font-medium">Address:</label>
+                    <input type="text" id="address" name="address" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="form-group">
+                    <label for="church_branch" class="text-lg font-medium">Local Church:</label>
+                    <input type="text" id="church_branch" name="church_branch" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="country" class="text-lg font-medium">Country:</label>
+                    <select id="country" name="country" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required onchange="updateStates()">
+                        <option value="">Select Country</option><option value="">Select Country</option>
+                        <option value="Nigeria">Nigeria</option>
+                        <option value="United States">United States</option>
+                        <option value="Canada">Canada</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Australia">Australia</option>
+                        <option value="India">India</option>
+                        <option value="South Africa">South Africa</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Kenya">Kenya</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="Mexico">Mexico</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Netherlands">Netherlands</option>
+                        <option value="Russia">Russia</option>
+                        <option value="Japan">Japan</option>
+                        <option value="China">China</option>
+                        <option value="United Arab Emirates">United Arab Emirates</option>
+                        <option value="Country Not listed">Country Not listed</option>                  
+
+                        <!-- Country options -->
+                    </select>
+                    <label for="manual_country" class="text-sm">If your country is not listed, please specify:</label>
+                    <input type="text" id="manual_country" name="manual_country" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Enter country name">
+                </div>
+
+                <div class="form-group">
+                    <label for="state" class="text-lg font-medium">State:</label>
+                    <select id="state" name="state" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Select State</option>
+
+                    </select>
+                    <label for="manual_state" class="text-sm">Or type your state:</label>
+                    <input type="text" id="manual_state" name="manual_state" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Type your state if not listed">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition-all">Register</button>
+                
+                <p class="text-center mt-4">Already have an account? <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Login here</a>.</p>
             </div>
-
-            <script>
-                document.getElementById('togglePassword').addEventListener('click', function () {
-                    const passwordField = document.getElementById('password');
-                    if (passwordField.type === 'password') {
-                        passwordField.type = 'text';
-                        this.classList.remove('fa-eye');
-                        this.classList.add('fa-eye-slash');
-                    } else {
-                        passwordField.type = 'password';
-                        this.classList.remove('fa-eye-slash');
-                        this.classList.add('fa-eye');
-                    }
-                });
-            </script>
-
-
-
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-                <label for="partner_since">Partner Since (Year):</label>
-                <select 
-                    id="partner_since" 
-                    name="partner_since" 
-                    class="form-control" 
-                    required
-                >
-                    <option value="" disabled selected>Select a year</option>
-                    {% for year in range(1990, current_year + 1) %}
-                    <option value="{{ year }}">{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-
-            <div class="form-group">
-                <label for="birthday">Birthday:</label>
-                <input type="date" id="birthday" name="birthday" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-                <label for="address">Address:</label>
-                <input type="text" id="address" name="address" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label for="church_branch">Local Church:</label>
-                <input type="text" id="church_branch" name="church_branch" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-                <label for="country">Country:</label>
-                <select id="country" name="country" required onchange="updateStates()">
-                    <option value="">Select Country</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="United States">United States</option>
-                    <option value="Canada">Canada</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Australia">Australia</option>
-                    <option value="India">India</option>
-                    <option value="South Africa">South Africa</option>
-                    <option value="Ghana">Ghana</option>
-                    <option value="Kenya">Kenya</option>
-                    <option value="Germany">Germany</option>
-                    <option value="France">France</option>
-                    <option value="Brazil">Brazil</option>
-                    <option value="Argentina">Argentina</option>
-                    <option value="Mexico">Mexico</option>
-                    <option value="Italy">Italy</option>
-                    <option value="Spain">Spain</option>
-                    <option value="Netherlands">Netherlands</option>
-                    <option value="Russia">Russia</option>
-                    <option value="Japan">Japan</option>
-                    <option value="China">China</option>
-                    <option value="United Arab Emirates">United Arab Emirates</option>
-                    <option value="Country Not listed">Country Not listed</option>
-                </select>
-                <label for="manual_country">If your country is not listed, please specify:</label>
-                <input type="text" id="manual_country" name="manual_country" placeholder="Enter country name">
-            </div>
-            <div class="form-group">
-                <label for="state">State:</label>
-                <select id="state" name="state" required>
-                    <option value="">Select State</option>
-                </select>
-                <label for="manual_state">Or type your state:</label>
-                <input type="text" id="manual_state" name="manual_state" placeholder="Type your state if not listed">
-            </div>
-    
-            <button type="submit">Register</button>
-            <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
         </form>
+
         {% with messages = get_flashed_messages() %}
             {% if messages %}
-                <ul class="flashes">
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
+            <ul class="text-black mt-4">
+                {% for message in messages %}
+                <li class="bg-yellow-200 p-3 rounded-lg">{{ message }}</li>
+                {% endfor %}
+            </ul>
             {% endif %}
         {% endwith %}
     </div>
@@ -477,3 +336,4 @@
     </script>
 </body>
 </html>
+

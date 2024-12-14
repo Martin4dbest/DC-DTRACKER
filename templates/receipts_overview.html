@@ -173,6 +173,9 @@
             <thead>
                 <tr>
                     <th>Partner Name</th>
+                    <th>Country</th>
+                    <th>State</th>
+                    <th>Local Church</th>
                     <th>Amount</th>
                     <th>Donation Date</th>
                     <th>Actions</th>
@@ -182,6 +185,9 @@
                 {% for donation, user in receipts %}
                 <tr>
                     <td>{{ user.name }}</td>  <!-- Display user's name -->
+                    <td>{{ user.country }}</td>
+                    <td>{{ user.state }}</td>
+                    <td>{{ user.church_branch }}</td>
                     <td>{{ donation.amount|commas }}</td>  <!-- Display donation amount -->
                     <td>{{ donation.donation_date }}</td>  <!-- Display donation date -->
                     <td>

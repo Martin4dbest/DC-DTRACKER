@@ -4,126 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0A3D62, #3C6382, #F5F6FA); /* Updated to match the desired background */
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 40px 30px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            width: 450px;
-        }
-
+        /* Lighter and Simpler Glowing and Hover Effect for Login Text */
         h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2em;
-            color: #0052D4; /* Adjust if you want to change the title color */
-        }
-
-        .form-group {
-            text-align: left;
-        }
-
-        label {
             font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            background: #f7f7f7;
-            color: #333;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: #0052D4;
-            outline: none;
-        }
-
-        button {
-            background-color: #0052D4;
-            color: #fff;
-            border: none;
-            padding: 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            align-items: center;
-            transition: background-color 0.3s, transform 0.3s;
-            width: 25%;
-        }
-
-        button:hover {
-            background-color: #0041a3;
-            transform: translateY(-2px);
-        }
-
-        p {
-            margin-top: 20px;
-            font-size: 1em;
-            text-align: center;
-        }
-
-        a {
             color: #0052D4;
-            text-decoration: none;
-            transition: text-decoration 0.3s;
+            text-shadow: 0 0 5px #6fa3f7, 0 0 10px #6fa3f7, 0 0 15px #6fa3f7;
+            transition: all 0.3s ease-in-out;
         }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .flashes {
-            list-style-type: none;
-            padding: 0;
-            margin-top: 10px;
-            color: black;
-            text-align: center;
+        
+        h1:hover {
+            text-shadow: 0 0 5px #ffcc66, 0 0 10px #ffcc66, 0 0 15px #ffcc66;
+            transform: scale(1.05);
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Login</h1>
-        <p style="text-align: center; margin-bottom: 20px; color: black;">
-            Please log in using the registered credentials (Email or Phone Number).
-        </p>
+<body class="font-sans bg-gradient-to-br from-[#0A3D62] via-[#3C6382] to-[#F5F6FA] min-h-screen flex justify-center items-center">
+
+    <div class="bg-white bg-opacity-95 p-12 rounded-lg shadow-lg w-[500px]">
+        <h1 class="text-4xl text-center mb-6">Login</h1>
         <form method="POST" action="{{ url_for('login') }}">
-            <div class="form-group">
-                <label for="login_input">Email or Phone Number:</label>
-                <input type="text" name="email" id="login_input" placeholder="Enter your email or phone number" required>
+
+            <!-- Email or Phone Number Field -->
+            <div class="relative mb-8">
+                <i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"></i>
+                <input type="text" name="email" id="login_input" placeholder="Enter your email or phone number" required
+                    class="w-full px-12 py-4 border border-gray-300 rounded-lg bg-[#f7f7f7] text-gray-800 text-lg focus:outline-none focus:ring-2 focus:ring-[#0052D4] transition">
             </div>
-            
+
             <!-- Password Field -->
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <div style="position: relative;">
-                    <input type="password" id="password" name="password" class="form-control" required 
-                        style="padding-right: 10px;">
-                    <i class="fas fa-eye" id="togglePassword" 
-                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
-                </div>
+            <div class="relative mb-8">
+                <i class="fas fa-key absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"></i>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required
+                    class="w-full px-12 py-4 border border-gray-300 rounded-lg bg-[#f7f7f7] text-gray-800 text-lg focus:outline-none focus:ring-2 focus:ring-[#0052D4] transition">
+                <i class="fas fa-eye absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer text-xl" id="togglePassword"></i>
             </div>
 
             <script>
@@ -141,22 +57,12 @@
                 });
             </script>
 
-            <button type="submit">Login</button>
+            <button type="submit" class="w-full bg-[#0052D4] text-white py-4 rounded-lg text-lg transition-transform hover:bg-[#0041a3] hover:translate-y-1">Login</button>
         </form>
 
-        <p style="text-align: center; margin-top: 20px;">
-            <a href="{{ url_for('change_password') }}">Forgot Password? Change your password</a>
+        <p class="mt-8 text-lg text-center">
+            <a href="{{ url_for('change_password') }}" class="text-[#0052D4] hover:underline">Forgot Password? Change your password</a>
         </p>
-
-        {% with messages = get_flashed_messages() %} 
-            {% if messages %} 
-                <ul class="flashes"> 
-                {% for message in messages %} 
-                    <li>{{ message }}</li> 
-                {% endfor %} 
-                </ul> 
-            {% endif %} 
-        {% endwith %}
     </div>
 </body>
 </html>
