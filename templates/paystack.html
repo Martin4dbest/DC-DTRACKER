@@ -4,140 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pay with Paystack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: rgb(255, 255, 255);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .form-container {
-            background-color: rgb(2, 2, 32);
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(160, 177, 9, 0.1);
-            max-width: 550px;
-            width: 100%;
-        }
-        .form-container h1 {
-            font-size: 2em;
-            color: #FFD700;
-            font-weight: bold;
-        }
-        .form-container p {
-            font-size: 1.2em;
-            color: wheat;
-            font-weight: bold;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            color: white;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-        .form-group input:focus {
-            border-color: #FFD700;
-        }
-        .form-note {
-            color: goldenrod;
-            margin-top: 5px;
-            font-weight: bold;
-        }
-        .form-button {
-            width: 100%;
-            padding: 12px;
-            background-color: #1E3A8A;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2em;
-            cursor: pointer;
-        }
-        .form-button:hover {
-            background-color: #2C52DF;
         }
     </style>
 </head>
-<body>
-    <!-- Top Back Section -->
-    <div class="top-left" style="position: fixed; top: 10px; left: 10px; display: flex; align-items: center; gap: 0.5em;">
-        <a href="{{ url_for('donate') }}" style="text-decoration: none;">
-            <i class="fas fa-sign-out-alt" style="color: rgb(165, 142, 13); font-size: 2em;" 
-               onmouseover="this.style.color='#1c7c32'" 
-               onmouseout="this.style.color='rgb(165, 142, 13)'"></i>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <!-- Back Button Section -->
+    <div class="absolute top-4 left-4 flex items-center gap-2">
+        <a href="{{ url_for('donate') }}" class="text-yellow-500 text-3xl hover:text-green-700">
+            <i class="fas fa-sign-out-alt"></i>
         </a>
-        <a href="{{ url_for('donate') }}" style="color: greenyellow;">Back</a>
+        <a href="{{ url_for('donate') }}" class="text-green-400 font-medium hover:text-green-600">Back</a>
     </div>
 
-    <div class="form-container">
-        <h1>Donate Securely</h1>
-        <p>Administrative charge applies</p>
-        
+    <!-- Form Container -->
+    <div class="bg-gray-900 text-white rounded-lg shadow-lg p-6 w-full max-w-lg mx-4">
+        <h1 class="text-3xl font-bold text-yellow-400 mb-2">Donate Securely</h1>
+        <p class="text-lg font-medium text-yellow-200 mb-6">Administrative charge applies</p>
+
+        <!-- Form -->
         <form id="paymentForm">
-            <div class="form-group">
-                <label for="fullName">Full Name</label>
-                <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
+            <div class="mb-4">
+                <label for="fullName" class="block font-semibold mb-1">Full Name</label>
+                <input type="text" id="fullName" placeholder="Enter your full name" required
+                       class="w-full px-4 py-2 rounded border focus:ring-2 focus:ring-yellow-400 focus:outline-none text-gray-900">
             </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="Enter your email" required>
-                <div class="form-note">A receipt will be sent to this email.</div>
+            <div class="mb-4">
+                <label for="email" class="block font-semibold mb-1">Email</label>
+                <input type="email" id="email" placeholder="Enter your email" required
+                       class="w-full px-4 py-2 rounded border focus:ring-2 focus:ring-yellow-400 focus:outline-none text-gray-900">
+                <p class="text-yellow-400 text-sm mt-1">A receipt will be sent to this email.</p>
             </div>
-            <div class="form-group">
-                <label for="contact">Contact (Mobile)</label>
-                <input type="tel" id="contact" name="contact" placeholder="Enter your phone number" required>
-                <div class="form-note">Include your country code (e.g., +234).</div>
+            <div class="mb-4">
+                <label for="contact" class="block font-semibold mb-1">Contact (Mobile)</label>
+                <input type="tel" id="contact" placeholder="Enter your phone number" required
+                       class="w-full px-4 py-2 rounded border focus:ring-2 focus:ring-yellow-400 focus:outline-none text-gray-900">
+                <p class="text-yellow-400 text-sm mt-1">Include your country code (e.g., +234).</p>
             </div>
-            <div class="form-group">
-                <label for="amount|commas">Amount</label>
-                <input type="number" id="amount" name="amount" placeholder="Enter the amount in NGN" required>
+            
+            <div class="mb-4">
+                <label for="amount" class="block font-semibold mb-1">Amount</label>
+                <input type="text" id="amount" placeholder="Enter the amount in NGN" required
+                       class="w-full px-4 py-2 rounded border focus:ring-2 focus:ring-yellow-400 focus:outline-none text-gray-900"
+                       oninput="formatAmount(this)">
             </div>
-            <div class="form-group">
-                <label for="remark">Remark</label>
-                <input type="text" id="remark" name="remark" placeholder="Add a note (optional)">
+            
+            <div class="mb-6">
+                <label for="remark" class="block font-semibold mb-1">Remark</label>
+                <input type="text" id="remark" placeholder="Add a note (optional)"
+                       class="w-full px-4 py-2 rounded border focus:ring-2 focus:ring-yellow-400 focus:outline-none text-gray-900">
             </div>
-            <button type="button" class="form-button" id="payWithPaystack">💳 PAY NOW</button>
+            <button type="button" id="payWithPaystack" 
+                    class="w-full py-3 bg-yellow-500 text-gray-900 font-bold rounded hover:bg-yellow-600 transition duration-200">
+                💳 PAY NOW
+            </button>
         </form>
     </div>
 
     <!-- Paystack Integration -->
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script>
+        // Format amount with comma separators as user types
+        function formatAmount(input) {
+            let value = input.value.replace(/,/g, ''); // Remove existing commas
+            if (!isNaN(value) && value !== "") {
+                input.value = parseFloat(value).toLocaleString('en'); // Format with commas
+            } else {
+                input.value = ""; // Clear invalid input
+            }
+        }
+
+        // Paystack Payment Integration
         document.getElementById("payWithPaystack").addEventListener("click", function(e) {
             e.preventDefault();
 
             const fullName = document.getElementById("fullName").value;
             const email = document.getElementById("email").value;
-            const amount = document.getElementById("amount").value * 100;
+            const amountField = document.getElementById("amount").value.replace(/,/g, ''); // Remove commas
+
+            // Validate input fields
+            if (!fullName || !email || !amountField || isNaN(amountField) || parseFloat(amountField) <= 0) {
+                alert('Please fill all fields correctly and ensure amount is a positive number.');
+                return;
+            }
+
+            const amountInKobo = parseFloat(amountField) * 100; // Convert amount to kobo
 
             const handler = PaystackPop.setup({
                 key: "pk_live_43f0e995f8e312c4dbf4d79b2edbe34802f4defc", // Replace with your Paystack public key
                 email: email,
-                amount: amount,
+                amount: amountInKobo, // Pass amount in kobo
                 currency: "NGN",
                 callback: function(response) {
-                    // Verify payment on the server
                     fetch('/verify-payment', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ reference: response.reference })
                     })
                     .then(res => res.json())
@@ -149,7 +116,7 @@
                         }
                     })
                     .catch(error => {
-                        alert('An error occurred while verifying payment: ' + error.message);
+                        alert('Error verifying payment: ' + error.message);
                     });
                 },
                 onClose: function() {

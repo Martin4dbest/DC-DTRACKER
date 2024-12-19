@@ -670,93 +670,6 @@ def compress_image(filepath):
         img.save(filepath, optimize=True, quality=85)
 
 
-"""
-@app.route("/donate", methods=["GET", "POST"])
-def donate():
-    user = None
-    if "user_id" in session:
-        user = get_current_user()  # Retrieve the current logged-in user if available
-        app.logger.debug(f"User object: {user}")
-        if user:
-            db.session.refresh(user)  # Refresh the user to ensure the latest data from the database
-
-    if request.method == "POST":
-        user_id = session.get("user_id")  # Check if a user is logged in
-        payment_type = request.form.get("payment_type")  # Get the selected payment type
-
-        # Handle offline donation
-        amount = request.form.get("amount")
-        currency = request.form.get("currency")
-        donation_date = request.form.get("date_donated")
-        receipt = request.files.get("receipt")
-
-        # Validate required fields
-        if not all([amount, payment_type, currency, donation_date]):
-            flash("Please fill in all required fields.", "danger")
-            return redirect(url_for("donate"))
-
-        # Validate amount
-        try:
-            amount = float(amount)
-            if amount <= 0:
-                flash("Donation amount must be greater than zero.", "danger")
-                return redirect(url_for("donate"))
-        except (ValueError, TypeError):
-            flash("Invalid amount format.", "danger")
-            return redirect(url_for("donate"))
-
-        # Validate or set the donation date
-        try:
-            donation_date = datetime.strptime(donation_date, "%Y-%m-%d").date()
-        except ValueError:
-            flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
-            return redirect(url_for("donate"))
-
-        # Handle the uploaded file (receipt)
-        receipt_filename = None
-        if receipt and allowed_file(receipt.filename):
-            receipt_filename = secure_filename(receipt.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], receipt_filename)
-            receipt.save(filepath)
-
-            # Compress image files if it's an image format
-            if receipt_filename.lower().endswith(('png', 'jpg', 'jpeg')):
-                compress_image(filepath)
-        elif receipt:
-            flash("Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, PDF.", "danger")
-            return redirect(url_for("donate"))
-
-        # Create a new donation
-        donation = Donation(
-            user_id=user_id,
-            amount=amount,
-            currency=currency,
-            donation_date=donation_date,
-            payment_type=payment_type,
-            receipt_filename=receipt_filename  # Optional field in the database for file name
-        )
-
-        try:
-            db.session.add(donation)
-            db.session.commit()
-
-            # Send email to admin with donation details
-            send_admin_notification(donation, receipt)
-
-            flash(f"Thank you for your {payment_type} donation!", "success")
-            app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
-            return redirect(url_for("donation_success"))
-        except Exception as e:
-            db.session.rollback()
-            app.logger.error(f"Error saving donation: {e}")
-            flash("There was an error processing your donation. Please try again.", "danger")
-            return redirect(url_for("donate"))
-
-    # Retrieve pledges made by all users
-    pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
-
-    return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
-"""
 @app.route('/view_my_donations')
 def view_my_donations():
     if 'user_id' not in session:
@@ -1567,39 +1480,54 @@ def get_current_pledge(user_id):
 
 
 
-#View Partners Pledges
 @app.route('/view_partners_pledges', methods=['GET', 'POST'])
 @login_required  
 @admin_required 
 def view_partners_pledges():
-    # Retrieve the search_country from the form if it's a POST request
-    search_country = request.form.get('search_country') if request.method == 'POST' else None
+    search_query = request.form.get('search_query') if request.method == 'POST' else None
 
-    # Filter out admins and apply country filter if search_country is provided
-    if search_country:
-        users = User.query.filter(User.is_admin == False, User.country.ilike(f"%{search_country}%")).all()
+    # Constructing the filter condition based on search query
+    if search_query:
+        users = User.query.filter(
+            User.is_admin == False, 
+            (User.name.ilike(f"%{search_query}%") | 
+             User.state.ilike(f"%{search_query}%") | 
+             User.country.ilike(f"%{search_query}%") | 
+             User.church_branch.ilike(f"%{search_query}%"))
+        ).all()
     else:
-        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users
+        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users if no search query
 
-    return render_template('view_partners_pledges.html', users=users, search_country=search_country)
+    return render_template('view_partners_pledges.html', users=users, search_query=search_query)
 
 
-
-#View Partnere Details
 @app.route('/view_partners_details', methods=['GET', 'POST'])
 @login_required  # Ensure the user is logged in
 @admin_required  # Ensure the user is an admin
 def view_partners_details():
-    # Retrieve the search_country from the form if it's a POST request
-    search_country = request.form.get('search_country') if request.method == 'POST' else None
+    # Retrieve the search_query from the form if it's a POST request
+    search_query = request.form.get('search_query') if request.method == 'POST' else None
 
-    # Filter out admins and apply country filter if search_country is provided
-    if search_country:
-        users = User.query.filter(User.is_admin == False, User.country.ilike(f"%{search_country}%")).all()
-    else:
-        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users
+    # Start the query by filtering out admins
+    query = User.query.filter(User.is_admin == False)
 
-    return render_template('view_partners_details.html', users=users, search_country=search_country)
+    # Apply filters based on the search query (matching in name, country, state, or local church)
+    if search_query:
+        query = query.filter(
+            (User.name.ilike(f"%{search_query}%")) |
+            (User.country.ilike(f"%{search_query}%")) |
+            (User.state.ilike(f"%{search_query}%")) |
+            (User.church_branch.ilike(f"%{search_query}%"))
+        )
+
+    # Execute the query
+    users = query.all()
+
+    return render_template('view_partners_details.html', 
+                           users=users, 
+                           search_query=search_query)
+
+
 
 
 
@@ -1620,27 +1548,10 @@ def view_admin_details():
     return render_template('view_admin_details.html', admins=admins, search_country=search_country)
 
 
-"""
-# View donations made by the logged-in partner
-@app.route('/view_my_donations')
-def view_my_donations():
-    # Manually check if the user is authenticated (using a session)
-    if 'user_id' not in session:
-        # If the user is not logged in, redirect them to the login page
-        return redirect(url_for('login'))  # Replace 'login' with your actual login route
-
-    # Fetch donations for the logged-in user
-    user_id = session['user_id']  # Get user_id from the session
-    donations = Donation.query.filter_by(user_id=user_id).all()  # Filter donations based on the logged-in user
-
-    return render_template('view_my_donations.html', donations=donations)
-
-"""
-
 
 @app.errorhandler(403)
 def forbidden_error(error):
-    return render_template('403.html'), 403
+    return render_template('403.html'), 403 
 
 
 @app.route('/change_password', methods=['GET', 'POST'])

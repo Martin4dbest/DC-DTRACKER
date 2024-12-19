@@ -4,410 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dominion City Partnership Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* General Styles */
-        body {
-            margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background-color: white;
-            color: rgb(248, 231, 198);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            box-sizing: border-box;
-            min-height: 100vh;
-        }
-        h1, h3, h4 {
-            margin-bottom: 10px;
-        }
-        h1 {
-            font-size: 3em;
-            font-weight: bold;
-            margin-bottom: 60px;
-        }
-        p {
-            font-size: 1.2em;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        /* App Container */
-        .app-container {
-            width: 100%;
-            max-width: 1000px;
-            background-color: #010720;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            padding: 30px;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        /* Account Details */
-        .account-details {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        .account-item {
-            background-color: #002244;
-            border-radius: 10px;
-            padding: 25px;
-            flex: 1;
-            min-width: 250px;
-            text-align: left;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        .account-item h4 {
-            margin-bottom: 25px;
-            font-size: 1.4em;
-        }
-        .account-item p {
-            margin: 10px 0;
-            font-size: 1.1em;
-        }
-
-        /* Payment Options */
-        .options-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 80px;
-            margin-top: 30px;
-        }
-        .option-button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 120px;
-            height: 100px;
-            border-radius: 50%;
-            color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s, background-color 0.3s;
-            font-size: 1.2em;
-        }
-        .option-button i {
-            font-size: 2.5em;
-            margin-bottom: 5px;
-        }
-        .option-button:hover {
-            transform: scale(1.1);
-        }
-        .option-paypal {
-            background-color: #00457C;
-        }
-        .option-paystack {
-            background-color: #D4AF37;
-        }
-        .option-zelle {
-            background-color: #008C74;
-        }
-
-        /* Donation Form */
-        #donation-form {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
-            background-color: #f7f7f7;
-            border-radius: 10px;
-            padding: 25px;
-            display: none; /* Hidden by default */
-        }
-        .donation-input {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-        }
-        .donation-input[type="number"] {
-            width: calc(100% - 24px);
-            margin-bottom: 25px;
-        }
-        button {
-            background-color: green;
-            color: white;
-            font-size: 1.3em;
-            padding: 15px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            border: none;
-        }
-        button:hover {
-            background-color: darkgreen;
-        }
-
-        /* Responsive Styles */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5em;
-                margin-bottom: 40px;
-            }
-            p {
-                font-size: 1em;
-                margin-bottom: 20px;
-            }
-            .account-details {
-                flex-direction: column;
-                gap: 20px;
-            }
-            .options-container {
-                flex-direction: column;
-                gap: 20px;
-            }
-            .option-button {
-                width: 120px;
-                height: 120px;
-                font-size: 1em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 2em;
-            }
-            .account-item {
-                padding: 20px;
-                min-width: 100%;
-            }
-            .option-button {
-                width: 100px;
-                height: 100px;
-                font-size: 0.9em;
-            }
-            .option-button i {
-                font-size: 2em;
-            }
-        }
-    </style>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
-<body>
+<body class="bg-white text-gray-800 font-[Poppins] flex flex-col items-center py-10 min-h-screen">
 
-    <div class="app-container">
-        <h1>DC Global Mission Partnership</h1>
+    <!-- Main Container -->
+    <div class="w-full max-w-5xl bg-gray-900 text-white rounded-lg shadow-lg p-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6">DC Global Mission Partnership</h1>
+        <p class="text-xl font-semibold mb-8 text-green-400">Proceed with any payment option!</p>
 
-        <p style="font-size: 1.5em; font-weight: bold; color: #fff; text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00; display: inline;">Proceed with any payment option!</p>
-
-        <!-- Account Details Section -->
-        <div class="account-details">
-            <div class="account-item">
-                
-                <p><strong>Account Name:</strong> <span style="color: white;">Dominion City Global</span></p>
-                <p><strong>Account Number:</strong> <span style="color: white;">3240700074</span></p>
-                <p><strong>Bank:</strong> <span style="color: white"> Wells Fargo</span></p>
-                <p><strong>WT routing number:</strong> <span style="color: white"> 121000248</span></p> 
-                             
+        <!-- Account Details -->
+        <div class="flex flex-wrap justify-between gap-6 mb-8">
+            <div class="bg-blue-900 rounded-lg p-6 flex-1 min-w-[280px] shadow-md">
+                <p class="mb-2"><strong>Account Name:</strong> <span>Dominion City Global</span></p>
+                <p class="mb-2"><strong>Account Number:</strong> <span>3240700074</span></p>
+                <p class="mb-2"><strong>Bank:</strong> <span>Wells Fargo</span></p>
+                <p><strong>WT Routing Number:</strong> <span>121000248</span></p>
             </div>
-    
-            <div class="account-item">
-                
-                <p><strong>Account Name:</strong> <span style="color: white;">DOMINION CITY</span></p>
-                <p><strong>Account Number:</strong> <span style="color: white;">4110041341</span></p>
-                <p><strong>Bank:</strong> <span style="color: white;"> Fidelity Bank</span></p>
-            </div>
-            
-            
-            <div class="account-item">
-                <h4>Account Information</h4></p>
+            <div class="bg-blue-900 rounded-lg p-6 flex-1 min-w-[280px] shadow-md">
+                <p class="mb-2"><strong>Account Name:</strong> <span>DOMINION CITY</span></p>
+                <p class="mb-2"><strong>Account Number:</strong> <span>4110041341</span></p>
+                <p><strong>Bank:</strong> <span>Fidelity Bank</span></p>
             </div>
         </div>
-    
-        <!-- Payment Options Section -->
-        <div class="options-container">
-            <a href="https://www.paypal.com/paypalme/dominioncityglobal" target="_blank" rel="noopener noreferrer">
-                <div class="option-button option-paypal">
-                    <i class="fab fa-paypal"></i>
-                    <span>PayPal</span>
+
+        <!-- Payment Options -->
+        <div class="flex flex-wrap justify-center gap-10 mb-8">
+            <a href="https://www.paypal.com/paypalme/dominioncityglobal" target="_blank" class="hover:scale-110 transform transition">
+                <div class="flex flex-col items-center justify-center w-28 h-28 bg-blue-600 text-white rounded-full shadow-md">
+                    <i class="fab fa-paypal text-4xl mb-2"></i>
+                    <span class="font-semibold">PayPal</span>
                 </div>
             </a>
-            
-            <a href="{{ url_for('paystack') }}" target="_self">
-                <div class="option-button option-paystack">
-                    <i class="fab fa-paystack"></i>
-                    <span>Paystack</span>
+            <a href="{{ url_for('paystack') }}" class="hover:scale-110 transform transition">
+                <div class="flex flex-col items-center justify-center w-28 h-28 bg-yellow-500 text-white rounded-full shadow-md">
+                    <i class="fas fa-credit-card text-4xl mb-2"></i>
+                    <span class="font-semibold">Paystack</span>
                 </div>
             </a>
-            
-            
-            <div class="option-button option-zelle" style="display: flex; align-items: center; padding: 10px;">
-                <i class="fab fa-cc-mastercard" style="font-size: 24px; margin-right: 15px; border-radius: 50%; background-color: #6c63ff; color: #fff; padding: 10px;"></i>
-                <div>
-                    <span style="font-weight: bold; font-size: 16px; display: block;">Zelle to Dominion City Global</span>
-                    <span style="font-size: 14px; color: black;">Email: <a href="mailto:give@dominioncityglobal.org" style="color: white; text-decoration: none;">give@dominioncityglobal.org</a></span>
-                </div>
+            <div class="flex flex-col items-center justify-center w-28 h-28 bg-green-600 text-white rounded-full shadow-md hover:scale-110 transform transition">
+                <i class="fas fa-money-check-alt text-4xl mb-2"></i>
+                <a href="mailto:give@dominioncityglobal.org" class="flex flex-col items-center justify-center w-28 h-28 bg-green-600 text-white rounded-full shadow-md hover:scale-110 transform transition">
+                    <i class="fas fa-money-check-alt text-4xl mb-2"></i>
+                    <span class="font-semibold">Zelle</span>
+                </a>
             </div>
-            
+        </div>
+
+        <!-- Back Button -->
+        <div class="flex items-center gap-3 mb-8">
+            <a href="{{ url_for('home2') }}" class="flex items-center text-yellow-400 hover:text-green-400 transition">
+                <i class="fas fa-sign-out-alt text-3xl"></i>
+                <span class="text-lg font-semibold">Back</span>
+            </a>
         </div>
 
 
-        <div class="option" style="display: flex; align-items: center; gap: 0.5em;">
-            <!-- Logout Icon as Link -->
-            <a href="{{ url_for('home2') }}" style="text-decoration: none;">
-                <i class="fas fa-sign-out-alt" 
-                   style="color: rgb(165, 142, 13); font-size: 2em; transition: color 0.3s ease;" 
-                   onmouseover="this.style.color='#1c7c32'" 
-                   onmouseout="this.style.color='rgb(165, 142, 13)'"></i>
-            </a>
-            <!-- Logout Text -->
-            <a href="{{ url_for('home2') }}" style="text-decoration: none; color: greenyellow;">Back</a>
-        </div>
-        
-        
-
-        
-    
         <!-- Donation Form -->
-        <form action="{{ url_for('donate') }}" method="POST" enctype="multipart/form-data" onsubmit="return checkForm();" style="width: 100%; max-width: 500px; margin: 0 auto;">
-            <!-- Checkbox to Toggle Payment Form -->
-            <label style="margin-top: 70px; display: flex; align-items: center; font-size: 1.3em; font-weight: bold;">
-                <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()" style="width: 20px; height: 20px; margin-right: 10px;">
-                Click here to track your donation after payment
-            </label>
 
-            <!-- Payment Form Fields -->
-            <div id="amount-entry" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; display: none;">
-                <!-- Amount Input -->
-                <label for="amount" style="font-size: 1.5em; font-weight: bold; display: block; margin-bottom: 10px;">
-                    Enter Amount paid:
-                </label>
-                <input type="number" id="amountRaw" name="amount" step="0.01" required style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;" oninput="formatAmount(this)" />
-                <input type="text" id="formattedAmount" readonly style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; background-color: #f7f7f7; margin-bottom: 15px;" />
+    <!-- Donation Form -->
+    <form action="{{ url_for('donate') }}" method="POST" enctype="multipart/form-data" onsubmit="return checkForm();" class="w-full max-w-md mx-auto mt-10 p-6 border rounded-lg shadow-lg">
+        <!-- Checkbox to Toggle Payment Form -->
+        <label class="flex items-center space-x-2 font-semibold text-lg mb-4 text-white">
+            <input type="checkbox" id="offline_donation" name="offline_donation" onchange="toggleFields()" class="w-5 h-5 text-green-500 border-gray-300 rounded focus:ring-green-400">
+            <span>Click here to track your donation after making payment</span>
+        </label>
 
-                <!-- Payment Type -->
-                <label for="payment_type" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">
-                    Payment Type:
-                </label>
-                <select id="payment_type" name="payment_type" required style="width: 100%; padding: 12px; font-size: 1.2em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
-                    <option value="" disabled selected>Select Payment Type</option>
-                    <option value="part_payment">Part Payment</option>
-                    <option value="full_payment">Full or Balance Payment</option>
-                </select>
+        <!-- Payment Form Fields -->
+        <div id="amount-entry" class="hidden mt-4 p-4 border border-gray-300 rounded-lg">
+            <!-- Amount Input -->
+            <label for="amount" class="block text-lg font-bold mb-2 text-white">Enter Amount Paid:</label>
+            <input type="number" id="amountRaw" name="amount" step="0.01" placeholder="Enter amount e.g., 1000" required 
+                class="w-full p-3 text-base border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400 text-black" oninput="formatAmount(this)">
+            <input type="text" id="formattedAmount" placeholder="Formatted Amount (readonly)" readonly 
+                class="w-full mt-2 p-3 text-base border border-gray-300 rounded bg-gray-100 text-black" />
 
-                <!-- Currency -->
-                <label for="currency" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">
-                    Currency:
-                </label>
-                <select id="currency" name="currency" required style="width: 100%; padding: 12px; font-size: 1.3em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;">
-                    <option value="USD">&#36; USD - United States Dollar</option>
-                    <option value="EUR">&#8364; EUR - Euro</option>
-                    <option value="GBP">&#163; GBP - British Pound</option>
-                    <option value="NGN">&#8358; NGN - Nigerian Naira</option>
-                    <option value="AUD">&#36; AUD - Australian Dollar</option>
-                    <option value="CAD">&#36; CAD - Canadian Dollar</option>
-                    <option value="JPY">&#165; JPY - Japanese Yen</option>
-                    <option value="CNY">&#165; CNY - Chinese Yuan</option>
-                    <option value="INR">&#8377; INR - Indian Rupee</option>
-                    <option value="MXN">&#36; MXN - Mexican Peso</option>
-                    <option value="CHF">&#67;&#72;&#70; CHF - Swiss Franc</option>
-                    <option value="RUB">&#8381; RUB - Russian Ruble</option>
-                    <option value="BRL">&#82;&#36; BRL - Brazilian Real</option>
-                    <option value="ZAR">&#82; ZAR - South African Rand</option>
-                    <option value="KRW">&#8361; KRW - South Korean Won</option>
-                    <option value="HKD">&#36; HKD - Hong Kong Dollar</option>
-                    <option value="SGD">&#36; SGD - Singapore Dollar</option>
-                    <option value="SEK">&#107;&#114; SEK - Swedish Krona</option>
-                    <option value="NOK">&#107;&#114; NOK - Norwegian Krone</option>
-                    <option value="DKK">&#107;&#114; DKK - Danish Krone</option>
-                    <option value="PLN">&#122;&#322; PLN - Polish Zloty</option>
-                    <option value="TRY">&#8378; TRY - Turkish Lira</option>
-                    <option value="IDR">&#82;&#112; IDR - Indonesian Rupiah</option>
-                    <option value="MYR">&#82;&#112; MYR - Malaysian Ringgit</option>
-                    <option value="THB">&#3647; THB - Thai Baht</option>
-                    <option value="PHP">&#8369; PHP - Philippine Peso</option>
-                    <option value="AED">&#1583;&#1604; AED - United Arab Emirates Dirham</option>
-                    <option value="SAR">&#65020; SAR - Saudi Riyal</option>
-                    <option value="EGP">&#1633; EGP - Egyptian Pound</option>
-                    <option value="KES">&#75;&#83; KES - Kenyan Shilling</option>
-                    <option value="TZS">&#84;&#90;&#83; TZS - Tanzanian Shilling</option>
-                    <option value="UGX">&#85;&#71;&#88; UGX - Ugandan Shilling</option>
-                    <option value="COP">&#36; COP - Colombian Peso</option>
-                    <option value="PEN">&#83;&#47;&#36; PEN - Peruvian Nuevo Sol</option>
-                    <option value="CLP">&#36; CLP - Chilean Peso</option>
-                    <option value="ARS">&#36; ARS - Argentine Peso</option>
-                    <option value="BWP">&#66;&#87;&#80; BWP - Botswanan Pula</option>
-                    <option value="GHS">&#162; GHS - Ghanaian Cedi</option>
-                    <option value="IQD">&#1603;&#1604; IQD - Iraqi Dinar</option>
-                    <option value="JOD">&#74;&#68; JOD - Jordanian Dinar</option>
-                    <option value="LKR">&#8360; LKR - Sri Lankan Rupee</option>
-                    <option value="VND">&#8363; VND - Vietnamese Dong</option>
-                    <option value="KHR">&#6163; KHR - Cambodian Riel</option>
-                    <option value="MMK">&#77;&#77;&#75; MMK - Myanmar Kyat</option>
-                </select>
+            <!-- Payment Type -->
+            <label for="payment_type" class="block mt-4 text-lg font-bold mb-2 text-white">Payment Type:</label>
+            <select id="payment_type" name="payment_type" required 
+                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400 text-black">
+                <option value="" disabled selected>Select Payment Type</option>
+                <option value="part_payment">Part Payment</option>
+                <option value="full_payment">Full or Balance Payment</option>
+            </select>
 
-                <!-- Payment Date -->
-                <label class="calendar-label" for="date_donated" style="font-size: 1.3em; font-weight: bold; display: block; margin-bottom: 10px;">
-                    Payment Date:
-                </label>
-                <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required 
-                    style="width: 100%; padding: 12px; font-size: 1.2em; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px;" />
+            <!-- Currency -->
+            <label for="currency" class="block mt-4 text-lg font-bold mb-2 text-white">Currency:</label>
 
-                <!-- Receipt Upload Section (beside checkbox) -->
-                <div id="receipt-upload" style="display: flex; align-items: center; margin-top: 20px;">
-                    <label for="receipt-file" class="upload-button" style="margin-right: 10px; font-size: 1.2em;">Upload your receipt (optional)</label>
-                    <input type="file" id="receipt-file" name="receipt" accept="image/*, .pdf" style="font-size: 1.1em;">
-                </div>
+            <select id="currency" name="currency" required 
+                class="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-black"
+                style="color: black; font-size: 1.3em; margin-bottom: 10px;">
+                <option value="USD">&#36; USD - United States Dollar</option>
+                <option value="EUR">&#8364; EUR - Euro</option>
+                <option value="GBP">&#163; GBP - British Pound</option>
+                <option value="NGN">&#8358; NGN - Nigerian Naira</option>
+                <option value="AUD">&#36; AUD - Australian Dollar</option>
+                <option value="CAD">&#36; CAD - Canadian Dollar</option>
+                <option value="JPY">&#165; JPY - Japanese Yen</option>
+                <option value="CNY">&#165; CNY - Chinese Yuan</option>
+                <option value="INR">&#8377; INR - Indian Rupee</option>
+                <option value="MXN">&#36; MXN - Mexican Peso</option>
+                <option value="CHF">&#67;&#72;&#70; CHF - Swiss Franc</option>
+                <option value="RUB">&#8381; RUB - Russian Ruble</option>
+                <option value="BRL">&#82;&#36; BRL - Brazilian Real</option>
+                <option value="ZAR">&#82; ZAR - South African Rand</option>
+                <option value="KRW">&#8361; KRW - South Korean Won</option>
+                <option value="HKD">&#36; HKD - Hong Kong Dollar</option>
+                <option value="SGD">&#36; SGD - Singapore Dollar</option>
+                <option value="SEK">&#107;&#114; SEK - Swedish Krona</option>
+                <option value="NOK">&#107;&#114; NOK - Norwegian Krone</option>
+                <option value="DKK">&#107;&#114; DKK - Danish Krone</option>
+                <option value="PLN">&#122;&#322; PLN - Polish Zloty</option>
+                <option value="TRY">&#8378; TRY - Turkish Lira</option>
+                <option value="IDR">&#82;&#112; IDR - Indonesian Rupiah</option>
+                <option value="MYR">&#82;&#112; MYR - Malaysian Ringgit</option>
+                <option value="THB">&#3647; THB - Thai Baht</option>
+                <option value="PHP">&#8369; PHP - Philippine Peso</option>
+                <option value="AED">&#1583;&#1604; AED - United Arab Emirates Dirham</option>
+                <option value="SAR">&#65020; SAR - Saudi Riyal</option>
+                <option value="EGP">&#1633; EGP - Egyptian Pound</option>
+                <option value="KES">&#75;&#83; KES - Kenyan Shilling</option>
+                <option value="TZS">&#84;&#90;&#83; TZS - Tanzanian Shilling</option>
+                <option value="UGX">&#85;&#71;&#88; UGX - Ugandan Shilling</option>
+                <option value="COP">&#36; COP - Colombian Peso</option>
+                <option value="PEN">&#83;&#47;&#36; PEN - Peruvian Nuevo Sol</option>
+                <option value="CLP">&#36; CLP - Chilean Peso</option>
+                <option value="ARS">&#36; ARS - Argentine Peso</option>
+                <option value="BWP">&#66;&#87;&#80; BWP - Botswanan Pula</option>
+                <option value="GHS">&#162; GHS - Ghanaian Cedi</option>
+                <option value="IQD">&#1603;&#1604; IQD - Iraqi Dinar</option>
+                <option value="JOD">&#74;&#68; JOD - Jordanian Dinar</option>
+                <option value="LKR">&#8360; LKR - Sri Lankan Rupee</option>
+                <option value="VND">&#8363; VND - Vietnamese Dong</option>
+                <option value="KHR">&#6163; KHR - Cambodian Riel</option>
+                <option value="MMK">&#77;&#77;&#75; MMK - Myanmar Kyat</option>
+            </select>
 
-                <!-- Submit Button -->
-                <button type="submit" 
-                        style="margin-top: 20px; padding: 12px 20px; background-color: green; color: white; font-size: 1.1em; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; width: 40%; transition: background-color 0.3s ease;">
-                    Confirm Payment
-                </button>
-            </div> <!-- Closing div for amount-entry -->
-        </form>
 
-        <script>
-            // Show or hide account details based on checkbox
-            function toggleFields() {
-                const amountEntry = document.getElementById("amount-entry");
-                const offlineDonation = document.getElementById("offline_donation");
-                amountEntry.style.display = offlineDonation.checked ? "block" : "none";
+            <!-- Payment Date -->
+            <label for="date_donated" class="block mt-4 text-lg font-bold mb-2 text-white">Payment Date:</label>
+            <input type="date" id="date_donated" name="date_donated" value="{{ donation_date | default(today) }}" required 
+                class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400 text-black" />
+
+            <!-- Receipt Upload -->
+            <div id="receipt-upload" class="flex items-center mt-4">
+                <label for="receipt-file" class="block text-base font-semibold mr-3 text-white">Upload Receipt (optional):</label>
+                <input type="file" id="receipt-file" name="receipt" accept="image/*, .pdf" 
+                    class="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-green-500 file:text-white file:rounded cursor-pointer hover:file:bg-blue-600">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full mt-6 py-2 px-2 bg-green-500 text-white font-bold text-lg rounded hover:bg-green-600 transition duration-300">
+                Confirm Payment
+            </button>
+        </div>
+    </form>
+
+    <script>
+        // Show or hide payment form based on checkbox state
+        function toggleFields() {
+            const amountEntry = document.getElementById("amount-entry");
+            const offlineDonation = document.getElementById("offline_donation");
+            amountEntry.style.display = offlineDonation.checked ? "block" : "none";
+        }
+
+        // Format amount with commas and display formatted value
+        function formatAmount(input) {
+            const rawValue = input.value.replace(/,/g, '').trim();
+            const formattedValue = rawValue ? Number(rawValue).toLocaleString() : '';
+            document.getElementById("formattedAmount").value = formattedValue;
+        }
+
+        // Validate form before submission
+        function checkForm() {
+            const amount = document.getElementById('amountRaw').value;
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid donation amount greater than 0.");
+                return false;
             }
-
-            // Format the amount input field with commas and display it in the second input field
-            function formatAmount(input) {
-                let value = input.value.replace(/,/g, ''); // Remove commas for calculation
-                if (!isNaN(value) && value !== '') {
-                    document.getElementById("formattedAmount").value = Number(value).toLocaleString(); // Format value with commas
-                } else {
-                    document.getElementById("formattedAmount").value = ''; // Reset if invalid
-                }
-            }
-
-            // Check if the form is correctly filled before submission
-            function checkForm() {
-                const amount = document.getElementById('amountRaw').value;
-                if (amount <= 0 || isNaN(amount)) {
-                    alert("Please enter a valid amount to donate.");
-                    return false;
-                }
-                return true;
-            }
-        </script>
+            return true;
+        }
+    </script>
 
 
+    
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-

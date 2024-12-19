@@ -4,48 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Update Success</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: rgb(14, 14, 53);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #28a745; /* Success color */
-        }
-        p {
-            color: #333;
-        }
-        a {
-            text-decoration: none;
-            color: rgb(30, 30, 230);
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Success!</h1>
-        <p>Your profile has been updated successfully.</p>
+<body class="bg-[#0e0e35] flex justify-center items-center min-h-screen m-0">
+
+    <div class="bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-lg text-center">
+        <h1 class="text-2xl sm:text-3xl font-semibold text-[#28a745] mb-4">Success!</h1>
+        <p class="text-gray-800 mb-4">Your profile has been updated successfully.</p>
         <p>
-            <a href="{{ url_for('home2') }}" 
-               style="font-weight: bold; font-size: 18px; text-decoration: none; 
-                      padding: 10px 20px; background-color: rgb(9, 9, 110); color: white; 
-                      border-radius: 5px; display: inline-block; text-align: center; 
-                      transition: background-color 0.3s ease, transform 0.3s ease;">
+            <a href="{{ url_for('home2') }}" class="inline-block px-6 py-3 bg-[#09096e] text-white font-semibold rounded-md hover:bg-blue-700 transition-all duration-300">
                 Return Home
             </a>
         </p>
     </div>
+
 </body>
 </html>

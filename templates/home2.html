@@ -10,10 +10,10 @@
     <style>
         .glow {
             text-decoration: none;
-            font-size: 1rem; /* Reduced font size */
+            font-size: 1rem;
             color: #27d0ff;
             font-weight: bold;
-            text-shadow: 0 0 3px #27d0ff, 0 0 2px #00c6ff; /* Reduced glow effect */
+            text-shadow: 0 0 3px #27d0ff, 0 0 2px #00c6ff;
             transition: text-shadow 0.3s ease-in-out;
         }
 
@@ -115,7 +115,6 @@
 
         <div class="flex flex-col gap-4 mt-6">
             <!-- First section with pledge link -->
-
             <div class="flex justify-start items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
                 <i class="fas fa-star text-xl text-[#00c6ff] mr-3"></i>
                 <span class="text-sm">
@@ -129,38 +128,38 @@
                 </span>
             </div>
             
-        <!-- Donations link -->
-        <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
-            <div class="button-content w-full flex items-center">
-                <i class="fas fa-hand-holding-heart text-xl text-[#28a745] mr-3"></i>
-                <a href="{{ url_for('view_my_donations') }}" class="text-white text-sm font-semibold">Recent Donations</a>
+            <!-- Donations link -->
+            <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
+                <div class="button-content w-full flex items-center">
+                    <i class="fas fa-hand-holding-heart text-xl text-[#28a745] mr-3"></i>
+                    <a href="{{ url_for('view_my_donations') }}" class="text-white text-sm font-semibold">Recent Donations</a>
+                </div>
+            </div>
+
+            <!-- Phone link -->
+            <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
+                <div class="button-content w-full flex items-center">
+                    <i class="fas fa-phone text-xl text-[#00c6ff] mr-3"></i>
+                    <span class="text-white text-sm">Phone: {% if user.phone %}{{ user.phone[:5] }}xxxxxxx{% else %}Not provided{% endif %}</span>
+                </div>
+            </div>
+
+            <!-- Logout link -->
+            <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
+                <div class="button-content w-full flex items-center">
+                    <i class="fas fa-sign-out-alt text-xl text-[#a58e0d] transition-colors duration-300 hover:text-[#1c7c32] mr-3"></i>
+                    <a href="{{ url_for('index') }}" class="text-white text-sm">Not you? Logout</a>
+                </div>
+            </div>
+
+            <!-- Profile update link -->
+            <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
+                <div class="button-content w-full flex items-center">
+                    <i class="fas fa-user-edit text-xl text-[#FFD700] transition-colors duration-300 hover:text-[#C5A100] mr-3"></i>
+                    <a href="{{ url_for('edit_profile') }}" class="text-green-400 text-sm font-semibold">Update Details</a>
+                </div>
             </div>
         </div>
-
-        <!-- Phone link -->
-        <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
-            <div class="button-content w-full flex items-center">
-                <i class="fas fa-phone text-xl text-[#00c6ff] mr-3"></i>
-                <span class="text-white text-sm">Phone: {% if user.phone %}{{ user.phone[:5] }}xxxxxxx{% else %}Not provided{% endif %}</span>
-            </div>
-        </div>
-
-        <!-- Logout link -->
-        <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
-            <div class="button-content w-full flex items-center">
-                <i class="fas fa-sign-out-alt text-xl text-[#a58e0d] transition-colors duration-300 hover:text-[#1c7c32] mr-3"></i>
-                <a href="{{ url_for('index') }}" class="text-white text-sm">Not you? Logout</a>
-            </div>
-        </div>
-
-        <!-- Profile update link -->
-        <div class="flex items-center p-3 bg-[#00274d] rounded-xl flex-card w-full max-w-[300px] mx-auto">
-            <div class="button-content w-full flex items-center">
-                <i class="fas fa-user-edit text-xl text-[#FFD700] transition-colors duration-300 hover:text-[#C5A100] mr-3"></i>
-                <a href="{{ url_for('edit_profile') }}" class="text-green-400 text-sm font-semibold">Update Details</a>
-            </div>
-        </div>
-
 
         <footer class="mt-6 text-sm text-gray-500">
             <p>&copy; 2024 Dominion City. All rights reserved.</p>
@@ -185,6 +184,5 @@
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             realtimeDate.textContent = ` ${now.toLocaleDateString('en-US', options)}`;
         </script>
-
 </body>
 </html>

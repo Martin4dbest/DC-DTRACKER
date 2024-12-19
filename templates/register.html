@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 min-h-screen flex justify-center items-center">
+<body class="bg-gradient-to-r from-indigo-500 via-indigo-500 to-indigo-500 min-h-screen flex justify-center items-center">
     <div class="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg w-full max-w-lg">
         <h1 class="text-center text-3xl font-semibold text-blue-600 mb-6">Partner Registration</h1>
         <form method="POST" action="{{ url_for('register') }}" id="registrationForm">
@@ -29,6 +29,25 @@
                         <i class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer" id="togglePassword"></i>
                     </div>
                 </div>
+                
+                <!-- JavaScript for toggling password visibility -->
+                <script>
+                document.getElementById("togglePassword").addEventListener("click", function () {
+                    const passwordInput = document.getElementById("password");
+                    const toggleIcon = this;
+                
+                    if (passwordInput.type === "password") {
+                        passwordInput.type = "text"; // Show password
+                        toggleIcon.classList.remove("fa-eye");
+                        toggleIcon.classList.add("fa-eye-slash"); // Change icon to eye-slash
+                    } else {
+                        passwordInput.type = "password"; // Hide password
+                        toggleIcon.classList.remove("fa-eye-slash");
+                        toggleIcon.classList.add("fa-eye"); // Change icon back to eye
+                    }
+                });
+                </script>
+                
 
                 <div class="form-group">
                     <label for="email" class="text-lg font-medium">Email:</label>
