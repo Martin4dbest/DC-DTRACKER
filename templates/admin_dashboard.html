@@ -55,7 +55,8 @@
             <a class="navbar-brand d-flex align-items-center text-white" href="#">
                 <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Logo"
                     style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
-                <span class="ms-2 fw-bold">Admin</span>
+                <span class="ms-2 fw-bold" style="color: rgb(255, 225, 54);">Admin</span>
+
             </a>
 
             <!-- Toggler Button -->
@@ -71,7 +72,9 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" id="navbarDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-cogs"></i> Admin Actions
+                            <i class="fa fa-cogs" style="color: gold;"></i> <span style="color: white;">Admin Actions</span>
+
+
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                             <li>
@@ -151,6 +154,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
+                        <th>Phone Number</th>
                         <th>Country</th>
                         <th>State</th>
                         <th>Local Church</th>
@@ -164,6 +168,7 @@
                     <tr>
                         <td>{{ user.name }}</td>
                         <td>{{ user.email }}</td>
+                        <td>{{ user.phone }}</td>
                         <td>{{ user.country }}</td>
                         <td>{{ user.state }}</td>
                         <td>{{ user.church_branch }}</td>
@@ -232,6 +237,7 @@
                         modalBody.innerHTML = ` 
                             <p><strong>Name:</strong> ${data.name}</p>
                             <p><strong>Email:</strong> ${data.email}</p>
+                            <p><strong>Phone Number:</strong> ${data.phone}</p>
                             <p><strong>Country:</strong> ${data.country}</p>
                             <p><strong>State:</strong> ${data.state}</p>
                             <p><strong>Church:</strong> ${data.church_branch || 'N/A'}</p>

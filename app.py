@@ -103,28 +103,19 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 
-
-from datetime import datetime, date
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
 class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200))
-    phone = db.Column(db.String(50), unique=True, nullable=False)
-    email = db.Column(db.String(255), unique=True, nullable=True)
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(255), unique=True)
     address = db.Column(db.String(500), nullable=True)
     country = db.Column(db.String(150))
     state = db.Column(db.String(150), nullable=True)
     church_branch = db.Column(db.String(150))
     birthday = db.Column(db.Date, nullable=True)
-    password_hash = db.Column(db.String(255))  # General password hash
-    phone_password_hash = db.Column(db.String(255))  # Hash of phone used as password
-    email_password_hash = db.Column(db.String(255))  # Hash of email used as password
+    password_hash = db.Column(db.String(255))
     is_admin = db.Column(db.Boolean, default=False)
     is_super_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
@@ -133,40 +124,28 @@ class User(db.Model):
     pledged_amount = db.Column(db.Float, default=0.0)
     pledge_currency = db.Column(db.String(3), default="USD")
     paid_status = db.Column(db.Boolean, default=False)
-    medal = db.Column(db.String(100), nullable=True)
-    partner_since = db.Column(db.Integer, nullable=True)
+    medal = db.Column(db.String(100), nullable=True)  # In your User model
+    partner_since = db.Column(db.Integer, nullable=True)  # Year as an integer
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
     has_received_onboarding_email = db.Column(db.Boolean, default=False)
     has_received_onboarding_sms = db.Column(db.Boolean, default=False)
 
+
+
     # Relationships
     pledges = db.relationship('Pledge', back_populates='donor', cascade="all, delete-orphan")
 
-    # Set password hashes for both phone and email
-    def set_password(self, password, is_phone=False, is_email=False):
+
+
+    
+
+    def set_password(self, password):
         """Set the user's password hash."""
-        if is_phone:
-            self.phone_password_hash = generate_password_hash(password)
-        elif is_email:
-            self.email_password_hash = generate_password_hash(password)
-        else:
-            self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password, is_phone=False, is_email=False):
+    def check_password(self, password):
         """Check if the provided password matches the stored password hash."""
-        if is_phone:
-            if self.phone_password_hash:  # Check if the phone password hash exists
-                return check_password_hash(self.phone_password_hash, password)
-            return False  # Return False if phone password hash is None
-        elif is_email:
-            if self.email_password_hash:  # Check if the email password hash exists
-                return check_password_hash(self.email_password_hash, password)
-            return False  # Return False if email password hash is None
-        else:
-            if self.password_hash:  # Check if general password hash exists
-                return check_password_hash(self.password_hash, password)
-            return False  # Return False if general password hash is None
-
+        return check_password_hash(self.password_hash, password)
 
 
 # Donation model
@@ -230,10 +209,14 @@ RECIPIENT_EMAIL = os.getenv('RECIPIENT_EMAIL')  # Add your recipient email to .e
 #print(f"SENDGRID_API_KEY: {SENDGRID_API_KEY}")  # Check if the key is updated
 
 # Ensure environment variables are loaded correctly
-if not SENDGRID_API_KEY or not FROM_EMAIL:
-    print("SENDGRID_API_KEY or FROM_EMAIL is missing")
+
+
+# Debugging environment variables
+if not SENDGRID_API_KEY or not FROM_EMAIL or not TWILIO_ACCOUNT_SID:
+    print("SENDGRID_API_KEY, FROM_EMAIL, or Twilio credentials are missing.")
 else:
-    print("Environment variables loaded successfully")
+    print("Environment variables loaded successfully.")
+
 
 @app.route("/mail_sms", methods=["GET", "POST"])
 def mail_sms():
@@ -254,15 +237,17 @@ def mail_sms():
                 flash("Emails sent successfully.", "success")
                 return redirect(url_for("delivery_success", delivery_type="Email"))
 
-            # Check for SMS form submission (SMS logic can be implemented similarly)
+            # Check for SMS form submission
             if "send_bulk_sms" in request.form:
                 sms_template = request.form.get("sms_message", "").strip()
 
+                # Validate SMS template
                 if not all(x in sms_template for x in ['{name}', '{email}', '{phone}']):
                     flash("The SMS template must contain {name}, {email}, and {phone}.", "danger")
                     return redirect(url_for("mail_sms"))
 
-                # Send SMS function would go here (not implemented)
+                # Send SMS messages
+                send_personalized_sms(sms_template)
                 flash("SMS sent successfully.", "success")
                 return redirect(url_for("delivery_success", delivery_type="SMS"))
 
@@ -274,19 +259,24 @@ def mail_sms():
 
     return render_template("mail_sms.html")
 
+
 def send_personalized_emails(subject, email_template):
     try:
         sg = SendGridAPIClient(SENDGRID_API_KEY)
-        # Query users who have not received the onboarding email
-        users_to_email = User.query.filter_by(has_received_onboarding_email=False).all()
+
+        # Query non-admin users who haven't received the onboarding email
+        users_to_email = User.query.filter(
+            User.has_received_onboarding_email == False,
+            User.is_admin == False  # Exclude admins
+        ).all()
 
         if not users_to_email:
-            print("No users found for email sending.")
+            print("No non-admin users found for email sending.")
             return
 
         for user in users_to_email:
             try:
-                # Personalize email body with user data
+                # Personalize email body
                 personalized_email_body = email_template.format(
                     name=user.name, phone=user.phone, email=user.email
                 )
@@ -302,17 +292,14 @@ def send_personalized_emails(subject, email_template):
 
                 # Send the email
                 response = sg.send(message)
+                print(f"Email sent to {user.email}: {response.status_code}")
 
-                # Log response for debugging
-                print(f"SendGrid Response Status: {response.status_code}")
-                print(f"SendGrid Response Body: {response.body}")
-
+                # Mark email as sent in the database
                 if response.status_code == 202:
-                    # Mark email as sent in the database
                     user.has_received_onboarding_email = True
                     db.session.commit()
                 else:
-                    print(f"Failed to send email to {user.email}: {response.status_code} - {response.body}")
+                    print(f"Failed to send email to {user.email}: {response.status_code}")
 
             except Exception as e:
                 print(f"Error sending email to {user.email}: {str(e)}")
@@ -321,30 +308,51 @@ def send_personalized_emails(subject, email_template):
         print(f"Error sending emails: {str(e)}")
         raise e
 
+
 def send_personalized_sms(sms_template):
     try:
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-        users_to_sms = User.query.filter_by(has_received_onboarding_sms=False).all()
+
+        # Query non-admin users who haven't received onboarding SMS
+        users_to_sms = User.query.filter(
+            User.has_received_onboarding_sms == False,
+            User.is_admin == False  # Exclude admins
+        ).all()
+
+        if not users_to_sms:
+            print("No non-admin users found for SMS sending.")
+            return
 
         for user in users_to_sms:
-            personalized_sms_body = sms_template.format(
-                name=user.name, phone=user.phone, email=user.email
-            )
-            
-            message = client.messages.create(
-                body=personalized_sms_body,
-                from_=TWILIO_PHONE_NUMBER,
-                to=user.phone
-            )
-            print(f"SMS sent to {user.phone}: {message.status}")
-            
-            if message.status == 'queued':
-                user.has_received_onboarding_sms = True
-                db.session.commit()
+            try:
+                # Personalize the SMS body
+                personalized_sms_body = sms_template.format(
+                    name=user.name, phone=user.phone, email=user.email
+                )
+
+                # Send the SMS
+                message = client.messages.create(
+                    body=personalized_sms_body,
+                    from_=TWILIO_PHONE_NUMBER,
+                    to=user.phone
+                )
+
+                print(f"SMS sent to {user.phone}: {message.status}")
+
+                # Mark SMS as sent in the database
+                if message.status in ['queued', 'sent', 'delivered']:
+                    user.has_received_onboarding_sms = True
+                    db.session.commit()
+
+            except Exception as e:
+                print(f"Error sending SMS to {user.phone}: {str(e)}")
+                continue
     except Exception as e:
         print(f"Error sending SMS: {str(e)}")
         raise e
+    
 
+    
 # Success page
 @app.route("/delivery_success/<delivery_type>")
 def delivery_success(delivery_type):
@@ -505,12 +513,10 @@ def register():
                 flash('Invalid year for Partner Since. Please provide a valid year.', 'error')
                 return render_template('register.html', current_year=datetime.now().year)
 
-        # Check if email or phone is already registered
-        existing_user = User.query.filter(
-            (User.email == email) | (User.phone == phone)
-        ).first()
+        # Check if email is already registered
+        existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            flash('Email or phone number already registered.', 'error')
+            flash('Email address already registered.', 'error')
             return render_template('register.html', current_year=datetime.now().year)
 
         # Create a new user
@@ -527,10 +533,7 @@ def register():
             is_admin=False,
             is_super_admin=False
         )
-
-        # Set password hashes for both email and phone
-        new_user.set_password(password, is_email=True)  # Set password for email
-        new_user.set_password(password, is_phone=True)  # Set password for phone
+        new_user.set_password(password)  # Set hashed password
 
         # Save user to the database
         db.session.add(new_user)
@@ -561,39 +564,38 @@ def index():
  # Renders the index page dynamically
 
 
+
+
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']  # 'username' can be email or phone
-        password = request.form['password']
+        login_input = request.form['email']  # We'll use 'email' form field for both email and phone number input
 
-        # Query the user based on email or phone
-        user = User.query.filter(
-            (User.email == username) | (User.phone == username)
-        ).first()
+        # Check if the input is an email or phone number
+        if re.match(r"[^@]+@[^@]+\.[^@]+", login_input):  # Email pattern check
+            user = User.query.filter_by(email=login_input).first()
+        else:  # Assume input is a phone number
+            user = User.query.filter_by(phone=login_input).first()  # Assuming you have a phone_number column in the User model
 
-        if user:
-            # Check if the password matches
-            if (user.check_password(password, is_phone=True) or 
-                user.check_password(password, is_email=True)):
-                session['user_id'] = user.id
-                session['is_admin'] = user.is_admin
-                session['is_super_admin'] = user.is_super_admin
+        if user and user.check_password(request.form['password']):
+            session['user_id'] = user.id
+            session['is_admin'] = user.is_admin
+            session['is_super_admin'] = user.is_super_admin
 
-                flash(f'Welcome, {user.name}!', 'success')
+            flash(f'Welcome, {user.name}!', 'success')
 
-                # Redirect admins to the admin dashboard
-                if user.is_admin or user.is_super_admin:
-                    return redirect(url_for('admin_dashboard'))
+            # Redirect admins to the admin dashboard
+            if user.is_admin or user.is_super_admin:
+                return redirect(url_for('admin_dashboard'))
 
-                # Redirect regular users to home
-                return redirect(url_for('home2'))
-        
-        flash('Invalid email or phone number, or password.', 'danger')
-    
+            # Redirect regular users to home2.html
+            return redirect(url_for('home2'))
+        else:
+            flash('Invalid email/phone number or password.', 'danger')
+
     return render_template('login.html')
-
-
 
 
 @app.route('/home2')
@@ -668,93 +670,6 @@ def compress_image(filepath):
         img.save(filepath, optimize=True, quality=85)
 
 
-"""
-@app.route("/donate", methods=["GET", "POST"])
-def donate():
-    user = None
-    if "user_id" in session:
-        user = get_current_user()  # Retrieve the current logged-in user if available
-        app.logger.debug(f"User object: {user}")
-        if user:
-            db.session.refresh(user)  # Refresh the user to ensure the latest data from the database
-
-    if request.method == "POST":
-        user_id = session.get("user_id")  # Check if a user is logged in
-        payment_type = request.form.get("payment_type")  # Get the selected payment type
-
-        # Handle offline donation
-        amount = request.form.get("amount")
-        currency = request.form.get("currency")
-        donation_date = request.form.get("date_donated")
-        receipt = request.files.get("receipt")
-
-        # Validate required fields
-        if not all([amount, payment_type, currency, donation_date]):
-            flash("Please fill in all required fields.", "danger")
-            return redirect(url_for("donate"))
-
-        # Validate amount
-        try:
-            amount = float(amount)
-            if amount <= 0:
-                flash("Donation amount must be greater than zero.", "danger")
-                return redirect(url_for("donate"))
-        except (ValueError, TypeError):
-            flash("Invalid amount format.", "danger")
-            return redirect(url_for("donate"))
-
-        # Validate or set the donation date
-        try:
-            donation_date = datetime.strptime(donation_date, "%Y-%m-%d").date()
-        except ValueError:
-            flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
-            return redirect(url_for("donate"))
-
-        # Handle the uploaded file (receipt)
-        receipt_filename = None
-        if receipt and allowed_file(receipt.filename):
-            receipt_filename = secure_filename(receipt.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], receipt_filename)
-            receipt.save(filepath)
-
-            # Compress image files if it's an image format
-            if receipt_filename.lower().endswith(('png', 'jpg', 'jpeg')):
-                compress_image(filepath)
-        elif receipt:
-            flash("Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, PDF.", "danger")
-            return redirect(url_for("donate"))
-
-        # Create a new donation
-        donation = Donation(
-            user_id=user_id,
-            amount=amount,
-            currency=currency,
-            donation_date=donation_date,
-            payment_type=payment_type,
-            receipt_filename=receipt_filename  # Optional field in the database for file name
-        )
-
-        try:
-            db.session.add(donation)
-            db.session.commit()
-
-            # Send email to admin with donation details
-            send_admin_notification(donation, receipt)
-
-            flash(f"Thank you for your {payment_type} donation!", "success")
-            app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
-            return redirect(url_for("donation_success"))
-        except Exception as e:
-            db.session.rollback()
-            app.logger.error(f"Error saving donation: {e}")
-            flash("There was an error processing your donation. Please try again.", "danger")
-            return redirect(url_for("donate"))
-
-    # Retrieve pledges made by all users
-    pledges = db.session.query(Pledge, User).join(User, Pledge.user_id == User.id).all()
-
-    return render_template("donate.html", user=user, pledges=pledges, donation_date=date.today())
-"""
 @app.route('/view_my_donations')
 def view_my_donations():
     if 'user_id' not in session:
@@ -1565,39 +1480,54 @@ def get_current_pledge(user_id):
 
 
 
-#View Partners Pledges
 @app.route('/view_partners_pledges', methods=['GET', 'POST'])
 @login_required  
 @admin_required 
 def view_partners_pledges():
-    # Retrieve the search_country from the form if it's a POST request
-    search_country = request.form.get('search_country') if request.method == 'POST' else None
+    search_query = request.form.get('search_query') if request.method == 'POST' else None
 
-    # Filter out admins and apply country filter if search_country is provided
-    if search_country:
-        users = User.query.filter(User.is_admin == False, User.country.ilike(f"%{search_country}%")).all()
+    # Constructing the filter condition based on search query
+    if search_query:
+        users = User.query.filter(
+            User.is_admin == False, 
+            (User.name.ilike(f"%{search_query}%") | 
+             User.state.ilike(f"%{search_query}%") | 
+             User.country.ilike(f"%{search_query}%") | 
+             User.church_branch.ilike(f"%{search_query}%"))
+        ).all()
     else:
-        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users
+        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users if no search query
 
-    return render_template('view_partners_pledges.html', users=users, search_country=search_country)
+    return render_template('view_partners_pledges.html', users=users, search_query=search_query)
 
 
-
-#View Partnere Details
 @app.route('/view_partners_details', methods=['GET', 'POST'])
 @login_required  # Ensure the user is logged in
 @admin_required  # Ensure the user is an admin
 def view_partners_details():
-    # Retrieve the search_country from the form if it's a POST request
-    search_country = request.form.get('search_country') if request.method == 'POST' else None
+    # Retrieve the search_query from the form if it's a POST request
+    search_query = request.form.get('search_query') if request.method == 'POST' else None
 
-    # Filter out admins and apply country filter if search_country is provided
-    if search_country:
-        users = User.query.filter(User.is_admin == False, User.country.ilike(f"%{search_country}%")).all()
-    else:
-        users = User.query.filter(User.is_admin == False).all()  # Fetch all non-admin users
+    # Start the query by filtering out admins
+    query = User.query.filter(User.is_admin == False)
 
-    return render_template('view_partners_details.html', users=users, search_country=search_country)
+    # Apply filters based on the search query (matching in name, country, state, or local church)
+    if search_query:
+        query = query.filter(
+            (User.name.ilike(f"%{search_query}%")) |
+            (User.country.ilike(f"%{search_query}%")) |
+            (User.state.ilike(f"%{search_query}%")) |
+            (User.church_branch.ilike(f"%{search_query}%"))
+        )
+
+    # Execute the query
+    users = query.all()
+
+    return render_template('view_partners_details.html', 
+                           users=users, 
+                           search_query=search_query)
+
+
 
 
 
@@ -1618,60 +1548,42 @@ def view_admin_details():
     return render_template('view_admin_details.html', admins=admins, search_country=search_country)
 
 
-"""
-# View donations made by the logged-in partner
-@app.route('/view_my_donations')
-def view_my_donations():
-    # Manually check if the user is authenticated (using a session)
-    if 'user_id' not in session:
-        # If the user is not logged in, redirect them to the login page
-        return redirect(url_for('login'))  # Replace 'login' with your actual login route
-
-    # Fetch donations for the logged-in user
-    user_id = session['user_id']  # Get user_id from the session
-    donations = Donation.query.filter_by(user_id=user_id).all()  # Filter donations based on the logged-in user
-
-    return render_template('view_my_donations.html', donations=donations)
-
-"""
-
 
 @app.errorhandler(403)
 def forbidden_error(error):
-    return render_template('403.html'), 403
+    return render_template('403.html'), 403 
 
 
-
-
-#Route to change password
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
     if request.method == 'POST':
         email_or_phone = request.form.get('email_or_phone')
         new_password = request.form.get('new_password')
-        
+
         # Validate email or phone (check if it exists in the database)
         user = User.query.filter((User.email == email_or_phone) | (User.phone == email_or_phone)).first()
-        
+
         if not user:
             flash('Invalid email or phone number', 'error')
             return redirect(url_for('change_password'))
-        
+
         # Hash the new password
         hashed_password = generate_password_hash(new_password)
-        
+
         # Update the password in the database
         try:
             user.password_hash = hashed_password
             db.session.commit()
             flash('Password successfully changed', 'success')
-            return redirect(url_for('login'))  # Redirect to login after successful update
+            return redirect(url_for('change_password'))  # Optionally redirect back to the form
         except Exception as e:
             db.session.rollback()
             flash('Error updating password. Please try again.', 'error')
             return redirect(url_for('change_password'))
-        
+
     return render_template('change_password.html')  # Render the password change form
+
+
 
 
 
@@ -1691,7 +1603,6 @@ def select_payment_options():
 
 
 
-
 # Load environment variables
 SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
@@ -1701,43 +1612,28 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 @app.route('/sync_with_google_sheets', methods=['POST'])
 def sync_with_google_sheets():
-    """Sync users with Google Sheets."""
     try:
-        # Debugging: Environment Variables
-        print(f"Service Account File Path: {SERVICE_ACCOUNT_FILE}")
-        print(f"Spreadsheet ID: {SPREADSHEET_ID}")
-
-        if not SERVICE_ACCOUNT_FILE or not SPREADSHEET_ID:
-            flash('Environment variables for Google Sheets are not set.', 'error')
-            return redirect(url_for('view_partners_pledges'))
-
-        # Authenticate with Google Sheets API
+        # Authenticate using Google service account
         creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
         service = build('sheets', 'v4', credentials=creds)
-        print(f"Google Sheets API Credentials Loaded Successfully")
 
-        # Fetch Data from Google Sheets
-        sheet_range = 'Registration!A1:J'
-        print(f"Fetching data from range: {sheet_range}")
+        # === Step 1: Import Data from Google Sheets ===
+        sheet_range = 'Registration!A1:J'  # Adjust range to include all columns
         result = service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
             range=sheet_range
         ).execute()
         rows = result.get('values', [])
-        print(f"Fetched rows: {rows}")
 
-        if not rows or len(rows) <= 1:
+        if not rows or len(rows) <= 1:  # First row is header
             flash('No data found in the Google Sheet or only header row present.', 'error')
             return redirect(url_for('view_partners_pledges'))
 
-        # Process each row
-        for i, row in enumerate(rows[1:], start=2):
-            print(f"Processing row {i}: {row}")
-
-            # Extract data safely from the row
+        # Process rows (skipping the header)
+        for i, row in enumerate(rows[1:], start=2):  # Start from row 2 for better debugging
             name = row[0] if len(row) > 0 else None
             phone = row[1] if len(row) > 1 else None
-            email = row[2] if len(row) > 2 and row[2].strip() != '' else None
+            email = row[2] if len(row) > 2 else None
             address = row[3] if len(row) > 3 else None
             country = row[4] if len(row) > 4 else None
             state = row[5] if len(row) > 5 else None
@@ -1746,10 +1642,13 @@ def sync_with_google_sheets():
             pledged_amount = row[8] if len(row) > 8 else None
             pledge_currency = row[9] if len(row) > 9 else None
 
-            # Skip rows with no meaningful identification fields
-            if not email and not phone:
-                print(f"Row {i}: Missing phone or email for user, skipping.")
-                continue
+            # If email is missing, we assign placeholder, but don't skip users based on it
+            if not email:
+                email = None  # Allow users with no email
+
+            # If phone is missing, allow it to be None without skipping
+            if not phone:
+                phone = None  # Allow users with no phone number
 
             # Parse birthday
             birthday = None
@@ -1757,23 +1656,25 @@ def sync_with_google_sheets():
                 try:
                     birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
                 except ValueError:
-                    print(f"Row {i}: Invalid birthday format: {birthday_str}")
                     birthday = None
 
-            # Check if the user already exists (either by phone or email)
-            existing_user = None
-            if email:
+            # Check if user already exists by email or phone (handling None gracefully)
+            if email and phone:
+                existing_user = User.query.filter((User.email == email) | (User.phone == phone)).first()
+            elif email:
                 existing_user = User.query.filter_by(email=email).first()
-            if not existing_user and phone:
+            elif phone:
                 existing_user = User.query.filter_by(phone=phone).first()
+            else:
+                existing_user = None  # Skip check if both email and phone are missing
 
             if existing_user:
-                print(f"Row {i}: Duplicate user found. Skipping.")
+                print(f"Row {i}: User with email {email} or phone {phone} already exists. Skipping.")
                 continue
 
-            # Create a new user
+            # Create new user if they don't already exist
             new_user = User(
-                name=name or "Unnamed",  # Ensure name is not None
+                name=name,
                 phone=phone,
                 email=email,
                 address=address,
@@ -1784,26 +1685,25 @@ def sync_with_google_sheets():
                 pledged_amount=pledged_amount,
                 pledge_currency=pledge_currency,
                 is_admin=False,
-                is_super_admin=False
+                is_super_admin=False,
+                is_active=True,
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
+                password_hash="hashed_password_placeholder",  # Replace with actual hashed password if needed
+                has_received_onboarding_email=False,
+                has_received_onboarding_sms=False
             )
-
-            # Set password only if phone is provided
-            if phone:
-                new_user.set_password(phone)  # Hash phone as password
-
+            new_user.set_password(phone or email)  # Use phone or email for password (hashed)
             db.session.add(new_user)
-            print(f"Row {i}: User {name or 'Unnamed'} added successfully.")
 
-        # Commit changes to the database
-        db.session.commit()
-        print("All users have been imported successfully.")
-        flash('Data synchronization completed successfully.', 'success')
+        db.session.commit()  # Commit all changes at once for efficiency
+        flash('Data synchronization with Google Sheets completed successfully.', 'success')
         return redirect(url_for('view_partners_pledges'))
 
     except Exception as e:
-        print(f"Error: {str(e)}")
-        flash(f"Error during synchronization: {str(e)}", 'error')
+        flash(f"Error during Google Sheets synchronization: {str(e)}", 'error')
         return redirect(url_for('view_partners_pledges'))
+
 
 
 
@@ -1908,21 +1808,3 @@ application = app
 
 if __name__ == "__main__":
     application.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
