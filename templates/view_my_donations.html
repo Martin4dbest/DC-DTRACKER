@@ -78,6 +78,8 @@
 
     <h1 class="text-center text-blue-500">My Donations</h1>
 
+    
+
     {% if donation_details %}
         <div class="overflow-x-auto">
             <table class="w-full sm:w-11/12 mx-auto mt-5 bg-white rounded-lg shadow-md">
@@ -89,7 +91,7 @@
                         <th class="py-3 px-5 text-white bg-blue-900">Currency</th>
                         <th class="py-3 px-5 text-white bg-blue-900">Payment Type</th>
                         <th class="py-3 px-5 text-white bg-blue-900">Timestamp</th>
-                        <th class="py-3 px-5 text-white bg-blue-900"></th>
+                        
                     </tr>
                 </thead>
                 <tbody>
@@ -101,7 +103,7 @@
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.currency }}</td>
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.payment_type }}</td>
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.timestamp }}</td>
-                            <td class="py-3 px-5 border-b border-gray-300 text-gray-700">
+                            
 
                                 <!-- Delete Button 
                                 <form action="{{ url_for('delete_user_donation', donation_id=donation_detail.donation.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDeletion()">
@@ -125,6 +127,7 @@
     {% else %}
     <p class="text-red-600 text-center">No donations found.</p>
     {% endif %}
+    
 
     <!-- Carousel Section -->
     <div class="carousel-container mt-8">

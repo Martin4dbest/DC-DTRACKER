@@ -18,6 +18,10 @@ from flask_login import LoginManager
 import re
 import requests
 from flask_cors import CORS
+import boto3
+from werkzeug.utils import secure_filename
+from botocore.exceptions import NoCredentialsError
+
 
 
 from dotenv import load_dotenv
@@ -33,7 +37,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
-csrf = CSRFProtect(app)
+
 
 
 
@@ -65,6 +69,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 app = Flask(__name__)
 
 CORS(app)
+
 
 # Initialize LoginManager
 login_manager = LoginManager()
@@ -616,9 +621,7 @@ def home2():
 
 
 #Donation and upload files
-
-
-
+"""
 # Add your allowed file extensions and upload folder
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
@@ -635,19 +638,6 @@ mail = Mail(app)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-""""
-# Route for handling file upload
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return 'No file part'
-    file = request.files['file']
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return redirect(url_for('admin_dashboard'))
-    return 'Invalid file type'
-"""
 # Route for handling file upload
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -669,7 +659,205 @@ def compress_image(filepath):
     with Image.open(filepath) as img:
         img.save(filepath, optimize=True, quality=85)
 
+"""
 
+
+# Your AWS S3 Configuration (replace with your actual values)
+app.config['S3_BUCKET'] = 'dcglobal-uploads'  # replace with your S3 bucket name
+app.config['S3_ACCESS_KEY'] = os.getenv('AWS_ACCESS_KEY_ID')
+app.config['S3_SECRET_KEY'] = os.getenv('AWS_SECRET_ACCESS_KEY')
+app.config['S3_REGION'] = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')  # default region
+
+# Initialize S3 client using boto3
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=app.config['S3_ACCESS_KEY'],
+    aws_secret_access_key=app.config['S3_SECRET_KEY'],
+    region_name=app.config['S3_REGION']
+)
+
+# Your allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+
+# Initialize mail instance (configure with actual settings)
+mail = Mail(app)
+
+# Check if the file is allowed (extension check)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Route for handling file upload
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return 'No file part'
+    
+    file = request.files['file']
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+
+        try:
+            # Upload the file to S3
+            s3_client.upload_fileobj(
+                file,
+                app.config['S3_BUCKET'],
+                filename,
+                ExtraArgs={'ACL': 'private'}  # Private by default, adjust as needed
+            )
+
+            # Assuming you have the donation_id passed in the form or some way to fetch it
+            donation_id = request.form.get('donation_id')  # Ensure you get donation_id from form or context
+            donation = Donation.query.get(donation_id)
+            
+            if donation:
+                # Save the file name to the database for the corresponding donation
+                donation.receipt_filename = filename
+                db.session.commit()
+
+            return redirect(url_for('receipts_overview'))  # Redirect to the receipt overview after upload
+        except Exception as e:
+            return f"Error uploading file to S3: {e}"
+
+    return 'Invalid file type'
+
+
+# Optional: Compress image function (if needed)
+def compress_image(filepath):
+    with Image.open(filepath) as img:
+        img.save(filepath, optimize=True, quality=85)
+
+
+# AWS S3 Client
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=app.config['S3_ACCESS_KEY'],
+    aws_secret_access_key=app.config['S3_SECRET_KEY'],
+    region_name=app.config['S3_REGION']
+)
+
+def delete_file_from_s3(filename):
+    try:
+        s3_client = boto3.client('s3')
+        bucket_name = 'dcglobal-uploads'  # Replace with your bucket name
+        s3_client.delete_object(Bucket=bucket_name, Key=filename)
+        print(f"File {filename} deleted successfully.")
+    except NoCredentialsError:
+        print("Credentials not available.")
+        # You can handle this error in a way that suits your application, like showing a message to the user
+    except Exception as e:
+        print(f"Error deleting file {filename}: {e}")
+        # Handle other exceptions (e.g., file not found, permission issues)
+
+
+@app.route('/delete_receipt/<filename>', methods=['POST'])
+def delete_receipt_by_filename(filename):
+    # First, delete the file from S3
+    delete_file_from_s3(filename)
+
+    # Now, update the database to remove the reference to the receipt
+    donation = Donation.query.filter_by(receipt_filename=filename).first()
+    if donation:
+        donation.receipt_filename = None  # Clear the filename field in the database
+        db.session.commit()  # Commit the changes to the database
+
+    return redirect(url_for('receipts_overview'))  # Redirect to the receipts overview page
+
+
+# Function to generate a URL for a file stored in S3
+def get_s3_file_url(filename):
+    return f"https://{app.config['S3_BUCKET']}.s3.{app.config['S3_REGION']}.amazonaws.com/{filename}"
+
+
+@app.route('/receipts-overview')
+def receipts_overview():
+    # Your code here
+    return render_template('admin_uploaded_receipts.html')
+
+
+
+@app.route('/view_receipt/<filename>')
+def view_receipt(filename):
+    # Fetch the donation by the receipt filename
+    donation = Donation.query.filter_by(receipt_filename=filename).first_or_404()
+
+    # Ensure the `currency` is part of the donation object
+    currency = donation.currency if hasattr(donation, 'currency') else 'USD'  # Default to USD if currency is missing
+    
+    # Get the S3 URL for the receipt file
+    file_url = get_s3_file_url(donation.receipt_filename)
+
+    # Render the receipt details page
+    return render_template('view_receipt.html', donation=donation, currency=currency, file_url=file_url)
+
+
+
+@app.route("/admin_uploaded_receipts", methods=["GET", "POST"])
+@admin_required
+def admin_uploaded_receipts():
+    search_term = request.args.get("search_term", "").lower()
+
+    # Query donations with receipts and join user data
+    receipts = (
+        db.session.query(
+            Donation.receipt_filename,
+            User.name,
+            User.country,
+            User.state,
+            User.church_branch
+        )
+        .join(User, Donation.user_id == User.id)
+        .filter(Donation.receipt_filename.isnot(None))
+    )
+
+    # Apply the filter if a search term is provided
+    if search_term:
+        receipts = receipts.filter(
+            db.or_(
+                User.name.ilike(f"%{search_term}%"),
+                User.country.ilike(f"%{search_term}%"),
+                User.state.ilike(f"%{search_term}%"),
+                User.church_branch.ilike(f"%{search_term}%")
+            )
+        )
+
+    # Execute the query
+    receipts = receipts.all()
+
+    # Format data for the template with S3 file URLs
+    uploaded_receipts = [
+        {
+            "filename": receipt.receipt_filename,
+            "user": receipt.name,
+            "country": receipt.country,
+            "state": receipt.state,
+            "church_branch": receipt.church_branch,
+            "file_url": get_s3_file_url(receipt.receipt_filename)
+        }
+        for receipt in receipts
+    ]
+
+    return render_template('admin_uploaded_receipts.html', files=uploaded_receipts, search_term=search_term)
+
+
+
+
+"""
+@app.route('/view_receipt/<int:receipt_id>')
+def view_receipt(receipt_id):
+    # Fetch a single receipt by its ID
+    receipt = Donation.query.get_or_404(receipt_id)  # Assuming Donation has all receipt data
+    
+    # Ensure the `currency` is part of the receipt object
+    currency = receipt.currency if hasattr(receipt, 'currency') else 'USD'  # Default to USD if currency is missing
+    
+    # Render the receipt details page
+    return render_template('view_receipt.html', receipt=receipt, currency=currency)
+"""
+
+
+
+        
 @app.route('/view_my_donations')
 def view_my_donations():
     if 'user_id' not in session:
@@ -772,8 +960,11 @@ def view_my_donations():
             'amount': donation.amount
         })
 
-    return render_template('view_my_donations.html', donation_details=donation_details)
+    return render_template('view_my_donations.html', donation_details=donation_details
 """
+
+
+
 @app.route("/donate", methods=["GET", "POST"])
 def donate():
     user = None
@@ -891,23 +1082,7 @@ def update_payment():
     return redirect(url_for('view_my_donations'))
 
 
-
-
-# Route to handle the display of all donations (receipts)
-@app.route('/receipts_overview', methods=['GET'])
-def receipts_overview():
-    # Get the search query from the request
-    name_filter = request.args.get('name', '')
-    
-    # Adjust this query to return tuples of (Donation, User)
-    if name_filter:
-        receipts = db.session.query(Donation, User).join(User).filter(User.name.ilike(f'%{name_filter}%')).all()  # Search by user name
-    else:
-        receipts = db.session.query(Donation, User).join(User).all()  # Fetch all donations with associated users
-    
-    return render_template('receipts_overview.html', receipts=receipts)
-
-
+"""
 
 # Route to delete a specific donation (receipt)
 @app.route('/delete_receipt/<int:receipt_id>', methods=['POST'])
@@ -934,16 +1109,6 @@ def delete_file_from_server(filename):
         raise
 
 
-@app.route('/view_receipt/<int:receipt_id>')
-def view_receipt(receipt_id):
-    # Fetch a single receipt by its ID
-    receipt = Donation.query.get_or_404(receipt_id)  # Assuming Donation has all receipt data
-    
-    # Ensure the `currency` is part of the receipt object
-    currency = receipt.currency if hasattr(receipt, 'currency') else 'USD'  # Default to USD if currency is missing
-    
-    # Render the receipt details page
-    return render_template('view_receipt.html', receipt=receipt, currency=currency)
 
 
 
@@ -997,23 +1162,7 @@ def admin_uploaded_receipts():
 
 
 
-@app.route("/delete_receipt/<filename>", methods=["POST"])
-@admin_required
-def delete_receipt_by_filename(filename):
-    # Find donation by filename
-    donation = Donation.query.filter_by(receipt_filename=filename).first()
-    if donation:
-        # Delete the file from the upload folder
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        
-        # Remove the filename from the database
-        donation.receipt_filename = None
-        db.session.commit()
-    
-    return redirect(url_for('admin_uploaded_receipts'))
-
+"""
 
 
 @app.route('/recent_donations', methods=['GET', 'POST'])

@@ -50,26 +50,27 @@
             max-height: 400px;
             overflow-y: auto;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: black; /* Set table background to black */
+        }
         table th, table td {
             padding: 10px;
-            border: 1px solid #003366;
-            color: white; /* Set text color to white for both table headers and data cells */
+            border: 1px solid #333333; /* Dark gray borders for contrast */
+            color: white; /* Ensure text is white for visibility */
         }
         table th {
-            background-color: #003366;
-            color: white; /* Ensure table headers are white */
+            background-color: #444444; /* Slightly lighter black for headers */
         }
         table tr:nth-child(even) {
-            background-color: #f9f9f9;
-            color: white; /* Set text color to white for even rows */
+            background-color: #333333; /* Dark gray for even rows */
         }
         table tr:nth-child(odd) {
-            background-color: #e2e2e2;
-            color: white; /* Set text color to white for odd rows */
+            background-color: black; /* Black for odd rows */
         }
         table tr:hover {
-            background-color: #cce7ff;
-            color: black; /* Keep text color black on hover for contrast */
+            background-color: #555555; /* Highlight row with a lighter black */
         }
         button {
             background-color: #d9534f;
@@ -128,6 +129,9 @@
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
 
+
+        
+
         <!-- Receipts Table -->
         <div class="table-wrapper">
             <table class="table table-striped table-bordered">
@@ -151,15 +155,20 @@
                         <td>{{ user.church_branch }}</td>
                         <td>{{ donation.amount|commas }}</td>
                         <td>{{ donation.donation_date }}</td>
+
                         <td>
                             <!-- View Receipt -->
-                            <a href="{{ url_for('view_receipt', receipt_id=donation.id) }}" class="btn btn-info btn-sm mr-2">View</a>
+                            {% if donation.receipt_filename %}
+                                <a href="{{ get_s3_file_url(donation.receipt_filename) }}" class="btn btn-info btn-sm mr-2" target="_blank">View</a>
+                            {% endif %}
                             
                             <!-- Delete Receipt -->
-                            <form method="post" action="{{ url_for('delete_receipt', receipt_id=donation.id) }}" style="display: inline;" onsubmit="confirmDelete(event)">
+                            <form method="post" action="{{ url_for('delete_receipt_by_filename', filename=donation.receipt_filename) }}" style="display: inline;" onsubmit="confirmDelete(event)">
                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                             </form>
+                            
                         </td>
+                        
                     </tr>
                     {% endfor %}
                 </tbody>

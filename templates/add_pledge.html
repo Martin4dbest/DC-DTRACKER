@@ -129,7 +129,10 @@
 
         <!-- Form -->
         <form id="pledgeForm" action="{{ url_for('add_pledge') }}" method="POST">
-            <label for="user_id">Partner ID:</label>
+            <label for="user_id">Partner ID:</label><small style="display: block; color: #555;">The <code style="color: rgba(0, 0, 255, 0.973)">user_id</code> can be found at the top of your browser's address bar.</small>
+
+
+
             <input type="text" id="user_id" name="user_id" required 
                    placeholder="Check the URL above to find your User ID">
 

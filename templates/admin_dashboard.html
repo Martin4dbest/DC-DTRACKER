@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
+    <title>DC GLOBAL - ADMIN Dashboard</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css" rel="stylesheet">
@@ -92,6 +92,7 @@
                                     <i class="fa fa-heart me-2 text-danger"></i> Recent Donations
                                 </a>
                             </li>
+                            
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('admin_uploaded_receipts') }}">
                                     <i class="fa fa-upload me-2"></i> Uploaded Receipts
@@ -107,11 +108,7 @@
                                     <i class="fa fa-address-book me-2"></i> Partners Contacts
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('receipts_overview') }}">
-                                    <i class="fa fa-file-invoice me-2 text-secondary"></i> Receipt Overview
-                                </a>
-                            </li>
+                        
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('view_admin_details') }}">
                                     <i class="fa fa-user-cog me-2 text-warning"></i> Admin Contacts
@@ -148,56 +145,84 @@
         
 
         <!-- Users Table -->
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>Country</th>
-                        <th>State</th>
-                        <th>Local Church</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                        <th>Send Notification</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.name }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.phone }}</td>
-                        <td>{{ user.country }}</td>
-                        <td>{{ user.state }}</td>
-                        <td>{{ user.church_branch }}</td>
-                        <td>
-                            {% if user.is_admin %}
-                            <span class="badge bg-warning text-dark">Admin</span>
-                            {% else %} Partner {% endif %}
-                        </td>
-                        <td>
-                            <button class="btn btn-primary btn-sm view-details" data-id="{{ user.id }}"
-                                data-bs-toggle="modal" data-bs-target="#userModal">Details</button>
-                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Delete this user?')">
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </form>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('mail_sms') }}" class="btn btn-success text-white">Notify Partner</a>
-                        </td>
-                    </tr>
+         <!-- Users Table -->
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th><strong>Name</strong></th>
+                <th><strong>Email</strong></th>
+                <th><strong>Phone Number</strong></th>
+                <th><strong>Country</strong></th>
+                <th><strong>State</strong></th>
+                <th><strong>Local Church</strong></th>
+                <th><strong>Role</strong></th>
+                <th><strong>Partner Since</strong></th>
+                <th><strong>New Pledge / Pending Approval</strong></th>
+                <th><strong>Actions</strong></th>
+                <th><strong>Send Notification</strong></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td><strong>{{ user.name }}</strong></td>
+                <td><strong>{{ user.email }}</strong></td>
+                <td><strong>{{ user.phone }}</strong></td>
+                <td><strong>{{ user.country }}</strong></td>
+                <td><strong>{{ user.state }}</strong></td>
+                <td><strong>{{ user.church_branch }}</strong></td>
+                <td>
+                    {% if user.is_admin %}
+                    <span class="badge bg-warning text-dark"><strong>Admin</strong></span>
                     {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center">No users found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    <strong>Partner</strong>
+                    {% endif %}
+                </td>
+                <td><strong>{{ user.partner_since }}</strong></td>
+                <td>
+                    {% if not user.is_admin %}
+                        {% if user.pledged_amount %}
+                        <a href="{{ url_for('update_pledge', user_id=user.id) }}" class="button"
+                            style="background-color: rgb(230, 158, 25); color: white; padding: 4px 8px; font-size: 12px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                            <strong>Approve Pending Pledge</strong>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('add_pledge', user_id=user.id) }}" class="button"
+                            style="background-color: green; color: white; padding: 4px 8px; font-size: 12px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                            <strong>Add Pledge</strong>
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                <td class="d-flex gap-2">
+                    {% if not user.is_admin %}
+                    <button class="btn btn-primary btn-sm view-details" data-id="{{ user.id }}"
+                        data-bs-toggle="modal" data-bs-target="#userModal">
+                        <strong>Details</strong>
+                    </button>
+                    {% endif %}
+                    <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" 
+                        onsubmit="return confirm('Delete this user?')">
+                        <button class="btn btn-danger btn-sm"><strong>Delete</strong></button>
+                    </form>
+                </td>
+                <td>
+                    <a href="{{ url_for('mail_sms') }}" class="btn btn-success text-white" 
+                       style="padding: 4px 8px; font-size: 12px; line-height: 1;">
+                       <strong>Notify Partner</strong>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="11" class="text-center"><strong>No users found.</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 
 
     <!-- User Details Modal -->
@@ -227,21 +252,22 @@
             const modalBody = document.getElementById('user-modal-content');
 
             userModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget; 
+                const button = event.relatedTarget;
                 const userId = button.getAttribute('data-id');
                 modalBody.innerHTML = 'Loading...';
 
                 fetch(`/user/${userId}`)
                     .then(response => response.json())
                     .then(data => {
-                        modalBody.innerHTML = ` 
+                        const role = data.is_admin === true ? 'Admin' : 'Partner';
+                        modalBody.innerHTML = `
                             <p><strong>Name:</strong> ${data.name}</p>
                             <p><strong>Email:</strong> ${data.email}</p>
                             <p><strong>Phone Number:</strong> ${data.phone}</p>
                             <p><strong>Country:</strong> ${data.country}</p>
                             <p><strong>State:</strong> ${data.state}</p>
                             <p><strong>Church:</strong> ${data.church_branch || 'N/A'}</p>
-                            <p><strong>Role:</strong> ${data.is_admin ? 'Admin' : 'Partner'}</p>
+                            <p><strong>Role:</strong> ${role}</p>
                         `;
                     })
                     .catch(() => {
@@ -249,6 +275,7 @@
                     });
             });
         });
+
     </script>
 
 
