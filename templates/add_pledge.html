@@ -113,7 +113,8 @@
     <div class="container">
         <!-- Partner Pledge Section -->
         <div class="header">
-            <h3>Partner Pledge</h3>
+            
+            <h3>Partner ID {{ user_id }}</h3>
             <div class="option">
                 <i class="fas fa-sign-out-alt" 
                    onmouseover="this.style.color='#1c7c32'" 
@@ -129,12 +130,9 @@
 
         <!-- Form -->
         <form id="pledgeForm" action="{{ url_for('add_pledge') }}" method="POST">
-            <label for="user_id">Partner ID:</label><small style="display: block; color: #555;">The <code style="color: rgba(0, 0, 255, 0.973)">user_id</code> can be found at the top of your browser's address bar.</small>
-
-
 
             <input type="text" id="user_id" name="user_id" required 
-                   placeholder="Check the URL above to find your User ID">
+                   placeholder="Enter Partner ID Here">
 
             <label for="pledged_amount">Pledged Amount:</label>
             <input type="text" id="pledged_amount" name="pledged_amount" required 

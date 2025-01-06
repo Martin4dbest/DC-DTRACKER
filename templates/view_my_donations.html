@@ -87,7 +87,7 @@
                     <tr>
                         <th class="py-3 px-5 text-white bg-blue-900">Donation Date</th>
                         <th class="py-3 px-5 text-white bg-blue-900">Amount Paid</th>
-                        <th class="py-3 px-5 text-white bg-blue-900">Balance</th>
+                         <!--<th class="py-3 px-5 text-white bg-blue-900">Balance</th>  -->
                         <th class="py-3 px-5 text-white bg-blue-900">Currency</th>
                         <th class="py-3 px-5 text-white bg-blue-900">Payment Type</th>
                         <th class="py-3 px-5 text-white bg-blue-900">Timestamp</th>
@@ -99,7 +99,7 @@
                         <tr>
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.donation_date.strftime('%Y-%m-%d') }}</td>
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.amount|commas  }}</td>
-                            <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.balance|commas  }}</td>
+                             <!--<td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.balance|commas  }}</td> -->
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.currency }}</td>
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.donation.payment_type }}</td>
                             <td class="py-3 px-5 border-b border-gray-300 text-gray-700">{{ donation_detail.timestamp }}</td>

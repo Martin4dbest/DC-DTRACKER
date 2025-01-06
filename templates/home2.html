@@ -120,7 +120,7 @@
                 <span class="text-sm">
                     {% if not user.pledged_amount %}
                         Not yet made a pledge? 
-                        <a href="http://127.0.0.1:5000/add_pledge?user_id={{ user.id }}" class="text-[#00c6ff] underline text-sm">Make a Pledge</a> .
+                        <a href="{{ url_for('add_pledge', user_id=user.id) }}" class="text-[#00c6ff] underline text-sm">Make a Pledge</a> .
                     {% else %}
                         Ready to redeem your pledge? 
                         <a href="{{ url_for('donate') }}" class="text-[#00c6ff] underline text-sm">Proceed to Payment</a> .

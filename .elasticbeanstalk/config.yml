@@ -1,2 +1,18 @@
+branch-defaults:
+  master:
+    environment: prod  
+    group_suffix: null
 global:
+  application_name: DCDTRACKER GLOBAL
+  branch: master  
+  default_ec2_keyname: my-ec2-keypair  
+  default_platform: Python 3.9
+  default_region: us-east-1
+  include_git_submodules: true
+  instance_profile: null  
+  platform_name: Python 3.9
+  platform_version: 3.9  
   profile: eb-cli
+  repository: null  
+  sc: git
+  workspace_type: Application

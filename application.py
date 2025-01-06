@@ -472,6 +472,7 @@ def admin_required(f):
 
 
 # User registration route
+# User registration route
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -545,7 +546,7 @@ def register():
         db.session.commit()
 
         # Success message and redirect
-        flash('Registration successful! You can now log in.', 'success')
+        flash('Registration successful!', 'success')
         return redirect(url_for('login'))
 
     # Render the registration form
@@ -1566,8 +1567,9 @@ def add_pledge():
             else:
                 return jsonify({'success': False, 'message': 'User not found.'}), 404
 
-    return render_template('add_pledge.html')
-
+    # Add the user_id to the template when rendering the page
+    user_id = request.args.get('user_id')
+    return render_template('add_pledge.html', user_id=user_id)
 
 
 def get_user_by_id(user_id):
