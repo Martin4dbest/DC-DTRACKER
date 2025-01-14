@@ -73,8 +73,11 @@
 <body class="bg-[#001f3f] text-white flex flex-col items-center justify-center min-h-screen text-center p-5">
 
     <div class="bg-[#144679] p-8 rounded-xl shadow-lg max-w-2xl w-full">
-        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" alt="Church Logo" class="w-32 h-32 rounded-lg object-cover mx-auto">
-        <h1 id="greeting" class="text-3xl text-[#00c6ff] mb-8 font-extrabold glow">Good Afternoon, Nonye Sokoh!</h1>
+        <img src="{{ url_for('static', filename='images/dominion_city.jpeg') }}" 
+             alt="Church Logo" 
+             class="w-32 h-32 rounded-lg object-cover mx-auto mb-6">
+        <h2 id="greeting" class="text-xl text-[#00c6ff] mb-8 font-extrabold "></h2>
+
         <h2 class="text-lg mb-6">
             Partner Since: {{ user.partner_since if user.partner_since else 'N/A' }}
             <br>
@@ -111,7 +114,7 @@
             Amount Pledged: {{ user.pledged_amount|commas }} {{ user.pledge_currency }}
         </p>
 
-        <a href="{{ url_for('add_pledge', user_id=user.id) }}" class="glow mb-4 inline-block">Confirm displayed amount HERE to unlock medal.</a>
+        <!-- <a href="{{ url_for('add_pledge', user_id=user.id) }}" class="glow mb-4 inline-block">Confirm displayed amount HERE to unlock medal.</a>  -->
 
         <div class="flex flex-col gap-4 mt-6">
             <!-- First section with pledge link -->

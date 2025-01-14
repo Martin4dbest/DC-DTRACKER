@@ -107,7 +107,6 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 
-
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -664,10 +663,10 @@ def compress_image(filepath):
 
 
 # Your AWS S3 Configuration (replace with your actual values)
-app.config['S3_BUCKET'] = 'dcglobal-uploads'  # replace with your S3 bucket name
+app.config['S3_BUCKET'] = 'dcglobal-uploads'  
 app.config['S3_ACCESS_KEY'] = os.getenv('AWS_ACCESS_KEY_ID')
 app.config['S3_SECRET_KEY'] = os.getenv('AWS_SECRET_ACCESS_KEY')
-app.config['S3_REGION'] = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')  # default region
+app.config['S3_REGION'] = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')  
 
 # Initialize S3 client using boto3
 s3_client = boto3.client(
@@ -1478,7 +1477,7 @@ def delete_donation(donation_id):
     return redirect(url_for("recent_donations"))
 
 
-
+"""
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
     if request.method == 'POST':
@@ -1570,6 +1569,64 @@ def add_pledge():
     # Add the user_id to the template when rendering the page
     user_id = request.args.get('user_id')
     return render_template('add_pledge.html', user_id=user_id)
+"""
+@app.route('/add_pledge', methods=['GET', 'POST'])
+def add_pledge():
+    if request.method == 'POST':
+        # Handling form submission
+        if request.form:
+            user_id = request.form['user_id']  # Get the user ID from the form
+            pledged_amount = request.form['pledged_amount']
+            pledge_currency = request.form['currency']
+            medal = request.form.get('medal')  # Get the selected medal from the form
+            donation_date_str = request.form['donation_date']  # Get the donation date from the form
+
+            # Convert the donation_date to a datetime object
+            try:
+                donation_date = datetime.strptime(donation_date_str, '%Y-%m-%d')
+            except ValueError:
+                flash('Invalid donation date. Please provide a valid date.', 'danger')
+                return redirect(url_for('add_pledge', user_id=user_id))  # Redirect to the form
+
+            # Remove commas from pledged amount before converting to float
+            pledged_amount = pledged_amount.replace(',', '')
+
+            try:
+                # Convert pledged amount to float
+                pledged_amount = float(pledged_amount)
+            except ValueError:
+                flash('Invalid pledged amount. Please enter a valid number.', 'danger')
+                return redirect(url_for('add_pledge', user_id=user_id))  # Redirect to the form
+
+            # Fetch the user from the User table
+            user = User.query.get(user_id)
+
+            if user:
+                # Update the pledged amount, currency, medal, and donation date in the User table
+                user.pledged_amount = pledged_amount
+                user.pledge_currency = pledge_currency
+                user.medal = medal  # Save the selected medal type
+                user.donation_date = donation_date  # Save the donation date
+
+                # Commit the changes to the database
+                db.session.commit()
+
+                # Check the admin status of the logged-in user and redirect accordingly
+                logged_in_user = User.query.get(session.get('user_id'))  # Assuming user_id is stored in the session
+                if logged_in_user and (logged_in_user.is_admin or logged_in_user.is_super_admin):
+                    flash('Pledge added successfully! You will be redirected to the admin dashboard.', 'success')
+                    return render_template('success.html', next_url=url_for('admin_dashboard'))
+                else:
+                    flash('Pledge added successfully! You will be redirected to the home page.', 'success')
+                    return render_template('success.html', next_url=url_for('home2'))
+            else:
+                flash('User not found!', 'danger')
+                return redirect(url_for('add_pledge', user_id=user_id))  # Redirect in case user not found
+
+    # Add the user_id to the template when rendering the page
+    user_id = request.args.get('user_id')
+    return render_template('add_pledge.html', user_id=user_id)
+
 
 
 def get_user_by_id(user_id):
@@ -1761,6 +1818,7 @@ SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 # Define SCOPES (Google Sheets API Scope)
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
+
 @app.route('/sync_with_google_sheets', methods=['POST'])
 def sync_with_google_sheets():
     try:
@@ -1791,15 +1849,9 @@ def sync_with_google_sheets():
             church_branch = row[6] if len(row) > 6 else None
             birthday_str = row[7] if len(row) > 7 else None
             pledged_amount = row[8] if len(row) > 8 else None
-            pledge_currency = row[9] if len(row) > 9 else None
 
-            # If email is missing, we assign placeholder, but don't skip users based on it
-            if not email:
-                email = None  # Allow users with no email
-
-            # If phone is missing, allow it to be None without skipping
-            if not phone:
-                phone = None  # Allow users with no phone number
+            # Process pledge_currency directly
+            pledge_currency = row[9].strip().upper() if len(row) > 9 else None
 
             # Parse birthday
             birthday = None
@@ -1854,6 +1906,7 @@ def sync_with_google_sheets():
     except Exception as e:
         flash(f"Error during Google Sheets synchronization: {str(e)}", 'error')
         return redirect(url_for('view_partners_pledges'))
+
 
 
 
