@@ -7,7 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gradient-to-r from-indigo-500 via-indigo-500 to-indigo-500 min-h-screen flex justify-center items-center">
+<body class="bg-white min-h-screen flex justify-center items-center">
+
     <div class="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg w-full max-w-lg">
         <h1 class="text-center text-3xl font-semibold text-blue-600 mb-6">Partner Registration</h1>
         <form method="POST" action="{{ url_for('register') }}" id="registrationForm">
@@ -354,14 +355,7 @@
         
     </script>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('registrationForm');
-        form.addEventListener('submit', function (event) {
-            alert('User registered successfully!');
-        });
-    });
-    </script>
+
     
 
 </body>

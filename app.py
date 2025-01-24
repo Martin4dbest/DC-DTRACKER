@@ -470,7 +470,7 @@ def admin_required(f):
     return decorated_function
 
 
-# User registration route
+"""
 # User registration route
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -551,6 +551,112 @@ def register():
     # Render the registration form
     return render_template('register.html', current_year=datetime.now().year)
 
+"""
+
+
+# Your registration route
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        # Get form data
+        email = request.form['email']
+        password = request.form['password']
+        name = request.form['name']
+        phone = request.form['phone']
+        address = request.form['address']
+        country = request.form['country']  # Country from the dropdown
+        state = request.form['state']  # State from the dropdown
+        manual_country = request.form.get('manual_country')  # Manual country input
+        manual_state = request.form.get('manual_state')  # Manual state input
+
+        # Use manual country/state if provided; otherwise, fall back to dropdown
+        if manual_country:
+            country = manual_country
+        if manual_state:
+            state = manual_state
+
+        # Handle birthday input with optional year
+        birthday_str = request.form.get('birthday')  # e.g., '10-10' or '2024-10-10'
+        birthday = None
+        if birthday_str:
+            try:
+                # Try parsing in 'YYYY-MM-DD' format
+                birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+            except ValueError:
+                try:
+                    # Try parsing in 'DD-MM-YYYY' format
+                    birthday = datetime.strptime(birthday_str, "%d-%m-%Y").date()
+                except ValueError:
+                    flash('Invalid date format for birthday. Please use YYYY-MM-DD or DD-MM-YYYY.', 'error')
+                    return render_template('register.html', current_year=datetime.now().year)
+
+        # Get the 'Partner Since' year
+        partner_since = request.form.get('partner_since')
+        if partner_since:
+            try:
+                partner_since = int(partner_since)
+                if partner_since < 1900 or partner_since > datetime.now().year:
+                    raise ValueError
+            except ValueError:
+                flash('Invalid year for Partner Since. Please provide a valid year.', 'error')
+                return render_template('register.html', current_year=datetime.now().year)
+
+        # Check if email is already registered
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('Email address already registered.', 'error')
+            return render_template('register.html', current_year=datetime.now().year)
+
+        # Create a new user
+        new_user = User(
+            name=name,
+            phone=phone,
+            email=email,
+            address=address,
+            country=country,
+            state=state,
+            church_branch=request.form['church_branch'],  # Ensure this field is also included
+            birthday=birthday,
+            partner_since=partner_since,  # Store the Partner Since year
+            is_admin=False,
+            is_super_admin=False
+        )
+        new_user.set_password(password)  # Set hashed password
+
+        # Save user to the database
+        db.session.add(new_user)
+        db.session.commit()
+
+        # Send confirmation email
+        message = Mail(
+            from_email='partnership@dominioncityglobal.org',  # Replace with your verified SendGrid sender email
+            to_emails=email,
+            subject='Welcome to Our Platform!',
+            html_content=f"""
+                <h1>Welcome to DC Global Partnership Mission, {name}! 🎉</h1>
+                <p>Thank you for registering with us! We are excited to have you as part of our community. 🤝</p>
+                <p>You can now proceed to log in to your account using the username (email) and password you provided during registration. 🔑</p>
+                <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:partnership@dominioncityglobal.org">partnership@dominioncityglobal.org</a>. 📩</p>
+                <p>We look forward to your engagement with the platform! 🌟</p>
+                <p>Best regards,<br>The DC Global Partnership Mission Team</p>
+            """
+        )
+
+        try:
+            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))  # Set your SendGrid API key in the environment
+            response = sg.send(message)
+            print(f"Email sent! Status Code: {response.status_code}")
+        except Exception as e:
+            print(f"Error sending email: {e}")
+            flash('Registration successful, but we couldn\'t send a confirmation email.', 'warning')
+
+        # Render a success page and redirect to login
+        flash('Registration successful! A confirmation email has been sent.', 'success')
+        return render_template('success2.html')  # Immediately show success template
+
+    # Render the registration form
+    return render_template('register.html', current_year=datetime.now().year)
+
 
 
 @login_manager.user_loader
@@ -571,10 +677,12 @@ def index():
 
 
 
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'GET':
+        # Clear previous flash messages when the login page is loaded
+        session.pop('_flashes', None)
+
     if request.method == 'POST':
         login_input = request.form['email']  # We'll use 'email' form field for both email and phone number input
 
@@ -603,6 +711,9 @@ def login():
     return render_template('login.html')
 
 
+
+
+
 @app.route('/home2')
 def home2():
     # Check if the user is logged in
@@ -613,6 +724,12 @@ def home2():
     # Retrieve user information
     user = User.query.get(session['user_id'])
 
+    # Check if the user exists
+    if not user:
+        flash('User not found', 'error')  # Show a user-friendly error message
+        return redirect(url_for('login'))  # Redirect to login or another page
+
+    # Render the template with the user data
     return render_template(
         'home2.html',
         user=user
@@ -1164,9 +1281,12 @@ def admin_uploaded_receipts():
 
 """
 
-
 @app.route('/recent_donations', methods=['GET', 'POST'])
 def recent_donations():
+    # Only clear session keys unrelated to authentication
+    session.pop('some_other_key', None)  # Example of clearing unrelated session data
+    # Avoid clearing user_id, is_admin, or is_super_admin here
+
     search_term = request.form.get('search_term', '').strip()  # Get search term from form, with trimming
 
     # Build the base query for donations
@@ -1191,6 +1311,7 @@ def recent_donations():
 
 
 
+
 def get_current_user():
     user_id = session.get("user_id")
     return User.query.get(user_id) if user_id else None  # Adjust according to your ORM
@@ -1207,7 +1328,35 @@ def donation_success():
 
 
 
-#Admin Registration route
+# Function to send email via SendGrid
+def send_registration_email(email, name, phone):
+    message = Mail(
+        from_email='partnership@dominioncityglobal.org',  # Replace with your SendGrid-verified sender email
+        to_emails=email,
+        subject='Admin Registration Successful',
+        html_content=f"""
+        <p>Dear {name},</p>
+        <p>Congratulations! You have been successfully registered as an admin.</p>
+        <p>Your login details are as follows:</p>
+        <ul>
+            <li><strong>Username:</strong> {phone} or {email}</li>
+            <li><strong>Password:</strong> {phone} or {email}</li>
+        </ul>
+        <p>You can change your password after logging in for the first time.</p>
+        <p>Best regards,<br>The Team</p>
+        """
+    )
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.send(message)
+        if response.status_code == 202:
+            print('Email sent successfully!')
+        else:
+            print(f'Failed to send email: {response.status_code}')
+    except Exception as e:
+        print(f'Error sending email: {e}')
+
+
 @app.route('/admin/register', methods=['GET', 'POST'])
 def admin_register():
     if request.method == 'POST':
@@ -1252,11 +1401,13 @@ def admin_register():
         db.session.add(new_admin)
         db.session.commit()
 
+        # Send email via SendGrid
+        send_registration_email(email, name, phone)
+
         flash('Admin registration successful! You can now log in.', 'success')
         return redirect(url_for('admin_login'))  # Adjust the redirect as necessary
 
     return render_template('admin_register.html')  # Render the registration form template
-
 
 
 # Admin login
@@ -1477,99 +1628,7 @@ def delete_donation(donation_id):
     return redirect(url_for("recent_donations"))
 
 
-"""
-@app.route('/add_pledge', methods=['GET', 'POST'])
-def add_pledge():
-    if request.method == 'POST':
-        # Handling form submission
-        if request.form:
-            user_id = request.form['user_id']  # Get the user ID from the form
-            pledged_amount = request.form['pledged_amount']
-            pledge_currency = request.form['currency']
-            medal = request.form.get('medal')  # Get the selected medal from the form
-            donation_date_str = request.form['donation_date']  # Get the donation date from the form
 
-            # Convert the donation_date to a datetime object
-            try:
-                donation_date = datetime.strptime(donation_date_str, '%Y-%m-%d')
-            except ValueError:
-                flash('Invalid donation date. Please provide a valid date.', 'danger')
-                return redirect(url_for('admin_dashboard'))  # Redirect to error page or the same form
-
-            # Remove commas from pledged amount before converting to float
-            pledged_amount = pledged_amount.replace(',', '')
-
-            try:
-                # Convert pledged amount to float
-                pledged_amount = float(pledged_amount)
-            except ValueError:
-                flash('Invalid pledged amount. Please enter a valid number.', 'danger')
-                return redirect(url_for('admin_dashboard'))  # Redirect to error page or the same form
-
-            # Fetch the user from the User table
-            user = User.query.get(user_id)
-
-            if user:
-                # Update the pledged amount, currency, medal, and donation date in the User table
-                user.pledged_amount = pledged_amount
-                user.pledge_currency = pledge_currency
-                user.medal = medal  # Save the selected medal type
-                user.donation_date = donation_date  # Save the donation date
-
-                # Commit the changes to the database
-                db.session.commit()
-
-                flash('Pledge added successfully! You can login again')
-                return redirect(url_for('admin_dashboard'))  # Redirect to the admin dashboard or success page
-            else:
-                flash('User not found!', 'danger')
-                return redirect(url_for('admin_dashboard'))  # Redirect in case user not found
-        
-        # Handling JSON submission
-        else:
-            data = request.get_json()
-            user_id = data.get('user_id')
-            pledged_amount = data.get('pledged_amount')
-            pledge_currency = data.get('currency', 'USD')  # Default to 'USD' if currency not provided
-            medal = data.get('medal')  # Medal type provided in JSON data
-            donation_date_str = data.get('donation_date')
-
-            try:
-                # Convert the donation date string to a datetime object
-                donation_date = datetime.strptime(donation_date_str, '%Y-%m-%d')
-            except ValueError:
-                return jsonify({'success': False, 'message': 'Invalid donation date.'}), 400
-
-            # Remove commas from pledged amount before converting to float
-            pledged_amount = pledged_amount.replace(',', '')
-
-            try:
-                # Convert pledged amount to float
-                pledged_amount = float(pledged_amount)
-            except ValueError:
-                return jsonify({'success': False, 'message': 'Invalid pledged amount.'}), 400
-
-            # Fetch the user from the User table
-            user = User.query.get(user_id)
-
-            if user:
-                # Update the pledged amount, currency, medal, and donation date in the User table
-                user.pledged_amount = pledged_amount
-                user.pledge_currency = pledge_currency
-                user.medal = medal  # Save the selected medal type
-                user.donation_date = donation_date  # Save the donation date
-
-                # Commit the changes to the database
-                db.session.commit()
-
-                return jsonify({'success': True, 'message': 'Pledge added successfully.'})
-            else:
-                return jsonify({'success': False, 'message': 'User not found.'}), 404
-
-    # Add the user_id to the template when rendering the page
-    user_id = request.args.get('user_id')
-    return render_template('add_pledge.html', user_id=user_id)
-"""
 @app.route('/add_pledge', methods=['GET', 'POST'])
 def add_pledge():
     if request.method == 'POST':
@@ -1811,13 +1870,70 @@ def select_payment_options():
 
 
 
+
+
+# Twilio API setup
+TWILIO_SID = os.getenv('TWILIO_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
+
+# Function to send email
+def send_welcome_email(email, name, phone=None):
+    try:
+        message = Mail(
+            from_email='partnership@dominioncityglobal.org',
+            to_emails=email,
+            subject='Welcome to DC Global Partnership Mission!',
+            html_content=f"""
+                <h1>Welcome to DC Global Partnership Mission, {name}! 🎉</h1>
+                <p>We are excited to inform you that you have been successfully onboarded to our platform. 🙌</p>
+
+                <p>You were onboarded directly by the admin after filling out the form received from the church. Kindly use the login details below to access your portal: 🔑</p>
+                <ul>
+                    <li><strong>Username:</strong> {phone} or {email}</li>
+                    <li><strong>Password:</strong> {phone} or {email}</li>
+                </ul>
+
+                <p>To proceed, please visit the following link to access your portal: 🌐</p>
+                <p><a href="http://www.dcglobal.org">www.dcglobal.org</a></p>
+
+                <p>If you have any inquiries or need assistance, please feel free to reach out to us at <a href="mailto:support@example.com">support@example.com</a>. 📩</p>
+
+                <p>Thank you for being part of our community, and we look forward to your engagement. 🌟</p>
+
+                <p>Best regards,<br>The DC Global Partnership Mission Team</p>
+
+            """
+        )
+        sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
+        response = sg.send(message)
+        print(f"Email sent to {email}. Status Code: {response.status_code}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        flash('Registration successful, but we couldn\'t send a confirmation email.', 'warning')
+
+
+# Function to send SMS
+def send_welcome_sms(phone, name):
+    try:
+        client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
+        message = client.messages.create(
+            body=f"Hello {name}, welcome to DC Global Partnership Mission! You have been successfully onboarded.",
+            from_=TWILIO_PHONE_NUMBER,
+            to=phone
+        )
+        print(f"SMS sent to {phone}. SID: {message.sid}")
+    except Exception as e:
+        print(f"Error sending SMS: {e}")
+        flash('Registration successful, but we couldn\'t send a confirmation SMS.', 'warning')
+
+
 # Load environment variables
 SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 
 # Define SCOPES (Google Sheets API Scope)
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
 
 @app.route('/sync_with_google_sheets', methods=['POST'])
 def sync_with_google_sheets():
@@ -1899,6 +2015,12 @@ def sync_with_google_sheets():
             new_user.set_password(phone or email)  # Use phone or email for password (hashed)
             db.session.add(new_user)
 
+            # Send email and SMS after user creation
+            if email:
+                send_welcome_email(email, name, phone)
+            if phone:
+                send_welcome_sms(phone, name)
+
         db.session.commit()  # Commit all changes at once for efficiency
         flash('Data synchronization with Google Sheets completed successfully.', 'success')
         return redirect(url_for('view_partners_pledges'))
@@ -1906,8 +2028,6 @@ def sync_with_google_sheets():
     except Exception as e:
         flash(f"Error during Google Sheets synchronization: {str(e)}", 'error')
         return redirect(url_for('view_partners_pledges'))
-
-
 
 
 
@@ -1923,11 +2043,22 @@ def paystack():
 def thank_you():
     return render_template('thank_you.html')
 
+"""
 @app.route('/edit-profile-success')
 def edit_profile_success():
     return render_template('edit_profile_success.html')
+"""
 
+"""
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+"""
 
 # Define a custom filter
 @app.template_filter('commas')
@@ -1942,11 +2073,16 @@ def success():
     return "Pledge added successfully!", 200
 
 
+
 @app.route('/edit-profile', methods=['GET', 'POST'])
 @login_required  # Ensure the user is logged in before accessing the profile edit page
 def edit_profile():
     user_id = session.get('user_id')  # Get the user ID from session
-    user = db.session.get(User, user_id)  # Use db.session.get() to avoid the deprecated warning
+    user = User.query.get(user_id)  # Query the user using SQLAlchemy
+
+    if not user:  # Handle the case where the user is not found
+        flash('User not found!', 'danger')
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
         # Get form data
@@ -1972,14 +2108,32 @@ def edit_profile():
         # Commit the changes to the database
         db.session.commit()
 
-        # Flash a success message
-        flash('Profile updated successfully!', 'success')
-
-        # Redirect to edit_profile_success.html first
-        return redirect(url_for('edit_profile_success'))
+        # Check the admin status of the logged-in user and redirect accordingly
+        logged_in_user = User.query.get(session.get('user_id'))  # Assuming user_id is stored in the session
+        if logged_in_user and (logged_in_user.is_admin or logged_in_user.is_super_admin):
+            flash('Profile updated successfully! You will be redirected to the admin dashboard.', 'success')
+            return render_template('profile_edit_success.html', next_url=url_for('admin_dashboard'))
+        else:
+            flash('Profile updated successfully! You will be redirected to the home page.', 'success')
+            return render_template('profile_edit_success.html', next_url=url_for('home2'))
 
     # Render the edit profile page for GET requests
     return render_template('edit_profile.html', user=user)  # Pass user data to the template
+
+
+
+@app.route('/edit-profile-success')
+@login_required  # Ensure the user is logged in
+def edit_profile_success():
+    # Determine the user's role to redirect appropriately
+    logged_in_user = User.query.get(session.get('user_id'))  # Assuming user_id is stored in the session
+    if logged_in_user and (logged_in_user.is_admin or logged_in_user.is_super_admin):
+        next_url = url_for('admin_dashboard')  # Redirect admins to the admin dashboard
+    else:
+        next_url = url_for('home2')  # Redirect regular users to the home page
+    
+    return render_template('profile_edit_success.html', next_url=next_url)
+
 
 
 
