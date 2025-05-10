@@ -17,17 +17,34 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE ONLY public.pledges DROP CONSTRAINT pledges_user_id_fkey;
+ALTER TABLE ONLY public.donations DROP CONSTRAINT donations_user_id_fkey;
+ALTER TABLE ONLY public."user" DROP CONSTRAINT user_pkey;
+ALTER TABLE ONLY public."user" DROP CONSTRAINT user_email_key;
+ALTER TABLE ONLY public.donations DROP CONSTRAINT uq_donations_reference;
+ALTER TABLE ONLY public.pledges DROP CONSTRAINT pledges_pkey;
+ALTER TABLE ONLY public.donations DROP CONSTRAINT donations_pkey;
+ALTER TABLE ONLY public.alembic_version DROP CONSTRAINT alembic_version_pkc;
+ALTER TABLE public."user" ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.pledges ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.donations ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE public.user_id_seq;
+DROP TABLE public."user";
+DROP SEQUENCE public.pledges_id_seq;
+DROP TABLE public.pledges;
+DROP SEQUENCE public.donations_id_seq;
+DROP TABLE public.donations;
+DROP TABLE public.alembic_version;
+-- *not* dropping schema, since initdb creates it
 --
--- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
 -- *not* creating schema, since initdb creates it
 
 
-ALTER SCHEMA public OWNER TO postgres;
-
 --
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON SCHEMA public IS '';
@@ -38,7 +55,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: postgres
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.alembic_version (
@@ -46,10 +63,8 @@ CREATE TABLE public.alembic_version (
 );
 
 
-ALTER TABLE public.alembic_version OWNER TO postgres;
-
 --
--- Name: donations; Type: TABLE; Schema: public; Owner: postgres
+-- Name: donations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.donations (
@@ -69,10 +84,8 @@ CREATE TABLE public.donations (
 );
 
 
-ALTER TABLE public.donations OWNER TO postgres;
-
 --
--- Name: donations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: donations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.donations_id_seq
@@ -84,17 +97,15 @@ CREATE SEQUENCE public.donations_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.donations_id_seq OWNER TO postgres;
-
 --
--- Name: donations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: donations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.donations_id_seq OWNED BY public.donations.id;
 
 
 --
--- Name: pledges; Type: TABLE; Schema: public; Owner: postgres
+-- Name: pledges; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.pledges (
@@ -106,10 +117,8 @@ CREATE TABLE public.pledges (
 );
 
 
-ALTER TABLE public.pledges OWNER TO postgres;
-
 --
--- Name: pledges_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: pledges_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.pledges_id_seq
@@ -121,17 +130,15 @@ CREATE SEQUENCE public.pledges_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.pledges_id_seq OWNER TO postgres;
-
 --
--- Name: pledges_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: pledges_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.pledges_id_seq OWNED BY public.pledges.id;
 
 
 --
--- Name: user; Type: TABLE; Schema: public; Owner: postgres
+-- Name: user; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."user" (
@@ -161,10 +168,8 @@ CREATE TABLE public."user" (
 );
 
 
-ALTER TABLE public."user" OWNER TO postgres;
-
 --
--- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.user_id_seq
@@ -176,38 +181,36 @@ CREATE SEQUENCE public.user_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.user_id_seq OWNER TO postgres;
-
 --
--- Name: user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.user_id_seq OWNED BY public."user".id;
 
 
 --
--- Name: donations id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: donations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.donations ALTER COLUMN id SET DEFAULT nextval('public.donations_id_seq'::regclass);
 
 
 --
--- Name: pledges id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: pledges id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pledges ALTER COLUMN id SET DEFAULT nextval('public.pledges_id_seq'::regclass);
 
 
 --
--- Name: user id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: user id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."user" ALTER COLUMN id SET DEFAULT nextval('public.user_id_seq'::regclass);
 
 
 --
--- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
@@ -216,7 +219,7 @@ e786ccd9b0d9
 
 
 --
--- Data for Name: donations; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: donations; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.donations (id, user_id, amount, currency, donation_date, medal, payment_type, receipt_filename, amount_paid, pledged_amount, "timestamp", paid_status, reference) FROM stdin;
@@ -225,7 +228,7 @@ COPY public.donations (id, user_id, amount, currency, donation_date, medal, paym
 
 
 --
--- Data for Name: pledges; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: pledges; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.pledges (id, user_id, pledged_amount, pledge_currency, created_at) FROM stdin;
@@ -233,7 +236,7 @@ COPY public.pledges (id, user_id, pledged_amount, pledge_currency, created_at) F
 
 
 --
--- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public."user" (id, name, phone, email, address, country, state, church_branch, birthday, password_hash, is_admin, is_super_admin, is_active, created_at, updated_at, pledged_amount, pledge_currency, paid_status, medal, partner_since, donation_date, has_received_onboarding_email, has_received_onboarding_sms) FROM stdin;
@@ -244,28 +247,28 @@ COPY public."user" (id, name, phone, email, address, country, state, church_bran
 
 
 --
--- Name: donations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: donations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.donations_id_seq', 345, true);
 
 
 --
--- Name: pledges_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: pledges_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.pledges_id_seq', 45, true);
 
 
 --
--- Name: user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.user_id_seq', 47, true);
 
 
 --
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.alembic_version
@@ -273,7 +276,7 @@ ALTER TABLE ONLY public.alembic_version
 
 
 --
--- Name: donations donations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: donations donations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.donations
@@ -281,7 +284,7 @@ ALTER TABLE ONLY public.donations
 
 
 --
--- Name: pledges pledges_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: pledges pledges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pledges
@@ -289,7 +292,7 @@ ALTER TABLE ONLY public.pledges
 
 
 --
--- Name: donations uq_donations_reference; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: donations uq_donations_reference; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.donations
@@ -297,7 +300,7 @@ ALTER TABLE ONLY public.donations
 
 
 --
--- Name: user user_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: user user_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."user"
@@ -305,7 +308,7 @@ ALTER TABLE ONLY public."user"
 
 
 --
--- Name: user user_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: user user_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."user"
@@ -313,7 +316,7 @@ ALTER TABLE ONLY public."user"
 
 
 --
--- Name: donations donations_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: donations donations_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.donations
@@ -321,18 +324,11 @@ ALTER TABLE ONLY public.donations
 
 
 --
--- Name: pledges pledges_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: pledges pledges_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pledges
     ADD CONSTRAINT pledges_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id);
-
-
---
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 
 
 --
