@@ -264,7 +264,6 @@ def mail_sms():
 
     return render_template("mail_sms.html")
 
-
 def send_personalized_emails(subject, email_template):
     try:
         sg = SendGridAPIClient(SENDGRID_API_KEY)
@@ -286,13 +285,16 @@ def send_personalized_emails(subject, email_template):
                     name=user.name, phone=user.phone, email=user.email
                 )
 
+                # Fix f-string backslash issue
+                html_email_body = personalized_email_body.replace('\n', '<br>')
+
                 # Create the email message
                 message = Mail(
                     from_email=FROM_EMAIL,
                     to_emails=user.email,
                     subject=subject,
                     plain_text_content=personalized_email_body,
-                    html_content=f"<p>{personalized_email_body.replace('\n', '<br>')}</p>"
+                    html_content=f"<p>{html_email_body}</p>"
                 )
 
                 # Send the email
@@ -312,6 +314,7 @@ def send_personalized_emails(subject, email_template):
     except Exception as e:
         print(f"Error sending emails: {str(e)}")
         raise e
+
 
 
 def send_personalized_sms(sms_template):
