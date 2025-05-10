@@ -1352,8 +1352,7 @@ def send_bulk_email(subject, body, recipients):
         print(f"An error occurred with SES: {error}")
 
 
-
-
+"""
 
 
 def validate_phone_number(phone_number):
