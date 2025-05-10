@@ -1353,19 +1353,7 @@ def send_bulk_email(subject, body, recipients):
 
 
 
-# Function to send bulk SMS using AWS SNS
-def send_bulk_sms(message, phone_numbers):
-    try:
-        for number in phone_numbers:
-            response = sns_client.publish(
-                PhoneNumber=number,
-                Message=message
-            )
-            print(f"Message sent to {number} with response: {response}")
-    except (BotoCoreError, ClientError) as error:
-        print(f"An error occurred with SNS: {error}")
 
-"""
 
 
 def validate_phone_number(phone_number):
