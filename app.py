@@ -1752,7 +1752,9 @@ def send_welcome_sms(phone, name):
 
 
 # Load environment variables
-SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
+#SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
+SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_JSON')
+
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 
 # Define SCOPES (Google Sheets API Scope)
@@ -1969,8 +1971,15 @@ def logout():
     flash('You have been logged out.', 'success')
     return redirect(url_for('index'))
 
-
+"""
 application = app
 
 if __name__ == "__main__":
     application.run(debug=True)
+
+"""
+
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
