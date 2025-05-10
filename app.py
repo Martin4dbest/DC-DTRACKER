@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash
+import uuid
 from sqlalchemy import Text
 from sqlalchemy import Column, Boolean, DateTime, DECIMAL
 from flask_login import LoginManager, login_required, current_user
@@ -107,6 +108,7 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 
+# User Model
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -128,18 +130,15 @@ class User(db.Model):
     pledged_amount = db.Column(db.Float, default=0.0)
     pledge_currency = db.Column(db.String(3), default="USD")
     paid_status = db.Column(db.Boolean, default=False)
-    medal = db.Column(db.String(100), nullable=True)  # In your User model
-    partner_since = db.Column(db.Integer, nullable=True)  # Year as an integer
+    medal = db.Column(db.String(100), nullable=True)  
+    partner_since = db.Column(db.Integer, nullable=True)  
     donation_date = db.Column(db.Date, nullable=False, default=date.today)
     has_received_onboarding_email = db.Column(db.Boolean, default=False)
     has_received_onboarding_sms = db.Column(db.Boolean, default=False)
 
-
-
     # Relationships
     pledges = db.relationship('Pledge', back_populates='donor', cascade="all, delete-orphan")
-
-
+    donations = db.relationship("Donation", back_populates="user")
 
     
 
@@ -166,10 +165,12 @@ class Donation(db.Model):
     pledged_amount = db.Column(db.Float, nullable=False, default=0)  # Added to store pledged amount
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) 
     paid_status = db.Column(db.Boolean, default=False)
-    
+    reference = db.Column(db.String(100), unique=True, nullable=False)  # Store Paystack reference
 
     #user = db.relationship('User', backref='pledges')
-    user = db.relationship("User", backref="donations")
+    #ser = db.relationship("User", backref="donations")
+    user = db.relationship("User", back_populates="donations")
+
     medal = db.Column(db.String(50))  # field to store medal type
 
     
@@ -470,88 +471,6 @@ def admin_required(f):
     return decorated_function
 
 
-"""
-# User registration route
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        # Get form data
-        email = request.form['email']
-        password = request.form['password']
-        name = request.form['name']
-        phone = request.form['phone']
-        address = request.form['address']
-        country = request.form['country']  # Country from the dropdown
-        state = request.form['state']  # State from the dropdown
-        manual_country = request.form.get('manual_country')  # Manual country input
-        manual_state = request.form.get('manual_state')  # Manual state input
-
-        # Use manual country/state if provided; otherwise, fall back to dropdown
-        if manual_country:
-            country = manual_country
-        if manual_state:
-            state = manual_state
-
-        # Handle birthday input with optional year
-        birthday_str = request.form.get('birthday')  # e.g., '10-10' or '2024-10-10'
-        birthday = None
-        if birthday_str:
-            try:
-                # Try parsing in 'YYYY-MM-DD' format
-                birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
-            except ValueError:
-                try:
-                    # Try parsing in 'DD-MM-YYYY' format
-                    birthday = datetime.strptime(birthday_str, "%d-%m-%Y").date()
-                except ValueError:
-                    flash('Invalid date format for birthday. Please use YYYY-MM-DD or DD-MM-YYYY.', 'error')
-                    return render_template('register.html', current_year=datetime.now().year)
-
-        # Get the 'Partner Since' year
-        partner_since = request.form.get('partner_since')
-        if partner_since:
-            try:
-                partner_since = int(partner_since)
-                if partner_since < 1900 or partner_since > datetime.now().year:
-                    raise ValueError
-            except ValueError:
-                flash('Invalid year for Partner Since. Please provide a valid year.', 'error')
-                return render_template('register.html', current_year=datetime.now().year)
-
-        # Check if email is already registered
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            flash('Email address already registered.', 'error')
-            return render_template('register.html', current_year=datetime.now().year)
-
-        # Create a new user
-        new_user = User(
-            name=name,
-            phone=phone,
-            email=email,
-            address=address,
-            country=country,
-            state=state,
-            church_branch=request.form['church_branch'],  # Ensure this field is also included
-            birthday=birthday,
-            partner_since=partner_since,  # Store the Partner Since year
-            is_admin=False,
-            is_super_admin=False
-        )
-        new_user.set_password(password)  # Set hashed password
-
-        # Save user to the database
-        db.session.add(new_user)
-        db.session.commit()
-
-        # Success message and redirect
-        flash('Registration successful!', 'success')
-        return redirect(url_for('login'))
-
-    # Render the registration form
-    return render_template('register.html', current_year=datetime.now().year)
-
-"""
 
 
 # Your registration route
@@ -559,15 +478,20 @@ def register():
 def register():
     if request.method == 'POST':
         # Get form data
-        email = request.form['email']
-        password = request.form['password']
-        name = request.form['name']
-        phone = request.form['phone']
-        address = request.form['address']
-        country = request.form['country']  # Country from the dropdown
-        state = request.form['state']  # State from the dropdown
+        email = request.form.get('email')
+        password = request.form.get('password')
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+        country = request.form.get('country')  # Country from the dropdown
+        state = request.form.get('state')  # State from the dropdown
         manual_country = request.form.get('manual_country')  # Manual country input
         manual_state = request.form.get('manual_state')  # Manual state input
+
+        # Validate required fields
+        if not email or not password or not name or not phone or not address or not country or not state:
+            flash('Please fill out all required fields.', 'error')
+            return render_template('register.html', current_year=datetime.now().year)
 
         # Use manual country/state if provided; otherwise, fall back to dropdown
         if manual_country:
@@ -623,29 +547,35 @@ def register():
         )
         new_user.set_password(password)  # Set hashed password
 
-        # Save user to the database
-        db.session.add(new_user)
-        db.session.commit()
-
-        # Send confirmation email
-        message = Mail(
-            from_email='partnership@dominioncityglobal.org',  # Replace with your verified SendGrid sender email
-            to_emails=email,
-            subject='Welcome to Our Platform!',
-            html_content=f"""
-                <h1>Welcome to DC Global Partnership Mission, {name}! 🎉</h1>
-                <p>Thank you for registering with us! We are excited to have you as part of our community. 🤝</p>
-                <p>You can now proceed to log in to your account using the username (email) and password you provided during registration. 🔑</p>
-                <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:partnership@dominioncityglobal.org">partnership@dominioncityglobal.org</a>. 📩</p>
-                <p>We look forward to your engagement with the platform! 🌟</p>
-                <p>Best regards,<br>The DC Global Partnership Mission Team</p>
-            """
-        )
-
         try:
+            # Save user to the database
+            db.session.add(new_user)
+            db.session.commit()
+
+            # Send confirmation email
+            message = Mail(
+                from_email='partnership@dominioncityglobal.org',  # Replace with your verified SendGrid sender email
+                to_emails=email,
+                subject='Welcome to Our Platform!',
+                html_content=f"""
+                    <h3>Welcome to DC Global Partnership Mission, {name}! 🎉</h3>
+                    <p>Thank you for registering with us! We are excited to have you as part of our community. 🤝</p>
+                    <p>You can now proceed to log in to your account using the username (email) and password you provided during registration. 🔑</p>
+                    <p>If you have any questions or need assistance, feel free to contact us at <a href=\"mailto:partnership@dominioncityglobal.org\">partnership@dominioncityglobal.org</a>. 📩</p>
+                    <p>We look forward to your engagement with the platform! 🌟</p>
+                    <p>Best regards,<br>The DC Global Partnership Mission Team</p>
+                """
+            )
+
             sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))  # Set your SendGrid API key in the environment
             response = sg.send(message)
             print(f"Email sent! Status Code: {response.status_code}")
+
+        except IntegrityError:
+            db.session.rollback()
+            flash('An account with this email or phone number already exists.', 'error')
+            return render_template('register.html', current_year=datetime.now().year)
+
         except Exception as e:
             print(f"Error sending email: {e}")
             flash('Registration successful, but we couldn\'t send a confirmation email.', 'warning')
@@ -673,8 +603,6 @@ def index():
     return render_template("index.html")
 
  # Renders the index page dynamically
-
-
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -735,48 +663,6 @@ def home2():
         user=user
     )
 
-
-
-#Donation and upload files
-"""
-# Add your allowed file extensions and upload folder
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
-#app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
-
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = os.environ.get('SECRET_KEY', 'default_fallback_key')
-
-# Initialize mail instance (configure this with your actual email settings)
-mail = Mail(app)
-
-# Utility to check file extensions
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# Route for handling file upload
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return 'No file part'
-    
-    file = request.files['file']
-    
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        # Save the file to the static/uploads directory
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return redirect(url_for('admin_dashboard'))  # Redirect to the dashboard after uploading
-    return 'Invalid file type'
-
-
-# Optional: Function to compress images
-def compress_image(filepath):
-    with Image.open(filepath) as img:
-        img.save(filepath, optimize=True, quality=85)
-
-"""
 
 
 # Your AWS S3 Configuration (replace with your actual values)
@@ -1089,7 +975,7 @@ def donate():
         user = get_current_user()  # Retrieve the current logged-in user if available
         app.logger.debug(f"User object: {user}")
         if user:
-            db.session.refresh(user)  # Refresh the user to ensure the latest data from the database
+            db.session.refresh(user)  # Ensure the latest data from the database
 
     if request.method == "POST":
         user_id = session.get("user_id")  # Check if a user is logged in
@@ -1137,6 +1023,17 @@ def donate():
             flash("Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, PDF.", "danger")
             return redirect(url_for("donate"))
 
+        # ✅ Generate a unique reference for donation
+        def generate_unique_reference():
+            """Generate a unique reference code and ensure it's not already in use."""
+            while True:
+                reference_code = str(uuid.uuid4())[:10]  # Generate a 10-character unique reference
+                existing_donation = Donation.query.filter_by(reference=reference_code).first()
+                if not existing_donation:
+                    return reference_code  # Ensure uniqueness before returning
+
+        reference_code = generate_unique_reference()
+
         # Create a new donation
         donation = Donation(
             user_id=user_id,
@@ -1144,7 +1041,8 @@ def donate():
             currency=currency,
             donation_date=donation_date,
             payment_type=payment_type,
-            receipt_filename=receipt_filename  # Optional field in the database for file name
+            receipt_filename=receipt_filename,  # Optional field in the database for file name
+            reference=reference_code  # Ensuring reference is unique
         )
 
         try:
@@ -1152,19 +1050,26 @@ def donate():
             db.session.add(donation)
             db.session.commit()
 
-            # Check if a pledge exists for the user and update pledged amount if necessary
+            # ✅ Check if a pledge exists for the user and update pledged amount if necessary
             pledge = Pledge.query.filter_by(user_id=user_id).first()
             if pledge:
                 pledged_amount = pledge.amount  # Retrieve current pledged amount
                 pledge.balance = max(0, pledged_amount - amount)  # Update pledge balance dynamically
-
-            # Email notification removed
+                db.session.commit()  # Commit the update
 
             flash(f"Thank you for your {payment_type} donation!", "success")
-            app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}")
+            app.logger.info(f"Donation saved: {donation.amount}, User ID: {user_id}, Type: {payment_type}, Date: {donation_date}, Reference: {reference_code}")
             return redirect(url_for("donation_success"))
+
+        except IntegrityError:
+            db.session.rollback()
+            app.logger.error("Database Integrity Error: Possible duplicate reference.")
+            flash("There was an error processing your donation. Please try again.", "danger")
+            return redirect(url_for("donate"))
+
         except Exception as e:
             db.session.rollback()
+            traceback.print_exc()  # Print full error traceback for debugging
             app.logger.error(f"Error saving donation: {e}")
             flash("There was an error processing your donation. Please try again.", "danger")
             return redirect(url_for("donate"))
@@ -1199,87 +1104,6 @@ def update_payment():
     return redirect(url_for('view_my_donations'))
 
 
-"""
-
-# Route to delete a specific donation (receipt)
-@app.route('/delete_receipt/<int:receipt_id>', methods=['POST'])
-def delete_receipt(receipt_id):
-    receipt = Donation.query.get_or_404(receipt_id)
-    db.session.delete(receipt)
-    db.session.commit()
-
-     # Flash success message
-    flash('Receipt successfully deleted!', 'success')  # You can customize the message
-    return redirect(url_for('receipts_overview'))
-    
-
-# Function to delete a file from the server
-def delete_file_from_server(filename):
-    file_path = os.path.join('static', 'uploads', filename)  # Adjust this path as needed
-    try:
-        if os.path.exists(file_path):
-            os.remove(file_path)  # Remove the file from the server
-        else:
-            raise FileNotFoundError(f"File {filename} not found on the server.")
-    except Exception as e:
-        print(f"Error deleting file {filename}: {e}")
-        raise
-
-
-
-
-
-@app.route("/admin_uploaded_receipts", methods=["GET", "POST"])
-@admin_required
-def admin_uploaded_receipts():
-    # Get the search term from the request (if provided)
-    search_term = request.args.get("search_term", "").lower()
-
-    # Query donations with receipts and join user data
-    receipts = (
-        db.session.query(
-            Donation.receipt_filename,
-            User.name,
-            User.country,
-            User.state,
-            User.church_branch
-        )
-        .join(User, Donation.user_id == User.id)
-        .filter(Donation.receipt_filename.isnot(None))  # Only include donations with receipt filenames
-    )
-
-    # Apply the filter if a search term is provided
-    if search_term:
-        receipts = receipts.filter(
-            db.or_(
-                User.name.ilike(f"%{search_term}%"),
-                User.country.ilike(f"%{search_term}%"),
-                User.state.ilike(f"%{search_term}%"),
-                User.church_branch.ilike(f"%{search_term}%")
-            )
-        )
-
-    # Execute the query
-    receipts = receipts.all()
-
-    # Format data for the template
-    uploaded_receipts = [
-        {
-            "filename": receipt.receipt_filename,
-            "user": receipt.name,
-            "country": receipt.country,
-            "state": receipt.state,
-            "church_branch": receipt.church_branch,
-        }
-        for receipt in receipts
-    ]
-
-    return render_template('admin_uploaded_receipts.html', files=uploaded_receipts, search_term=search_term)
-
-
-
-
-"""
 
 @app.route('/recent_donations', methods=['GET', 'POST'])
 def recent_donations():
@@ -1308,7 +1132,6 @@ def recent_donations():
     return render_template('recent_donations.html', 
                            recent_donations=recent_donations, 
                            search_term=search_term)
-
 
 
 
@@ -2043,22 +1866,6 @@ def paystack():
 def thank_you():
     return render_template('thank_you.html')
 
-"""
-@app.route('/edit-profile-success')
-def edit_profile_success():
-    return render_template('edit_profile_success.html')
-"""
-
-"""
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-"""
 
 # Define a custom filter
 @app.template_filter('commas')
@@ -2148,6 +1955,7 @@ def get_exchange_rates():
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 
