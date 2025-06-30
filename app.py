@@ -23,8 +23,6 @@ import boto3
 from werkzeug.utils import secure_filename
 from botocore.exceptions import NoCredentialsError
 
-
-
 from dotenv import load_dotenv
 from twilio.rest import Client
 from sendgrid import SendGridAPIClient
@@ -66,8 +64,6 @@ load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 
-# App and database setup
-app = Flask(__name__)
 
 CORS(app)
 
@@ -94,6 +90,9 @@ app.config["MAIL_USE_SSL"] = False
 
 # Initialize extensions
 mail = Mail(app)
+
+print("Database URI:", app.config["SQLALCHEMY_DATABASE_URI"])
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 scheduler = BackgroundScheduler()
@@ -196,6 +195,18 @@ class Pledge(db.Model):
     # Relationship to User model
     #user = db.relationship('User', backref='pledges')
     donor = db.relationship('User', back_populates='pledges')  # This should reference 'pledges' in User
+
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    content = db.Column(db.Text, nullable=False)
+    sent_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    is_read = db.Column(db.Boolean, default=False)
+
     
 
 
@@ -1742,7 +1753,7 @@ def send_welcome_sms(phone, name):
 
 
 # Load environment variables
-#SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
+SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SHEET_API_KEY_PATH')
 SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_JSON')
 
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
@@ -1967,8 +1978,8 @@ application = app
 if __name__ == "__main__":
     application.run(debug=True)
 
-"""
 
+"""
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
